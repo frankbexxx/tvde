@@ -86,6 +86,14 @@ function isExpired(pending: GoogleOAuthPending, now: number): boolean {
  * Valida o `state` devolvido pela Google contra o registo local iniciado neste browser.
  * O fluxo (login vs add identity) só é confiável se vier do JSON atómico ou do par legacy coerente.
  */
+/** Lê o pedido OAuth local activo (sem validar `state` na URL). Útil em cancelamentos `?error=`. */
+export function peekGoogleOAuthPending(now: number = Date.now()): GoogleOAuthPending | null {
+  const fromJson = readPendingJson()
+  if (!fromJson) return null
+  if (isExpired(fromJson, now)) return null
+  return fromJson
+}
+
 export function resolveGoogleOAuthPending(
   returnedState: string | null | undefined,
   now: number = Date.now(),

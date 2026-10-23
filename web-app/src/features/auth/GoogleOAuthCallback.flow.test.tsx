@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import '../../i18n'
 import { GoogleOAuthCallback } from './GoogleOAuthCallback'
 import {
   beginGoogleOAuthFlow,
@@ -29,11 +30,10 @@ vi.mock('../../utils/authStorage', () => ({
   getStoredAccessToken: vi.fn(() => null),
 }))
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'pt' } }),
-}))
-
 import { getStoredAccessToken } from '../../utils/authStorage'
+
+const PASSWORD_PLACEHOLDER = 'Palavra-passe para confirmar'
+const ADD_GOOGLE_LABEL = 'Adicionar Google'
 
 function Landed() {
   const { pathname } = useLocation()
@@ -67,7 +67,7 @@ describe('GoogleOAuthCallback flow routing', () => {
   it('add identity: shows password step and never calls loginGoogle', () => {
     const state = beginGoogleOAuthFlow('add_identity', '/passenger/account')
     renderCallback(`?code=abc&state=${state}`)
-    expect(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER)).toBeInTheDocument()
     expect(loginGoogle).not.toHaveBeenCalled()
   })
 
@@ -75,7 +75,7 @@ describe('GoogleOAuthCallback flow routing', () => {
     const state = beginGoogleOAuthFlow('add_identity')
     expect(resolveGoogleOAuthPending(state)?.flow).toBe('add_identity')
     renderCallback(`?code=abc&state=${state}`)
-    expect(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER)).toBeInTheDocument()
     expect(resolveGoogleOAuthPending(state)?.flow).toBe('add_identity')
     expect(loginGoogle).not.toHaveBeenCalled()
   })
@@ -119,7 +119,7 @@ describe('GoogleOAuthCallback flow routing', () => {
     vi.mocked(getStoredAccessToken).mockReturnValue('existing-jwt')
     const state = beginGoogleOAuthFlow('add_identity', '/passenger/account')
     renderCallback(`?code=abc&state=${state}`)
-    expect(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER)).toBeInTheDocument()
     expect(loginGoogle).not.toHaveBeenCalled()
   })
 
@@ -138,12 +138,31 @@ describe('GoogleOAuthCallback flow routing', () => {
     expect(screen.getByTestId('google-choice-create')).toBeInTheDocument()
   })
 
-  it('oauth cancel: shows cancel copy and clears pending on navigate', async () => {
-    beginGoogleOAuthFlow('add_identity')
+  it('oauth cancel login: copy and back to login', async () => {
+    beginGoogleOAuthFlow('login')
     renderCallback('?error=access_denied')
-    expect(screen.getByText(/cancelado ou recusado/i)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /voltar ao início/i }))
+    expect(screen.getByText(/Login Google cancelado/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Voltar ao início de sessão/i }))
+    await waitFor(() => expect(screen.getByTestId('landed')).toHaveTextContent('/passenger'))
     expect(sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY)).toBeNull()
+  })
+
+  it('oauth cancel add identity: copy and back to account returnPath', async () => {
+    beginGoogleOAuthFlow('add_identity', '/passenger/account')
+    renderCallback('?error=access_denied')
+    expect(screen.getByText(/Associação Google cancelada/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Voltar à conta/i }))
+    await waitFor(() => expect(screen.getByTestId('landed')).toHaveTextContent('/passenger/account'))
+    expect(sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY)).toBeNull()
+  })
+
+  it('login exchange failure shows API message not state mismatch', async () => {
+    const state = beginGoogleOAuthFlow('login')
+    loginGoogle.mockRejectedValue({ detail: 'identity_revoked' })
+    renderCallback(`?code=abc&state=${state}`)
+    await waitFor(() => expect(loginGoogle).toHaveBeenCalled())
+    expect(await screen.findByText(/já não está activo/i)).toBeInTheDocument()
+    expect(screen.queryByText(/não corresponde a esta sessão/i)).not.toBeInTheDocument()
   })
 
   it('add identity submit calls POST identities API path helper', async () => {
@@ -151,10 +170,10 @@ describe('GoogleOAuthCallback flow routing', () => {
     addGoogleIdentity.mockResolvedValue({ identities: [] })
     const state = beginGoogleOAuthFlow('add_identity', '/passenger/account')
     renderCallback(`?code=abc&state=${state}`)
-    fireEvent.change(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel'), {
+    fireEvent.change(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), {
       target: { value: 'secret-pass' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'profilePanel.loginMethods.addGoogle' }))
+    fireEvent.click(screen.getByRole('button', { name: ADD_GOOGLE_LABEL }))
     await waitFor(() =>
       expect(addGoogleIdentity).toHaveBeenCalledWith('existing-jwt', {
         password: 'secret-pass',
@@ -171,12 +190,12 @@ describe('GoogleOAuthCallback flow routing', () => {
     addGoogleIdentity.mockRejectedValue({ detail: { code: 'identity_email_taken' } })
     const state = beginGoogleOAuthFlow('add_identity')
     renderCallback(`?code=abc&state=${state}`)
-    fireEvent.change(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel'), {
+    fireEvent.change(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), {
       target: { value: 'secret-pass' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'profilePanel.loginMethods.addGoogle' }))
+    fireEvent.click(screen.getByRole('button', { name: ADD_GOOGLE_LABEL }))
     await waitFor(() => expect(addGoogleIdentity).toHaveBeenCalled())
-    expect(screen.getByText('profilePanel.loginMethods.errors.generic')).toBeInTheDocument()
+    expect(screen.getByText(/outra conta/i)).toBeInTheDocument()
     expect(loginGoogle).not.toHaveBeenCalled()
   })
 })

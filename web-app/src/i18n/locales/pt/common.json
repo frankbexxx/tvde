@@ -88,6 +88,8 @@
         "google_email_not_verified": "O Google não devolveu um email verificado.",
         "google_token_invalid": "Não foi possível validar o Google.",
         "google_oauth_disabled": "O Google não está configurado.",
+        "invalid_token": "A sessão expirou. Volta a entrar e tenta outra vez.",
+        "timeout": "Não foi possível ligar ao servidor. Verifica a rede e tenta outra vez.",
         "generic": "Não foi possível actualizar os métodos de início de sessão."
       }
     }

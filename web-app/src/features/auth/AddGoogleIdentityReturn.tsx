@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { addGoogleIdentity } from '@/api/auth'
-import type { ApiError } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { getStoredAccessToken } from '@/utils/authStorage'
+import { mapLoginMethodsApiError } from './googleOAuthErrors'
 import { clearGoogleOAuthPending } from './googleOauthState'
 
 /** Confirma a password depois do redirect Google. Não chama o login nem o onboarding. */
@@ -32,7 +32,7 @@ export function AddGoogleIdentityReturn({
 
   const submit = async () => {
     if (!token) {
-      setMessage(t('profilePanel.loginMethods.errors.generic'))
+      setMessage(t('profilePanel.loginMethods.errors.invalid_token'))
       return
     }
     if (!password.trim()) {
@@ -45,11 +45,7 @@ export function AddGoogleIdentityReturn({
       await addGoogleIdentity(token, { password, code, redirectUri })
       back()
     } catch (err: unknown) {
-      const detail = (err as ApiError).detail
-      const codeName = typeof detail === 'string' ? detail : detail?.code
-      const key = `profilePanel.loginMethods.errors.${codeName ?? 'generic'}`
-      const translated = t(key)
-      setMessage(translated === key ? t('profilePanel.loginMethods.errors.generic') : translated)
+      setMessage(mapLoginMethodsApiError(err, t))
     } finally {
       setBusy(false)
     }
