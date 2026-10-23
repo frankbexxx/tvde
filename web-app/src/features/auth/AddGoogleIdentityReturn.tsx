@@ -6,25 +6,17 @@ import type { ApiError } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { getStoredAccessToken } from '@/utils/authStorage'
-import {
-  GOOGLE_OAUTH_INTENT_KEY,
-  GOOGLE_OAUTH_RETURN_KEY,
-  GOOGLE_OAUTH_STATE_KEY,
-} from './googleOauthState'
-
-function clearAddIntent() {
-  sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
-  sessionStorage.removeItem(GOOGLE_OAUTH_INTENT_KEY)
-  sessionStorage.removeItem(GOOGLE_OAUTH_RETURN_KEY)
-}
+import { clearGoogleOAuthPending } from './googleOauthState'
 
 /** Confirma a password depois do redirect Google. Não chama o login nem o onboarding. */
 export function AddGoogleIdentityReturn({
   code,
   redirectUri,
+  returnPath,
 }: {
   code: string
   redirectUri: string
+  returnPath: string
 }) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
@@ -34,9 +26,8 @@ export function AddGoogleIdentityReturn({
   const token = getStoredAccessToken()
 
   const back = () => {
-    const target = sessionStorage.getItem(GOOGLE_OAUTH_RETURN_KEY) || '/passenger'
-    clearAddIntent()
-    navigate(target, { replace: true })
+    clearGoogleOAuthPending()
+    navigate(returnPath || '/passenger', { replace: true })
   }
 
   const submit = async () => {

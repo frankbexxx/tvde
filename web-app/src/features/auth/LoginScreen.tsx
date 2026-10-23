@@ -13,7 +13,7 @@ import {
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { isCapacitorNative } from './capacitorPlatform'
-import { createOauthNonce, GOOGLE_OAUTH_STATE_KEY, nativeGoogleNonce } from './googleOauthState'
+import { beginGoogleOAuthFlow, nativeGoogleNonce } from './googleOauthState'
 import { homePathForSessionRole } from '../../context/authBootstrap'
 import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in'
 import { LS_LAST_PHONE, setStoredAccessToken } from '../../utils/authStorage'
@@ -142,8 +142,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       void startNativeGoogle(googleClientId)
       return
     }
-    const state = createOauthNonce()
-    sessionStorage.setItem(GOOGLE_OAUTH_STATE_KEY, state)
+    const state = beginGoogleOAuthFlow('login')
     const redirectUri = `${window.location.origin}/auth/google/callback`
     const u = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     u.searchParams.set('client_id', googleClientId)

@@ -2,7 +2,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GoogleOAuthCallback } from './GoogleOAuthCallback'
-import { GOOGLE_OAUTH_STATE_KEY } from './googleOauthState'
 
 const loginGoogle = vi.fn()
 
@@ -23,7 +22,11 @@ describe('GoogleOAuthCallback role home', () => {
   beforeEach(() => {
     loginGoogle.mockReset()
     sessionStorage.clear()
-    sessionStorage.setItem(GOOGLE_OAUTH_STATE_KEY, 'state-1')
+    sessionStorage.setItem(
+      'tvde_google_oauth_pending',
+      JSON.stringify({ state: 'state-1', flow: 'login', startedAt: Date.now() }),
+    )
+    sessionStorage.setItem('tvde_google_oauth_state', 'state-1')
   })
 
   it.each([

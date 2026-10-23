@@ -16,14 +16,7 @@ import {
 } from '@/api/auth'
 import type { ApiError } from '@/api/client'
 import { isCapacitorNative } from '@/features/auth/capacitorPlatform'
-import {
-  ADD_IDENTITY_INTENT,
-  createOauthNonce,
-  GOOGLE_OAUTH_INTENT_KEY,
-  GOOGLE_OAUTH_RETURN_KEY,
-  GOOGLE_OAUTH_STATE_KEY,
-  nativeGoogleNonce,
-} from '@/features/auth/googleOauthState'
+import { beginGoogleOAuthFlow, nativeGoogleNonce } from '@/features/auth/googleOauthState'
 
 function errorCode(err: unknown): string {
   if (err !== null && typeof err === 'object' && 'detail' in err) {
@@ -137,10 +130,7 @@ export function LoginMethodsSection({
       setMessage(t('profilePanel.loginMethods.errors.google_oauth_disabled'))
       return
     }
-    const state = createOauthNonce()
-    sessionStorage.setItem(GOOGLE_OAUTH_STATE_KEY, state)
-    sessionStorage.setItem(GOOGLE_OAUTH_INTENT_KEY, ADD_IDENTITY_INTENT)
-    sessionStorage.setItem(GOOGLE_OAUTH_RETURN_KEY, window.location.pathname)
+    const state = beginGoogleOAuthFlow('add_identity', window.location.pathname)
     const redirectUri = `${window.location.origin}/auth/google/callback`
     const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     url.searchParams.set('client_id', clientId)
