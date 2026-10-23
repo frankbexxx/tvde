@@ -113,7 +113,7 @@ Executar **só com staging já criado** (e redirects Google actualizados):
 - [x] *(Opcional — **N/A** fecho)* Seed / dev tools / `ENABLE_DEV_TOOLS` — política: staging deployed-safe; **não** espelhar prod público; item **opcional** do checklist.
 - [x] Roster: testes usam **baseline efectivo** (5 users) — PR [#766](https://github.com/frankbexxx/tvde/pull/766); **não** seed dos 6 DEV em falta.
 
-**Verificação operacional independente (fora deste fecho):** cron agendado em **`tvde-staging-api`** — ver [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2 · [`TODOdoDIA.md`](../../TODOdoDIA.md) **TVDE-STG**.
+**Cron STAGING:** acta **§9** (**2026-10-23**) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md) **TVDE-STG** · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2.
 
 ---
 
@@ -165,9 +165,45 @@ Executar **só com staging já criado** (e redirects Google actualizados):
 
 1. **Parceiro:** fecho aceita **confirmação humana 22/10**; não há relatório técnico dedicado na janela 19–22/10.
 2. **Password vs sessão:** a matriz **não** declara PASS técnico isolado de «password» onde só existe prova de **sessão autenticada** ou UI manual.
-3. **Cron STAGING:** permanece **verificação operacional independente** (`TVDE-STG`); **não** condiciona este fecho.
+3. **Cron STAGING:** fecho **independente** em **§9 (23/10/2026)**; **não** condicionava este fecho §8.
 4. **Não repetir** smokes já encerrados (Stripe A–J, OAuth SA, logout, Health, UX copy) salvo regressão comprovada.
 
 ### Fora de scope desta acta
 
 - Stripe **LIVE** · SMS OTP real · reset BD STAGING · seed dos 6 utilizadores DEV em falta.
+
+---
+
+## 9. Acta — cron STAGING (`TVDE-STG`) (**2026-10-23**)
+
+**Decisão:** fechar **operacionalmente** o item **`TVDE-STG`** no âmbito **exclusivo** do agendador externo → `GET /cron/jobs` em **`tvde-staging-api`**. **Não** declara saúde global STAGING OK nem resolve `system_health` degradado.
+
+### Configuração (cron-job.org)
+
+| Campo | Valor |
+|-------|-------|
+| **Job** | `TVDE - STAGING` |
+| **URL** | `https://tvde-staging-api.onrender.com/cron/jobs` |
+| **Método** | `GET` |
+| **Schedule** | **1 minuto** |
+| **Header** | `X-Cron-Secret` = secret **`CRON_SECRET`** do Render **`tvde-staging-api`** (valor **não** registado no repo) |
+
+Referência genérica: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md). **Cron PROD** inalterado (job separado / URL prod).
+
+### Evidências (**23/10/2026**)
+
+| Fonte | Observação |
+|-------|------------|
+| **cron-job.org** | **14** execuções consecutivas **HTTP 200** entre **10:13** e **10:26** (hora local da validação) |
+| **Logs Render `tvde-staging-api`** | `cron_started` · `cron_job_ok` · `cron_finished` · `ok=True` · `error_count=0` |
+
+### Limitações (preservadas)
+
+1. **`system_health_status=degraded`** observado durante a janela — **condição independente**; **não** resolvida nem validada por esta acta.
+2. **≠** smoke E2E completo §2 [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) além do eixo **cron funciona** (webhook/e2e cobertos noutros actas A2-02 / B-STG).
+3. **≠** ausência de `partial_error` futuro — monitor cron-job.org deve alertar **non-2xx** (incl. **500**).
+
+### Registo canónico
+
+- Painel: [`TODOdoDIA.md`](../../TODOdoDIA.md) **TVDE-STG** → **Concluído** (cron).
+- Roadmap: **F2.4** · índice carril **F** ([`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md)).
