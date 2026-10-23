@@ -206,4 +206,19 @@ Referência genérica: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES
 ### Registo canónico
 
 - Painel: [`TODOdoDIA.md`](../../TODOdoDIA.md) **TVDE-STG** → **Concluído** (cron).
+
+---
+
+## 10. Acta — diagnóstico saúde + pagamentos presos STAGING (**2026-10-23**)
+
+**Modo:** READ-ONLY (documentação). **≠** reconciliação executada.
+
+| Tema | Conclusão |
+|------|-----------|
+| **`system_health.status=degraded`** | Coerente com **4** pagamentos em `processing` > 10 min (críticos Fase 1). **≠** indisponibilidade API (`/health` 200) nem falha cron (§9). |
+| **Origem provável** | Resíduos smokes/legado (**`pi_mock_*`** + PIs Stripe TEST, datas ~09/09 e 15/10/2026). |
+| **Órfãos PI** | Universo **distinto** de `GET /admin/ops/orphan-payment-intents/preview` — auditoria **`R-PAY-ORPHAN-PI-AUD`** concluída; **≠** os 4 stuck locais. |
+| **Próximo passo ops** | Preview reconcile / close-mock **read-only** → reconciliação **individual** (`R-PAY-STG-4`) — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) §10–11. |
+
+Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-23**.
 - Roadmap: **F2.4** · índice carril **F** ([`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md)).

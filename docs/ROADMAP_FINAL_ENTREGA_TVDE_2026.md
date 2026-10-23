@@ -49,10 +49,10 @@ Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATION
 |--------|--------|
 | **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; **A1.4 DECIDIDA / CLOSED** 2026-09-18)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; **A2.6** alinhado a A1.4) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
 | **B** Pagamentos / Financeiro | **B-STG DONE (2026-10-21)** · **B-PAY-REL PR1–PR4 + PR3 STG preflight DONE (22/10)** · smoke PR3 E2E **dispensado** · B1 live · B2 · B3 · B4 · **B5** (MB WAY) |
-| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE (STAGING 2026-10-21)** · **C4 II-C PARCIAL (#768 UX STG+PROD PASS 22/10)** · **Fase VI #765 STG+PROD PASS 22/10** · **R-OAUTH-UX P2** |
+| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE** · **C4 II-C PARCIAL (T1/T2 STG PASS 23/10 #783/#784; T3/T4 pendente)** · **Fase VI #765 STG+PROD PASS 22/10** · **R-OAUTH-UX R1–R4 DONE (#785 23/10)** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
-| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 assertivo DONE 22/10 (#766 · acta A2-02 §8)** · **TVDE-STG cron DONE 23/10 (§9)** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** |
+| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 assertivo DONE 22/10 (#766 · acta A2-02 §8)** · **TVDE-STG cron DONE 23/10 (#782 · §9)** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** · **diagnóstico degraded STG READ-ONLY 23/10** |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
 | **H** Pós-entrega / Futuro | H1 B2 next-trip · H2 Redispatch · H3 Dead code/CI · H4 Admin rastos · H5 Futuro |
 
@@ -487,7 +487,8 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | C3.2 | Smoke login Google (passageiro / roles STAGING) | PASS | TESTE | C3.1 | **DONE** 2026-10-21 |
 | C3.3 | Env Render `GOOGLE_OAUTH_REDIRECT_URIS` alinhado | Backend aceita callback | CONFIG | C3.1 | **DONE** 2026-10-21 |
 
-- **R-OAUTH-UX (P2):** após falha no **exchange** Google, o callback pode mostrar erro de **correspondência de sessão** em vez do erro real (`GoogleOAuthCallback.tsx` / ordem de branches). **Correcção pendente** — não invalida C3 STAGING ([`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-21**).
+- **R-OAUTH-UX R1–R4:** **DONE** 2026-10-23 · PR [#785](https://github.com/frankbexxx/tvde/pull/785) · mensagens PT, cancel contextual, erros associação · **R5/R6** (retry/TTL copy) **adiados** · smoke manual erros **pendente** ([`TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-23**).
+- **A-ID-06 STAGING:** **T1/T2 PASS** (#783 callback pending · #784 routing JWT) · **T3/T4** smoke **pendente** (24/10, 2.ª identity QA).
 
 ## C4 — Identidades de login (`user_identities`)
 
@@ -499,7 +500,7 @@ Uma pessoa = um `User`. Vários emails / Google vivem em `user_identities`. O te
 | II-A | Repetir o backfill e dual-write. Auth continua a ler `users`. `oauth_google_sub` continua activo | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
 | II-B | Login Google lê `user_identities`. Sem auto-link. Escolha criar/ligar. `oauth_google_sub` deprecated. Prova curta | **CLOSED** 2026-09-29 · sem migration · [`USER_IDENTITIES.md`](architecture/USER_IDENTITIES.md) |
 | S-ID-01 | Smoke prod: Google desconhecido sem User; link QA à fixture `dev_admin`; login seguinte na mesma conta | **CLOSED** 2026-09-29 |
-| II-C | Listar, mudar primary, revogar e adicionar Google na Conta canónica. Sem password, definir password primeiro. Sem Google como step-up | **PARTIAL** — UX copy STG+PROD **PASS** (#768 · **22/10**) · gestão primary/revoke/add Google **não fechada** · [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-22** |
+| II-C | Listar, mudar primary, revogar e adicionar Google na Conta canónica. Sem password, definir password primeiro. Sem Google como step-up | **PARTIAL** — UX copy STG+PROD **PASS** (#768) · **add Google STG PASS** (#783/#784 · **23/10**) · **T3/T4** primary/revoke **pendente** · [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-23** |
 | III | Mover a mesma linha de identity e bloquear a origem. `bf19df73` em `09c539d1`; `35ddb821` `blocked` | **CLOSED** 2026-09-30 · transferência PROD **PASS** · smoke Google humano **PASS** · PR #680 |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |
@@ -721,7 +722,9 @@ Push P1 / foundation = **CLOSED**. Push P2 / oferta ao motorista = **CLOSED**. P
 | **STAGING** | `status=degraded` | Quatro pagamentos em `processing` classificados como **críticos**; separação crítico/informativo **validada**. |
 | **PROD** | `status=ok` · «Operacional» | Zero críticos; motorista Marly offline em **Informações**; badge **Conta demo**; **nenhuma** recuperação administrativa executada. |
 
-**Fase 2 (evolução):** objectivo = distinguir motoristas voluntariamente offline de situações realmente bloqueadas após erros, viagens ou timeouts. Arquitectura decidida **numa análise posterior**; **não** se assume obrigatoriedade de migrations.
+**Diagnóstico READ-ONLY (2026-10-23 · `X-SYSHEALTH-2-DIAG`):** `degraded` STG **≠** API/cron offline — causa provável = **4×** pagamentos antigos em `processing` (mock + Stripe TEST smokes); **≠** reconciliados · **≠** órfãos PI (universo distinto · auditoria **`R-PAY-ORPHAN-PI-AUD`**). Detalhe operacional: [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-23** · **`R-PAY-STG-4` Por iniciar**.
+
+**Fase 2 (evolução · F5.4):** objectivo = distinguir motoristas voluntariamente offline de situações realmente bloqueadas após erros, viagens ou timeouts. Arquitectura decidida **numa análise posterior**; **não** se assume obrigatoriedade de migrations.
 
 ---
 
