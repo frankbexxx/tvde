@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN |
 | **status** | ACTIVO |
-| **updated** | 2026-10-22 (fecho operacional PR3 STAGING) |
+| **updated** | 2026-10-23 (cron STAGING TVDE-STG) |
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
@@ -52,7 +52,7 @@ Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATION
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE (STAGING 2026-10-21)** · **C4 II-C PARCIAL (#768 UX STG+PROD PASS 22/10)** · **Fase VI #765 STG+PROD PASS 22/10** · **R-OAUTH-UX P2** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
-| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 assertivo DONE 22/10 (#766 · acta A2-02 §8)** · **TVDE-STG cron STG ops pendente** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** |
+| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 assertivo DONE 22/10 (#766 · acta A2-02 §8)** · **TVDE-STG cron DONE 23/10 (§9)** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
 | **H** Pós-entrega / Futuro | H1 B2 next-trip · H2 Redispatch · H3 Dead code/CI · H4 Admin rastos · H5 Futuro |
 
@@ -668,14 +668,15 @@ Push P1 / foundation = **CLOSED**. Push P2 / oferta ao motorista = **CLOSED**. P
 ## F2 — Staging OAuth / smoke staging
 
 - **IDs:** `S-OPS-02` · `A2-02-2` · `TVDE-STG`  
-- **Estado assertivo (2026-10-22):** **F2.2 / A2-02-2 DONE** — acta [`STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§8** (consolidação evidências 15–22/10; **sem novos testes**). Baseline **DONE** [#766](https://github.com/frankbexxx/tvde/pull/766). C3 · B-STG · logout Admin · II-C UX · System Health — ver acta.  
-- **Pendência independente:** **`TVDE-STG` cron STAGING** ([`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2) — **não** bloqueia F2.2; cron **PROD** validado à parte.
+- **Estado assertivo (2026-10-23):** **F2.2 / A2-02-2 DONE** — acta **§8** (22/10). **F2.4 / cron STG DONE** — acta **§9** (23/10). Baseline **DONE** [#766](https://github.com/frankbexxx/tvde/pull/766). C3 · B-STG · logout Admin · II-C UX · System Health — §8. **≠** saúde global STG OK.  
+- **Cron STAGING:** **DONE 2026-10-23** — acta [`STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§9** · [`TODOdoDIA.md`](../TODOdoDIA.md) **TVDE-STG** · **≠** saúde global STG OK.
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
 | F2.1 | Stack staging viva | URLs OK | CONFIG | — | **DONE** |
 | F2.2 | Smoke curto (OAuth + pagamentos TEST + §6 runbook) | PASS | TESTE | F2.1 · C3 · B-STG | **DONE** 2026-10-22 · acta §8 |
 | F2.3 | Baseline roster STAGING vs DEV documentado | 5 users efectivos; MISSING = gap vs DEV | DOCS | F2.1 | **DONE** #766 |
+| F2.4 | Cron STAGING (cron-job.org → `/cron/jobs`) | 200 + lote OK | CONFIG · TESTE | F2.1 | **DONE** **2026-10-23** · acta §9 · job **`TVDE - STAGING`** |
 
 ## F3 — Sentry prod FE/BE
 
@@ -878,7 +879,7 @@ Além de M2:
 
 # PÓS-ENTREGA / BACKLOG FUTURO
 
-Carril **H** + itens adiados (B5 fase 2, C2, **F2.2 DONE 22/10** · **TVDE-STG cron STG** ops, F4, **F5 Fase 2** `X-SYSHEALTH-2`, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
+Carril **H** + itens adiados (B5 fase 2, C2, **F2.4 / TVDE-STG cron DONE 23/10**, F4, **F5 Fase 2** `X-SYSHEALTH-2`, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
 
 **Não** reabre Demo Manel 2 / retoma como pendência.
 

@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN (painel operacional) |
 | **status** | ACTIVO |
-| **updated** | 2026-10-22 |
+| **updated** | 2026-10-23 |
 | **owner** | Frank |
 | **source_of_truth** | Estado operacional diário (GOV-DOC-002) |
 
@@ -540,7 +540,7 @@ _Ver painel **2026-07-15** acima para estado actual._
 | **TVDE-PROD** | `PROD_VALIDATION` | **Concluído** | gate P5 beta ✅ · prod `STRIPE_MOCK=true` · plano Jul arquivado [`FORWARD_PLAN_2026-07.md`](docs/archive/plans/FORWARD_PLAN_2026-07.md) |
 | **O-STRIPE-1** | Webhook Stripe (Fase A local) | **Concluído** | 2026-07-13 · [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) |
 | **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12 · [`TVDE_BKP_RUNBOOK.md`](docs/ops/TVDE_BKP_RUNBOOK.md) |
-| **TVDE-STG** | Staging smoke_validation | Em curso | **PARCIAL** · **A2-02-2 / F2.2 fechados 22/10** · **cron STAGING** (ops) ainda sem acta dedicada · [`TODO_CODIGO_TVDE.md`](docs/TODO_CODIGO_TVDE.md) §2 |
+| **TVDE-STG** | Cron STAGING (`GET /cron/jobs` via cron-job.org) | **Concluído** | **23/10/2026** · job **`TVDE - STAGING`** · 14× HTTP **200** (10:13–10:26) · logs `cron_started`/`cron_finished` · `ok=True` · `error_count=0` · acta [`STAGING_A2-02_RUNBOOK.md`](docs/ops/STAGING_A2-02_RUNBOOK.md) **§9** · **≠** saúde global STG OK · PROD cron **inalterado** |
 
 **Regra:** Frank + agente **escolhem 1 carril** (P0 vs P1 vs P5) antes de codar.
 

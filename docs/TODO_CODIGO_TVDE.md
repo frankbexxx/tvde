@@ -49,6 +49,8 @@ STAGING
     └── e2e básico passa
 ```
 
+**Estado operacional (2026-10-23):** **infra** + **stripe_test** + smokes A2-02/B-STG documentados (22/10). **`cron funciona` (STAGING)** — **PASS** · acta [`ops/STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§9** · job cron-job.org **`TVDE - STAGING`**. Painel [`../TODOdoDIA.md`](../TODOdoDIA.md) **TVDE-STG** fechado **só** no eixo cron. **≠** saúde global STAGING OK (`system_health` degradado permanece item à parte).
+
 ---
 
 ## 3. BACKUPS (A028) — antes de escala
