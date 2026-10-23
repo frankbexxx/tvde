@@ -52,7 +52,26 @@ Confronto código / PRs / smokes manuais STAGING. **PROD**, jurídico, fiscal, S
 | **C1** | OTP SMS real (prod) | **Bloqueado** | `503 otp_auth_unavailable` · provider + go explícito — [`S-AUTH-01_OTP_SMS_DECISION.md`](docs/architecture/S-AUTH-01_OTP_SMS_DECISION.md) |
 | **O-STRIPE-LIVE** | Stripe live / B1 | **Bloqueado** | Prod `STRIPE_MOCK=true` · parceiro + `sk_live_*` · [`ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) |
 | **DOC-NEXT-1** / **DOC-NEXT-2** | Consultas EXT-LEG / EXT-FIS | **Bloqueado** (externo) | Mandato / parecer jurídico e envio fiscal **sem fecho** — registo inalterado |
-| **R-OAUTH-UX** | Mensagem OAuth pós-exchange (P2) | **Por iniciar** | Falha no exchange Google apresentada como «sessão não corresponde» · `GoogleOAuthCallback.tsx` · correcção pendente · não bloqueia C3 STAGING |
+| **R-OAUTH-UX** | Mensagens OAuth R1–R4 (callback + associação) | **Concluído** | PR [#785](https://github.com/frankbexxx/tvde/pull/785) · merge `9dd4a5f5` · CI PASS · deploy STG confirmado · **R5/R6** P3 **Por iniciar** · smoke manual erros OAuth **Smoke pendente** |
+
+---
+
+## Painel — **Fecho sessão** (**2026-10-23**)
+
+Registo documental pós-merge **`9dd4a5f5`**. **≠** reconciliação financeira executada · **≠** T3/T4 PASS.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **TVDE-STG** | Cron STAGING (cron-job.org → `/cron/jobs`) | **Concluído** | PR [#782](https://github.com/frankbexxx/tvde/pull/782) · operacional · acta runbook A2-02 **§9** · **≠** `system_health` OK |
+| **A-ID-06-T1** | Login Google STAGING (callback) | **Concluído** | PR [#783](https://github.com/frankbexxx/tvde/pull/783) · pending OAuth atómico |
+| **A-ID-06-T2** | Adicionar Google (Conta) STAGING | **Concluído** | PR [#784](https://github.com/frankbexxx/tvde/pull/784) · callback com JWT · smoke STG **PASS** (`test_passenger` + QA Google) |
+| **A-ID-06-T3** | Tornar principal (≥2 identities) | **Smoke pendente** | Previsto **24/10** · requer 2.ª identidade Google QA · **≠ PASS** |
+| **A-ID-06-T4** | Revogar identity não-primária | **Smoke pendente** | Previsto **24/10** · ≥2 identities · **≠ PASS** |
+| **R-OAUTH-UX** | R1–R4 mensagens e navegação OAuth | **Concluído** | PR [#785](https://github.com/frankbexxx/tvde/pull/785) · ver linha painel **2026-10-22** |
+| **S-R-OAUTH-UX** | Smoke manual cenários de erro OAuth | **Smoke pendente** | Cancel login/associação · erros API · pós-#785 |
+| **X-SYSHEALTH-2-DIAG** | Diagnóstico `degraded` vs API offline (READ-ONLY) | **Concluído** | **23/10** · `degraded` = **4×** pagamentos `processing` >10 min (legado/smokes) · API/cron **OK** · **≠** Fase 2 produto |
+| **R-PAY-STG-4** | Reconciliar 4 pagamentos STAGING presos | **Por iniciar** | Após confirmar trip/PI local + Stripe TEST **read-only** · **≠ reconciliados** · runbook [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) §10–11 |
+| **R-PAY-ORPHAN-PI-AUD** | Auditoria órfãos vs pagamentos locais presos | **Concluído** | **23/10** READ-ONLY · 4 stuck **≠** universo `orphan-payment-intents/preview` |
 
 ---
 
@@ -63,7 +82,7 @@ Fase 1 integrada em `main` · PR [#770](https://github.com/frankbexxx/tvde/pull/
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **X-SYSHEALTH-1** | Fase 1 — alertas críticos vs informativos | **Concluído** | `warnings` = só críticos · offline prolongado → `informational_warnings` + lista com `is_test_account` · Admin Saúde/Agora · cron propaga contadores · secção **F5** em [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md) |
-| **X-SYSHEALTH-2** | Fase 2 — indisponibilidade anómala | **Por iniciar** | Distinguir offline voluntário vs bloqueado após erros, viagens ou timeouts · arquitectura **TBD** · migrations **não** assumidas |
+| **X-SYSHEALTH-2** | Fase 2 — indisponibilidade anómala | **Por iniciar** | Implementação produto (F5.4) · diagnóstico READ-ONLY **Concluído** **23/10** → painel **2026-10-23** **`X-SYSHEALTH-2-DIAG`** |
 | **S-SYSHEALTH-1-STG** | Smoke manual STAGING Saúde/Agora | **Concluído** | 22/10 · 4 pagamentos `processing` = **críticos** · `status=degraded` **correcto** · separação crítico/informativo **validada** |
 | **S-SYSHEALTH-1-PROD** | Smoke manual PROD Saúde/Agora | **Concluído** | 22/10 · `status=ok` · «Operacional» · 0 críticos · motorista Marly offline em **Informações** · badge **Conta demo** · **sem** recover admin |
 
@@ -86,7 +105,7 @@ Fase 1 integrada em `main` · PR [#770](https://github.com/frankbexxx/tvde/pull/
 | **S-PAY-PR4-STG** | Smoke manual STAGING preview órfãos (Admin Saúde) | **Concluído** | **22/10/2026** · `scan_status=ok` · **0** órfãos confirmados e **0** inconclusivos **na página/janela consultadas** · HTTP 500 pré-#777 **resolvido** · **≠** ausência global de órfãos na conta Stripe |
 | **O-PAY-PR5** | Reconcile batch automático (cron) | **N/A** | **Q6 A — não autorizado** |
 | **O-STRIPE-LIVE** | Stripe LIVE / B1 | **Bloqueado** | Prod `STRIPE_MOCK=true` · inalterado |
-| **R-PAY-ORPHAN-PI** | Cancel/recover automático PI órfão aberto | **Por iniciar** | PR4 = **detector manual** only; reconcile **não** cancela PIs abertos |
+| **R-PAY-ORPHAN-PI** | Cancel/recover automático PI órfão aberto | **Por iniciar** | PR4 = preview manual (#776/#777) · auditoria READ-ONLY **23/10** → **`R-PAY-ORPHAN-PI-AUD`** · **4× processing STG** → **`R-PAY-STG-4`** (reconcile **Por iniciar**) |
 
 **Limitações PR4 (registo):** só PIs com `metadata.trip_id` UUID válido entram na classificação TVDE; PIs externos ignorados; janela `window_days` ≤ 7 · grace ≥ 5 min; paginação cap **500**/run (`scan_status=partial` se `has_more`); atribuição conservadora (`confirmed_orphan` vs `inconclusive_*`).
 
@@ -98,7 +117,7 @@ O painel Conta lista os métodos de início de sessão, muda a primary, revoga e
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **A-ID-06** | Fase II-C gestão no perfil | **Em curso** | **PARCIAL** — painel Conta + UX copy STG/PROD OK · primary/revoke/Google add não revalidados · ver painel **2026-10-22** · não usar `09c539d1` nem `35ddb821` |
+| **A-ID-06** | Fase II-C gestão no perfil | **Em curso** | **T1/T2 STG PASS** **23/10** (#783/#784) · **T3/T4 Smoke pendente** (24/10) · UX copy STG/PROD OK (#768) · painel **2026-10-23** · não usar `09c539d1` nem `35ddb821` |
 | **A-ID-08** | Fase VI logout / sessões | Concluído | STAGING + **PROD PASS** **22/10** · PR #765 · não reabre a II-C |
 
 ---
@@ -530,7 +549,7 @@ _Ver painel **2026-07-15** acima para estado actual._
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **O-UX20-1** | Desenho UX 2.0 motorista | Por iniciar | [`DRIVER_UX_2_0.md`](docs/product/DRIVER_UX_2_0.md) |
-| **R-OAUTH-UX** | OAuth Google — erro exchange vs sessão | Por iniciar | P2 · callback mostra falha de correspondência de sessão quando o exchange falhou · correcção pendente · painel **2026-10-21** |
+| **R-OAUTH-UX** | OAuth Google — mensagens R1–R4 | Concluído | PR #785 · **R5/R6** adiados · painel **2026-10-23** |
 | **R-LEGACY-1** | Layout legacy `!driverBottomNav` | Por iniciar | [`driver-ux-fixes-backlog.md`](docs/ux/driver-ux-fixes-backlog.md) |
 
 ### P5 — operação pré-escala
@@ -540,7 +559,7 @@ _Ver painel **2026-07-15** acima para estado actual._
 | **TVDE-PROD** | `PROD_VALIDATION` | **Concluído** | gate P5 beta ✅ · prod `STRIPE_MOCK=true` · plano Jul arquivado [`FORWARD_PLAN_2026-07.md`](docs/archive/plans/FORWARD_PLAN_2026-07.md) |
 | **O-STRIPE-1** | Webhook Stripe (Fase A local) | **Concluído** | 2026-07-13 · [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) |
 | **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12 · [`TVDE_BKP_RUNBOOK.md`](docs/ops/TVDE_BKP_RUNBOOK.md) |
-| **TVDE-STG** | Cron STAGING (`GET /cron/jobs` via cron-job.org) | **Concluído** | **23/10/2026** · job **`TVDE - STAGING`** · 14× HTTP **200** (10:13–10:26) · logs `cron_started`/`cron_finished` · `ok=True` · `error_count=0` · acta [`STAGING_A2-02_RUNBOOK.md`](docs/ops/STAGING_A2-02_RUNBOOK.md) **§9** · **≠** saúde global STG OK · PROD cron **inalterado** |
+| **TVDE-STG** | Cron STAGING (`GET /cron/jobs` via cron-job.org) | **Concluído** | PR [#782](https://github.com/frankbexxx/tvde/pull/782) · **23/10** · job **`TVDE - STAGING`** · 14× HTTP **200** · acta runbook **§9** · **≠** saúde global STG OK · PROD cron **inalterado** |
 
 **Regra:** Frank + agente **escolhem 1 carril** (P0 vs P1 vs P5) antes de codar.
 
