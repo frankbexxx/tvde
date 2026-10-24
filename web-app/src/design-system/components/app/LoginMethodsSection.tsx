@@ -235,38 +235,53 @@ export function LoginMethodsSection({
                 const soleActive = identities.length <= 1
                 const canRevoke = !identity.is_primary && !soleActive
                 return (
-                  <li key={identity.id} className="rounded-lg border border-border/70 p-2 space-y-2">
-                  <p className="text-sm font-medium">
-                    {providerLabel(identity.provider, t)}
-                    {identity.email ? ` · ${identity.email}` : ''}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {identity.is_primary ? t('profilePanel.loginMethods.primary') : '—'}
-                    {' · '}
-                    {identity.is_verified
-                      ? t('profilePanel.loginMethods.verified')
-                      : t('profilePanel.loginMethods.unverified')}
-                  </p>
-                  <div className="flex gap-2">
-                    {identity.is_primary ? null : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="flex-1"
-                        disabled={busy}
-                        onClick={() =>
-                          void runChange(() => makeIdentityPrimary(token, identity.id, password))
-                        }
-                      >
-                        {t('profilePanel.loginMethods.makePrimary')}
-                      </Button>
-                    )}
+                  <li key={identity.id} className="min-w-0 rounded-lg border border-border/70 p-2 space-y-2">
+                    <p className="text-sm font-medium break-words">
+                      {providerLabel(identity.provider, t)}
+                      {identity.email ? ` · ${identity.email}` : ''}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {identity.is_primary ? t('profilePanel.loginMethods.primary') : '—'}
+                      {' · '}
+                      {identity.is_verified
+                        ? t('profilePanel.loginMethods.verified')
+                        : t('profilePanel.loginMethods.unverified')}
+                    </p>
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      {identity.is_primary ? null : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full min-w-0 sm:w-auto sm:flex-1"
+                          disabled={busy}
+                          onClick={() =>
+                            void runChange(() => makeIdentityPrimary(token, identity.id, password))
+                          }
+                        >
+                          {t('profilePanel.loginMethods.makePrimary')}
+                        </Button>
+                      )}
+                      {canRevoke && pendingRevoke !== identity.id ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="w-full min-w-0 sm:w-auto sm:flex-1"
+                          disabled={busy}
+                          onClick={() => setPendingRevoke(identity.id)}
+                        >
+                          {t('profilePanel.loginMethods.revoke')}
+                        </Button>
+                      ) : null}
+                    </div>
                     {canRevoke && pendingRevoke === identity.id ? (
-                      <>
+                      <div
+                        className="flex min-w-0 flex-col gap-2 sm:flex-row"
+                        data-testid={`revoke-confirm-${identity.id}`}
+                      >
                         <Button
                           type="button"
                           variant="destructive"
-                          className="flex-1"
+                          className="w-full min-w-0 sm:flex-1"
                           disabled={busy}
                           onClick={() =>
                             void runChange(() => revokeIdentity(token, identity.id, password))
@@ -277,32 +292,21 @@ export function LoginMethodsSection({
                         <Button
                           type="button"
                           variant="ghost"
+                          className="w-full min-w-0 sm:w-auto"
                           disabled={busy}
                           onClick={() => setPendingRevoke(null)}
                         >
                           {t('profilePanel.loginMethods.cancel')}
                         </Button>
-                      </>
+                      </div>
                     ) : null}
-                    {canRevoke && pendingRevoke !== identity.id ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="flex-1"
-                        disabled={busy}
-                        onClick={() => setPendingRevoke(identity.id)}
-                      >
-                        {t('profilePanel.loginMethods.revoke')}
-                      </Button>
-                    ) : null}
-                  </div>
-                  {canRevoke ? null : (
-                    <p className="text-xs text-muted-foreground">
-                      {soleActive
-                        ? t('profilePanel.loginMethods.revokeOnly')
-                        : `${t('profilePanel.loginMethods.revokePrimary')} ${t('profilePanel.loginMethods.revokePrimaryNext')}`}
-                    </p>
-                  )}
+                    {canRevoke ? null : (
+                      <p className="text-xs text-muted-foreground">
+                        {soleActive
+                          ? t('profilePanel.loginMethods.revokeOnly')
+                          : `${t('profilePanel.loginMethods.revokePrimary')} ${t('profilePanel.loginMethods.revokePrimaryNext')}`}
+                      </p>
+                    )}
                   </li>
                 )
               })}
