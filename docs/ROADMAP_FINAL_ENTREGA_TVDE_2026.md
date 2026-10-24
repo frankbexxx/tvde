@@ -49,7 +49,7 @@ Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATION
 |--------|--------|
 | **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; **A1.4 DECIDIDA / CLOSED** 2026-09-18)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; **A2.6** alinhado a A1.4) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
 | **B** Pagamentos / Financeiro | **B-STG DONE (2026-10-21)** · **B-PAY-REL PR1–PR4 + PR3 STG preflight DONE (22/10)** · smoke PR3 E2E **dispensado** · B1 live · B2 · B3 · B4 · **B5** (MB WAY) |
-| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE** · **C4 II-C STG DONE (T1–T4 PASS 24/10 #783/#784/#787)** · **Fase VI #765 STG+PROD PASS 22/10** · **R-OAUTH-UX R1–R4 DONE (#785 23/10)** |
+| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE** · **C4 II-C STG DONE (T1–T4 PASS 24/10 #783/#784/#787)** · **Fase VI #765 STG+PROD PASS 22/10** · **R-OAUTH-UX R1–R4 DONE (#785)** · **S-R-OAUTH-UX STG parcial (M4 PASS 24/10)** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
 | **F** Infra / Segurança / Operação | F1 Restore drill · **F2 assertivo DONE 22/10 (#766 · acta A2-02 §8)** · **TVDE-STG cron DONE 23/10 (#782 · §9)** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** · **diagnóstico degraded STG READ-ONLY 23/10** |
@@ -487,7 +487,8 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | C3.2 | Smoke login Google (passageiro / roles STAGING) | PASS | TESTE | C3.1 | **DONE** 2026-10-21 |
 | C3.3 | Env Render `GOOGLE_OAUTH_REDIRECT_URIS` alinhado | Backend aceita callback | CONFIG | C3.1 | **DONE** 2026-10-21 |
 
-- **R-OAUTH-UX R1–R4:** **DONE** 2026-10-23 · PR [#785](https://github.com/frankbexxx/tvde/pull/785) · mensagens PT, cancel contextual, erros associação · **R5/R6** (retry/TTL copy) **adiados** · smoke manual erros **pendente** ([`TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-23**).
+- **R-OAUTH-UX R1–R4:** **DONE** · PR [#785](https://github.com/frankbexxx/tvde/pull/785) · CI/Vitest **PASS** · **R5/R6** (retry/TTL copy) **adiados**.
+- **S-R-OAUTH-UX (smokes STG):** **parcial 24/10** — M4 callback incompleto **PASS** · M1 cancel login **PARCIAL** (Back browser; **≠** copy `?error=`) · M2/M3 **N/E / N/A** · cancel associação → testes auto · **≠** cobertura manual completa · [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-24**.
 - **A-ID-06 STAGING:** **T1–T4 PASS** **24/10** — listagem · add Google (#783/#784) · tornar principal · cancelar/revogar secundária · hotfix layout confirmação [#787](https://github.com/frankbexxx/tvde/pull/787) · acta runbook **§11** · **≠** aprovação global PROD.
 
 ## C4 — Identidades de login (`user_identities`)

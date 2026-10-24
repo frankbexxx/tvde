@@ -248,6 +248,6 @@ Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-23**. R
 
 1. Conta **passageiro de teste STAGING** + identidades **Google QA** — sem registo de emails pessoais de terceiros nesta acta.
 2. **`system_health=degraded`** e **4× pagamentos `processing`** — inalterados (§10).
-3. **S-R-OAUTH-UX** — smoke manual de **mensagens de erro** OAuth continua **pendente**.
+3. **S-R-OAUTH-UX** — smokes manuais **parciais 24/10** (M4 PASS; cancel Google `?error=` **≠** exercitado) — detalhe [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-24**.
 
 Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-24** · ROADMAP **C4 / II-C**.

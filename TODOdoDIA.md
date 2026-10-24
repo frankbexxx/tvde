@@ -52,7 +52,7 @@ Confronto código / PRs / smokes manuais STAGING. **PROD**, jurídico, fiscal, S
 | **C1** | OTP SMS real (prod) | **Bloqueado** | `503 otp_auth_unavailable` · provider + go explícito — [`S-AUTH-01_OTP_SMS_DECISION.md`](docs/architecture/S-AUTH-01_OTP_SMS_DECISION.md) |
 | **O-STRIPE-LIVE** | Stripe live / B1 | **Bloqueado** | Prod `STRIPE_MOCK=true` · parceiro + `sk_live_*` · [`ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) |
 | **DOC-NEXT-1** / **DOC-NEXT-2** | Consultas EXT-LEG / EXT-FIS | **Bloqueado** (externo) | Mandato / parecer jurídico e envio fiscal **sem fecho** — registo inalterado |
-| **R-OAUTH-UX** | Mensagens OAuth R1–R4 (callback + associação) | **Concluído** | PR [#785](https://github.com/frankbexxx/tvde/pull/785) · merge `9dd4a5f5` · CI PASS · deploy STG confirmado · **R5/R6** P3 **Por iniciar** · smoke manual erros OAuth **Smoke pendente** |
+| **R-OAUTH-UX** | Mensagens OAuth R1–R4 (callback + associação) | **Concluído** | PR [#785](https://github.com/frankbexxx/tvde/pull/785) · merge `9dd4a5f5` · CI + Vitest **PASS** · deploy STG · **R5/R6** P3 **Por iniciar** · smoke manual STG **parcial** → painel **2026-10-24** **`S-R-OAUTH-UX`** |
 
 ---
 
@@ -70,6 +70,20 @@ Smokes funcionais **Fase II-C** no host STAGING (`test_passenger` + identidades 
 
 ---
 
+## Painel — **S-R-OAUTH-UX** smokes STAGING (**2026-10-24**)
+
+Validação manual pós-PR [#785](https://github.com/frankbexxx/tvde/pull/785) (R1–R4 implementados · CI/testes auto **PASS**). **≠** cobertura manual completa · **≠** bugs funcionais novos nesta ronda · cancelamento via callback Google (`?error=`) **≠** exercitado manualmente.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-R-OAUTH-M1** | Cancel login Google (copy + recuperação) | **Em curso** | **PARCIAL** **24/10** · selector Google sem «Cancelar» · regresso **Back** browser · **sem** `error=access_denied` · copy «Login Google cancelado…» **≠** validada |
+| **S-R-OAUTH-M2** | Cancel associação Google (copy Conta) | **N/A** | **Não executado** (mesmo selector) · fluxo cancel associação → **Vitest** `GoogleOAuthCallback.flow.test` |
+| **S-R-OAUTH-M3** | Cancel no formulário password pós-Google | **N/A** | **Dispensado** · não repetir associação só para este botão |
+| **S-R-OAUTH-M4** | Callback incompleto + recuperação | **Concluído** | **PASS** **24/10** · `/auth/google/callback` sem params · «Código de autorização em falta.» · «Voltar ao início de sessão» → login · sem códigos técnicos |
+| **S-R-OAUTH-UX** | Fecho ronda smokes manuais STG | **Em curso** | M4 **PASS** · M1 **PARCIAL** · **≠** PASS M1/M2 callback Google · residual opcional: reproduzir `?error=` se UI Google o permitir |
+
+---
+
 ## Painel — **Fecho sessão** (**2026-10-23**)
 
 Registo documental pós-merge **`9dd4a5f5`**. **≠** reconciliação financeira executada · T3/T4 **supersedidos** pelo painel **2026-10-24** (PASS STG).
@@ -82,7 +96,7 @@ Registo documental pós-merge **`9dd4a5f5`**. **≠** reconciliação financeira
 | **A-ID-06-T3** | Tornar principal (≥2 identities) | **Concluído** | Ver painel **2026-10-24** · STG **PASS** |
 | **A-ID-06-T4** | Revogar identity não-primária | **Concluído** | Ver painel **2026-10-24** · STG **PASS** · #787 |
 | **R-OAUTH-UX** | R1–R4 mensagens e navegação OAuth | **Concluído** | PR [#785](https://github.com/frankbexxx/tvde/pull/785) · ver linha painel **2026-10-22** |
-| **S-R-OAUTH-UX** | Smoke manual cenários de erro OAuth | **Smoke pendente** | Cancel login/associação · erros API · pós-#785 |
+| **S-R-OAUTH-UX** | Smoke manual cenários de erro OAuth | **Em curso** | Supersedido parcialmente pelo painel **2026-10-24** · M4 PASS · M1 parcial · ver **`S-R-OAUTH-UX`** |
 | **X-SYSHEALTH-2-DIAG** | Diagnóstico `degraded` vs API offline (READ-ONLY) | **Concluído** | **23/10** · `degraded` = **4×** pagamentos `processing` >10 min (legado/smokes) · API/cron **OK** · **≠** Fase 2 produto |
 | **R-PAY-STG-4** | Reconciliar 4 pagamentos STAGING presos | **Por iniciar** | Após confirmar trip/PI local + Stripe TEST **read-only** · **≠ reconciliados** · runbook [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) §10–11 |
 | **R-PAY-ORPHAN-PI-AUD** | Auditoria órfãos vs pagamentos locais presos | **Concluído** | **23/10** READ-ONLY · 4 stuck **≠** universo `orphan-payment-intents/preview` |
@@ -563,7 +577,7 @@ _Ver painel **2026-07-15** acima para estado actual._
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **O-UX20-1** | Desenho UX 2.0 motorista | Por iniciar | [`DRIVER_UX_2_0.md`](docs/product/DRIVER_UX_2_0.md) |
-| **R-OAUTH-UX** | OAuth Google — mensagens R1–R4 | Concluído | PR #785 · **R5/R6** adiados · painel **2026-10-23** |
+| **R-OAUTH-UX** | OAuth Google — mensagens R1–R4 | Concluído | PR #785 · **R5/R6** adiados · smokes STG parcial **24/10** |
 | **R-LEGACY-1** | Layout legacy `!driverBottomNav` | Por iniciar | [`driver-ux-fixes-backlog.md`](docs/ux/driver-ux-fixes-backlog.md) |
 
 ### P5 — operação pré-escala
