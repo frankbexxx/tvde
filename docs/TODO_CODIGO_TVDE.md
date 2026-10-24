@@ -49,7 +49,7 @@ STAGING
     └── e2e básico passa
 ```
 
-**Estado operacional (2026-10-23):** **infra** + **stripe_test** + smokes A2-02/B-STG documentados (22/10). **`cron funciona` (STAGING)** — **PASS** · PR #782 · acta [`ops/STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§9**. **OAuth II-C STG:** T1/T2 **PASS** (#783/#784) · R-OAUTH-UX R1–R4 **DONE** (#785). **Diagnóstico saúde STG (READ-ONLY):** `degraded` = 4 pagamentos `processing` legado — **≠** API offline · **≠** reconciliados (`R-PAY-STG-4` pendente). Painel [`../TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-23**.
+**Estado operacional (2026-10-24):** **infra** + **stripe_test** + smokes A2-02/B-STG documentados (22/10). **`cron funciona` (STAGING)** — **PASS** · PR #782 · acta [`ops/STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§9**. **OAuth II-C STG:** **T1–T4 PASS** (24/10 · #783/#784/#787) · R-OAUTH-UX R1–R4 **DONE** (#785). **Diagnóstico saúde STG (READ-ONLY):** `degraded` = 4 pagamentos `processing` legado — **≠** API offline · **≠** reconciliados (`R-PAY-STG-4` pendente). Painel [`../TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-24**.
 
 ---
 

@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN (painel operacional) |
 | **status** | ACTIVO |
-| **updated** | 2026-10-23 |
+| **updated** | 2026-10-24 |
 | **owner** | Frank |
 | **source_of_truth** | Estado operacional diário (GOV-DOC-002) |
 
@@ -56,17 +56,31 @@ Confronto código / PRs / smokes manuais STAGING. **PROD**, jurídico, fiscal, S
 
 ---
 
+## Painel — **A-ID-06 II-C STAGING** (**2026-10-24**)
+
+Smokes funcionais **Fase II-C** no host STAGING (`test_passenger` + identidades Google QA). **≠** aprovação global PROD / go-live · **≠** OTP SMS · **≠** Stripe LIVE.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A-ID-06-T1** | Listagem de identidades (Conta) | **Concluído** | STG **PASS** **24/10** · alinhado T1 **23/10** (#783) |
+| **A-ID-06-T2** | Associar Google (Conta) | **Concluído** | STG **PASS** **24/10** · alinhado T2 **23/10** (#784) |
+| **A-ID-06-T3** | Tornar principal (≥2 identities) | **Concluído** | STG **PASS** **24/10** · 2.ª Google QA associada · promovida a principal · identidade QA original reposta como primary · verificado na UI |
+| **A-ID-06-T4** | Cancelar / revogar identity secundária | **Concluído** | STG **PASS** **24/10** · overflow confirmação corrigido PR [#787](https://github.com/frankbexxx/tvde/pull/787) · layout mobile validado · **Cancelar** manteve associação · **Confirmar revogação** removeu só a secundária · conta reposta (1× Google primary verificada) |
+| **A-ID-06** | Fase II-C — fecho smokes STG T1–T4 | **Concluído** | Baseline código `7e13245e` · ver painel II-C abaixo · PROD: listagem/UX copy já registadas · gestão primary/revoke **≠** smoke PROD neste fecho |
+
+---
+
 ## Painel — **Fecho sessão** (**2026-10-23**)
 
-Registo documental pós-merge **`9dd4a5f5`**. **≠** reconciliação financeira executada · **≠** T3/T4 PASS.
+Registo documental pós-merge **`9dd4a5f5`**. **≠** reconciliação financeira executada · T3/T4 **supersedidos** pelo painel **2026-10-24** (PASS STG).
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **TVDE-STG** | Cron STAGING (cron-job.org → `/cron/jobs`) | **Concluído** | PR [#782](https://github.com/frankbexxx/tvde/pull/782) · operacional · acta runbook A2-02 **§9** · **≠** `system_health` OK |
 | **A-ID-06-T1** | Login Google STAGING (callback) | **Concluído** | PR [#783](https://github.com/frankbexxx/tvde/pull/783) · pending OAuth atómico |
 | **A-ID-06-T2** | Adicionar Google (Conta) STAGING | **Concluído** | PR [#784](https://github.com/frankbexxx/tvde/pull/784) · callback com JWT · smoke STG **PASS** (`test_passenger` + QA Google) |
-| **A-ID-06-T3** | Tornar principal (≥2 identities) | **Smoke pendente** | Previsto **24/10** · requer 2.ª identidade Google QA · **≠ PASS** |
-| **A-ID-06-T4** | Revogar identity não-primária | **Smoke pendente** | Previsto **24/10** · ≥2 identities · **≠ PASS** |
+| **A-ID-06-T3** | Tornar principal (≥2 identities) | **Concluído** | Ver painel **2026-10-24** · STG **PASS** |
+| **A-ID-06-T4** | Revogar identity não-primária | **Concluído** | Ver painel **2026-10-24** · STG **PASS** · #787 |
 | **R-OAUTH-UX** | R1–R4 mensagens e navegação OAuth | **Concluído** | PR [#785](https://github.com/frankbexxx/tvde/pull/785) · ver linha painel **2026-10-22** |
 | **S-R-OAUTH-UX** | Smoke manual cenários de erro OAuth | **Smoke pendente** | Cancel login/associação · erros API · pós-#785 |
 | **X-SYSHEALTH-2-DIAG** | Diagnóstico `degraded` vs API offline (READ-ONLY) | **Concluído** | **23/10** · `degraded` = **4×** pagamentos `processing` >10 min (legado/smokes) · API/cron **OK** · **≠** Fase 2 produto |
@@ -117,7 +131,7 @@ O painel Conta lista os métodos de início de sessão, muda a primary, revoga e
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **A-ID-06** | Fase II-C gestão no perfil | **Em curso** | **T1/T2 STG PASS** **23/10** (#783/#784) · **T3/T4 Smoke pendente** (24/10) · UX copy STG/PROD OK (#768) · painel **2026-10-23** · não usar `09c539d1` nem `35ddb821` |
+| **A-ID-06** | Fase II-C gestão no perfil | **Concluído** (STG T1–T4) | **T1–T4 STG PASS** **24/10** (#783/#784/#787) · UX copy STG/PROD OK (#768) · **≠** smoke PROD primary/revoke · painel **2026-10-24** · não usar `09c539d1` nem `35ddb821` |
 | **A-ID-08** | Fase VI logout / sessões | Concluído | STAGING + **PROD PASS** **22/10** · PR #765 · não reabre a II-C |
 
 ---

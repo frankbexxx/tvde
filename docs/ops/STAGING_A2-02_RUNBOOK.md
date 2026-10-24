@@ -220,5 +220,34 @@ Referência genérica: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES
 | **Órfãos PI** | Universo **distinto** de `GET /admin/ops/orphan-payment-intents/preview` — auditoria **`R-PAY-ORPHAN-PI-AUD`** concluída; **≠** os 4 stuck locais. |
 | **Próximo passo ops** | Preview reconcile / close-mock **read-only** → reconciliação **individual** (`R-PAY-STG-4`) — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) §10–11. |
 
-Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-23**.
-- Roadmap: **F2.4** · índice carril **F** ([`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md)).
+Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-23**. Roadmap: **F2.4** · índice carril **F** ([`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md)).
+
+---
+
+## 11. Acta — A-ID-06 Fase II-C smokes STAGING (**2026-10-24**)
+
+**Decisão:** fechar **documentalmente** os smokes funcionais **T1–T4** (gestão de identidades na Conta canónica) no host STAGING. **≠** smoke equivalente em PROD · **≠** aprovação global de produção.
+
+### Matriz T1–T4
+
+| ID | Cenário | Resultado | Referência |
+|----|---------|-----------|------------|
+| **T1** | Listagem métodos de início de sessão | **PASS** | Alinhado #783 · validado **24/10** |
+| **T2** | Associar Google (Conta, step-up password) | **PASS** | #784 · validado **24/10** |
+| **T3** | Tornar principal com ≥2 identities Google | **PASS** | 2.ª identity QA · promoção · repor primary original · UI **24/10** |
+| **T4** | Cancelar confirmação + revogar secundária | **PASS** | Layout mobile pós-#787 · **Cancelar** preserva associação · revogação remove só secundária · estado final 1× Google primary verificada **24/10** |
+
+### Hotfix layout (T4)
+
+| Item | Detalhe |
+|------|---------|
+| **Problema** | Overflow horizontal na confirmação «Confirmar revogação» / «Cancelar» (viewport mobile Conta) |
+| **Correcção** | PR [#787](https://github.com/frankbexxx/tvde/pull/787) · merge `7e13245e` |
+
+### Limitações (preservadas)
+
+1. Conta **passageiro de teste STAGING** + identidades **Google QA** — sem registo de emails pessoais de terceiros nesta acta.
+2. **`system_health=degraded`** e **4× pagamentos `processing`** — inalterados (§10).
+3. **S-R-OAUTH-UX** — smoke manual de **mensagens de erro** OAuth continua **pendente**.
+
+Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-24** · ROADMAP **C4 / II-C**.
