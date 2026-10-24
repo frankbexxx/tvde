@@ -720,10 +720,11 @@ Push P1 / foundation = **CLOSED**. Push P2 / oferta ao motorista = **CLOSED**. P
 
 | Ambiente | Leitura | Notas |
 |----------|---------|--------|
-| **STAGING** | `status=degraded` | Quatro pagamentos em `processing` classificados como **críticos**; separação crítico/informativo **validada**. |
+| **STAGING** | `status=degraded` *(22/10)* | Quatro pagamentos em `processing` classificados como **críticos**; separação crítico/informativo **validada**. |
+| **STAGING** | `status=ok` *(24/10 pós-`R-PAY-STG-4`)* | **0** stuck após close-mock (2× mock) + reconcile individual (2× Stripe TEST PI `canceled`); **≠** declaração sobre órfãos PI. |
 | **PROD** | `status=ok` · «Operacional» | Zero críticos; motorista Marly offline em **Informações**; badge **Conta demo**; **nenhuma** recuperação administrativa executada. |
 
-**Diagnóstico READ-ONLY (2026-10-23 · `X-SYSHEALTH-2-DIAG`):** `degraded` STG **≠** API/cron offline — causa provável = **4×** pagamentos antigos em `processing` (mock + Stripe TEST smokes); **≠** reconciliados · **≠** órfãos PI (universo distinto · auditoria **`R-PAY-ORPHAN-PI-AUD`**). Detalhe operacional: [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-23** · **`R-PAY-STG-4` Por iniciar**.
+**Diagnóstico READ-ONLY (2026-10-23 · `X-SYSHEALTH-2-DIAG`):** `degraded` STG **≠** API/cron offline — causa provável = **4×** pagamentos antigos em `processing` (mock + Stripe TEST smokes); **≠** órfãos PI (universo distinto · auditoria **`R-PAY-ORPHAN-PI-AUD`**). **Resolução ops (2026-10-24 · `R-PAY-STG-4` Concluído):** [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-24** · acta [`STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§12** · **`X-SYSHEALTH-2` / F5.4** permanece **Por iniciar** (produto).
 
 **Fase 2 (evolução · F5.4):** objectivo = distinguir motoristas voluntariamente offline de situações realmente bloqueadas após erros, viagens ou timeouts. Arquitectura decidida **numa análise posterior**; **não** se assume obrigatoriedade de migrations.
 

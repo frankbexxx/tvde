@@ -84,13 +84,26 @@ Validação manual pós-PR [#785](https://github.com/frankbexxx/tvde/pull/785) (
 
 ---
 
+## Painel — **R-PAY-STG-4** pagamentos presos STAGING (**2026-10-24**)
+
+Resolução operacional de **4** pagamentos locais antigos em `processing` (>10 min) com viagens **`cancelled`** — **2×** `pi_mock_*` + **2×** PIs Stripe TEST. **≠** reconciliação batch · **≠** `O-PAY-PR5` · **≠** prova de ausência global de órfãos PI (universo **`R-PAY-ORPHAN-PI`** / preview PR4). Runbook pagamentos: [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) §10–11 · acta A2-02 **§12**.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **R-PAY-STG-4a** | Close-mock admin (2× `pi_mock_*`) | **Concluído** | **24/10** · preview `count=2` · apply único · payments **`failed`** · trips **`cancelled`** · preview pós **`count=0`** · **sem** Stripe |
+| **R-PAY-STG-4b** | Diagnóstico individual Stripe TEST (READ-ONLY) | **Concluído** | **24/10** · 2× PI **`canceled`** · `amount_received=0` · **≠** captura/reembolso · **B:** 0,50 € local vs 4,50 € PI — **registado, não corrigido** |
+| **R-PAY-STG-4c** | Reconcile individual (2× viagens) | **Concluído** | **24/10** · dry-run **`dry_run_failed`** ×2 · apply **`updated_failed`** ×2 · auditoria `admin.reconcile_single_payment_stripe_terminal_failed` · **sem** ops financeiras Stripe |
+| **R-PAY-STG-4** | Fecho STAGING (4 stuck → 0) | **Concluído** | Saúde STG: **`degraded`/4 stuck** → após 4a **`degraded`/2** → após 4c **`ok`/0** · baseline docs `7af3635f` · **≠** PROD · **≠** LIVE |
+
+---
+
 ## Painel — **Fecho sessão** (**2026-10-23**)
 
 Registo documental pós-merge **`9dd4a5f5`**. **≠** reconciliação financeira executada · T3/T4 **supersedidos** pelo painel **2026-10-24** (PASS STG).
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-STG** | Cron STAGING (cron-job.org → `/cron/jobs`) | **Concluído** | PR [#782](https://github.com/frankbexxx/tvde/pull/782) · operacional · acta runbook A2-02 **§9** · **≠** `system_health` OK |
+| **TVDE-STG** | Cron STAGING (cron-job.org → `/cron/jobs`) | **Concluído** | PR [#782](https://github.com/frankbexxx/tvde/pull/782) · operacional · acta runbook A2-02 **§9** · saúde STG **`ok`** após **`R-PAY-STG-4`** **24/10** (§12) |
 | **A-ID-06-T1** | Login Google STAGING (callback) | **Concluído** | PR [#783](https://github.com/frankbexxx/tvde/pull/783) · pending OAuth atómico |
 | **A-ID-06-T2** | Adicionar Google (Conta) STAGING | **Concluído** | PR [#784](https://github.com/frankbexxx/tvde/pull/784) · callback com JWT · smoke STG **PASS** (`test_passenger` + QA Google) |
 | **A-ID-06-T3** | Tornar principal (≥2 identities) | **Concluído** | Ver painel **2026-10-24** · STG **PASS** |
@@ -98,7 +111,7 @@ Registo documental pós-merge **`9dd4a5f5`**. **≠** reconciliação financeira
 | **R-OAUTH-UX** | R1–R4 mensagens e navegação OAuth | **Concluído** | PR [#785](https://github.com/frankbexxx/tvde/pull/785) · ver linha painel **2026-10-22** |
 | **S-R-OAUTH-UX** | Smoke manual cenários de erro OAuth | **Em curso** | Supersedido parcialmente pelo painel **2026-10-24** · M4 PASS · M1 parcial · ver **`S-R-OAUTH-UX`** |
 | **X-SYSHEALTH-2-DIAG** | Diagnóstico `degraded` vs API offline (READ-ONLY) | **Concluído** | **23/10** · `degraded` = **4×** pagamentos `processing` >10 min (legado/smokes) · API/cron **OK** · **≠** Fase 2 produto |
-| **R-PAY-STG-4** | Reconciliar 4 pagamentos STAGING presos | **Por iniciar** | Após confirmar trip/PI local + Stripe TEST **read-only** · **≠ reconciliados** · runbook [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) §10–11 |
+| **R-PAY-STG-4** | Reconciliar 4 pagamentos STAGING presos | **Concluído** | Fecho ops **24/10** — ver painel **`R-PAY-STG-4` 2026-10-24** · acta [`STAGING_A2-02_RUNBOOK.md`](docs/ops/STAGING_A2-02_RUNBOOK.md) **§12** |
 | **R-PAY-ORPHAN-PI-AUD** | Auditoria órfãos vs pagamentos locais presos | **Concluído** | **23/10** READ-ONLY · 4 stuck **≠** universo `orphan-payment-intents/preview` |
 
 ---
@@ -110,8 +123,8 @@ Fase 1 integrada em `main` · PR [#770](https://github.com/frankbexxx/tvde/pull/
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **X-SYSHEALTH-1** | Fase 1 — alertas críticos vs informativos | **Concluído** | `warnings` = só críticos · offline prolongado → `informational_warnings` + lista com `is_test_account` · Admin Saúde/Agora · cron propaga contadores · secção **F5** em [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md) |
-| **X-SYSHEALTH-2** | Fase 2 — indisponibilidade anómala | **Por iniciar** | Implementação produto (F5.4) · diagnóstico READ-ONLY **Concluído** **23/10** → painel **2026-10-23** **`X-SYSHEALTH-2-DIAG`** |
-| **S-SYSHEALTH-1-STG** | Smoke manual STAGING Saúde/Agora | **Concluído** | 22/10 · 4 pagamentos `processing` = **críticos** · `status=degraded` **correcto** · separação crítico/informativo **validada** |
+| **X-SYSHEALTH-2** | Fase 2 — indisponibilidade anómala | **Por iniciar** | Implementação produto (**F5.4**) · diagnóstico ops **`X-SYSHEALTH-2-DIAG` Concluído** **23/10** · causa STG `degraded` (4 stuck) **resolvida** **`R-PAY-STG-4`** **24/10** — **≠** F5.4 implementado |
+| **S-SYSHEALTH-1-STG** | Smoke manual STAGING Saúde/Agora | **Concluído** | 22/10 · 4 pagamentos `processing` = **críticos** · `status=degraded` **correcto** · separação crítico/informativo **validada** · pós-**`R-PAY-STG-4`** **24/10:** STG **`ok`** / 0 stuck (revalidação ops, **≠** novo smoke formal) |
 | **S-SYSHEALTH-1-PROD** | Smoke manual PROD Saúde/Agora | **Concluído** | 22/10 · `status=ok` · «Operacional» · 0 críticos · motorista Marly offline em **Informações** · badge **Conta demo** · **sem** recover admin |
 
 ---
@@ -133,7 +146,7 @@ Fase 1 integrada em `main` · PR [#770](https://github.com/frankbexxx/tvde/pull/
 | **S-PAY-PR4-STG** | Smoke manual STAGING preview órfãos (Admin Saúde) | **Concluído** | **22/10/2026** · `scan_status=ok` · **0** órfãos confirmados e **0** inconclusivos **na página/janela consultadas** · HTTP 500 pré-#777 **resolvido** · **≠** ausência global de órfãos na conta Stripe |
 | **O-PAY-PR5** | Reconcile batch automático (cron) | **N/A** | **Q6 A — não autorizado** |
 | **O-STRIPE-LIVE** | Stripe LIVE / B1 | **Bloqueado** | Prod `STRIPE_MOCK=true` · inalterado |
-| **R-PAY-ORPHAN-PI** | Cancel/recover automático PI órfão aberto | **Por iniciar** | PR4 = preview manual (#776/#777) · auditoria READ-ONLY **23/10** → **`R-PAY-ORPHAN-PI-AUD`** · **4× processing STG** → **`R-PAY-STG-4`** (reconcile **Por iniciar**) |
+| **R-PAY-ORPHAN-PI** | Cancel/recover automático PI órfão aberto | **Por iniciar** | PR4 = preview manual (#776/#777) · auditoria **23/10** **`R-PAY-ORPHAN-PI-AUD`** · **4× processing STG** fechados **`R-PAY-STG-4`** **24/10** — **≠** universo órfãos PI |
 
 **Limitações PR4 (registo):** só PIs com `metadata.trip_id` UUID válido entram na classificação TVDE; PIs externos ignorados; janela `window_days` ≤ 7 · grace ≥ 5 min; paginação cap **500**/run (`scan_status=partial` se `has_more`); atribuição conservadora (`confirmed_orphan` vs `inconclusive_*`).
 
