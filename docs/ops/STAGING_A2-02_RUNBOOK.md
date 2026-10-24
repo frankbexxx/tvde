@@ -218,7 +218,7 @@ Referência genérica: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES
 | **`system_health.status=degraded`** | Coerente com **4** pagamentos em `processing` > 10 min (críticos Fase 1). **≠** indisponibilidade API (`/health` 200) nem falha cron (§9). |
 | **Origem provável** | Resíduos smokes/legado (**`pi_mock_*`** + PIs Stripe TEST, datas ~09/09 e 15/10/2026). |
 | **Órfãos PI** | Universo **distinto** de `GET /admin/ops/orphan-payment-intents/preview` — auditoria **`R-PAY-ORPHAN-PI-AUD`** concluída; **≠** os 4 stuck locais. |
-| **Próximo passo ops** | Preview reconcile / close-mock **read-only** → reconciliação **individual** (`R-PAY-STG-4`) — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) §10–11. |
+| **Próximo passo ops** *(23/10)* | Preview reconcile / close-mock **read-only** → reconciliação **individual** (`R-PAY-STG-4`) — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) §10–11. **Supersedido:** fecho **24/10** → **§12**. |
 
 Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-23**. Roadmap: **F2.4** · índice carril **F** ([`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md)).
 
@@ -247,7 +247,43 @@ Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-23**. R
 ### Limitações (preservadas)
 
 1. Conta **passageiro de teste STAGING** + identidades **Google QA** — sem registo de emails pessoais de terceiros nesta acta.
-2. **`system_health=degraded`** e **4× pagamentos `processing`** — inalterados (§10).
+2. **`system_health` / stuck** — estado **23/10** em §10; resolução **`R-PAY-STG-4`** **24/10** → **§12**.
 3. **S-R-OAUTH-UX** — smokes manuais **parciais 24/10** (M4 PASS; cancel Google `?error=` **≠** exercitado) — detalhe [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-24**.
 
 Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-24** · ROADMAP **C4 / II-C**.
+
+---
+
+## 12. Acta — **`R-PAY-STG-4`** fecho pagamentos presos STAGING (**2026-10-24**)
+
+**Modo:** operações admin STAGING (mock close + reconcile individual Stripe TEST) + registo documental. **≠** batch reconcile · **≠** `O-PAY-PR5` · **≠** Stripe LIVE/PROD · **≠** correcção de montantes.
+
+### Contexto
+
+Quatro pagamentos locais em `processing` (>10 min) com viagens **`cancelled`** — diagnóstico **23/10** (§10) · **`X-SYSHEALTH-2-DIAG`**. Dois **`pi_mock_*`** + dois PIs Stripe TEST (`pi_3…`).
+
+### Execução (evidência)
+
+| Fase | ID | Resultado |
+|------|-----|-----------|
+| Mock close | **R-PAY-STG-4a** | Admin `close-mock-processing` · preview/dry-run **2** candidatos · apply único · payments **`failed`** · trips **`cancelled`** · preview pós **`count=0`** · **sem** API Stripe |
+| Diagnóstico | **R-PAY-STG-4b** | READ-ONLY · 2× PI **`canceled`** · `amount_received=0` · **B:** 0,50 € local vs 4,50 € PI — **histórico, não alterado** |
+| Reconcile | **R-PAY-STG-4c** | `POST …/reconcile-payment-stripe` por viagem · dry-run **`dry_run_failed`** ×2 · apply **`updated_failed`** ×2 · auditoria `admin.reconcile_single_payment_stripe_terminal_failed` · **sem** capture/cancel/refund Stripe |
+
+### Saúde Admin STAGING
+
+| Momento | `status` | Stuck (`processing` >10 min) |
+|---------|----------|------------------------------|
+| Antes (4 presos) | **`degraded`** | **4** |
+| Após **4a** | **`degraded`** | **2** (Stripe TEST restantes) |
+| Após **4c** | **`ok`** | **0** |
+
+### Distinções (preservadas)
+
+- **`R-PAY-ORPHAN-PI`:** scanner preview órfãos = universo **distinto** — **≠** prova de zero órfãos na conta Stripe.
+- **`X-SYSHEALTH-2` / F5.4:** diagnóstico ops fechado; **implementação produto Fase 2** continua **Por iniciar**.
+- **`O-PAY-PR5`:** **não autorizado**.
+
+Runbook pagamentos: [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) §10–11.
+
+Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **R-PAY-STG-4 2026-10-24** · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · ROADMAP **F5**.
