@@ -167,6 +167,22 @@ describe('LoginMethodsSection', () => {
     ).toBeInTheDocument()
   })
 
+  it('cancels pending revoke without calling the API', async () => {
+    getMeProfile.mockResolvedValue({ has_custom_password: true })
+    listMyIdentities.mockResolvedValue(identities)
+    render(<LoginMethodsSection token="session" onSessionEnded={vi.fn()} />)
+    await screen.findByText('second@example.com', { exact: false })
+    const secondary = card('second@example.com')
+    fireEvent.click(secondary.getByRole('button', { name: 'profilePanel.loginMethods.revoke' }))
+    expect(screen.getByTestId('revoke-confirm-google-id')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'profilePanel.loginMethods.cancel' }))
+    expect(screen.queryByTestId('revoke-confirm-google-id')).not.toBeInTheDocument()
+    expect(revokeIdentity).not.toHaveBeenCalled()
+    expect(
+      secondary.getByRole('button', { name: 'profilePanel.loginMethods.revoke' })
+    ).toBeInTheDocument()
+  })
+
   it('confirms revoke and adds Google through Capacitor without replacing the session', async () => {
     getMeProfile.mockResolvedValue({ has_custom_password: true })
     listMyIdentities.mockResolvedValue(identities)
