@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN |
 | **status** | ACTIVO |
-| **updated** | 2026-10-23 (cron STAGING TVDE-STG) |
+| **updated** | 2026-10-25 (cron PROD TVDE Background Workers) |
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
@@ -52,7 +52,7 @@ Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATION
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE** · **C4 II-C STG DONE (T1–T4 PASS 24/10 #783/#784/#787)** · **Fase VI #765 STG+PROD PASS 22/10** · **R-OAUTH-UX R1–R4 DONE (#785)** · **S-R-OAUTH-UX STG parcial (M4 PASS 24/10)** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
-| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 assertivo DONE 22/10 (#766 · acta A2-02 §8)** · **TVDE-STG cron DONE 23/10 (#782 · §9)** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** · **diagnóstico degraded STG READ-ONLY 23/10** |
+| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 assertivo DONE 22/10 (#766 · acta A2-02 §8)** · **TVDE-STG cron DONE 23/10 (#782 · §9)** · **cron PROD validado 25/10 (W1 §7)** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** · **R-PAY-STG-4 STG 24/10** |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
 | **H** Pós-entrega / Futuro | H1 B2 next-trip · H2 Redispatch · H3 Dead code/CI · H4 Admin rastos · H5 Futuro |
 
@@ -679,6 +679,7 @@ Push P1 / foundation = **CLOSED**. Push P2 / oferta ao motorista = **CLOSED**. P
 | F2.2 | Smoke curto (OAuth + pagamentos TEST + §6 runbook) | PASS | TESTE | F2.1 · C3 · B-STG | **DONE** 2026-10-22 · acta §8 |
 | F2.3 | Baseline roster STAGING vs DEV documentado | 5 users efectivos; MISSING = gap vs DEV | DOCS | F2.1 | **DONE** #766 |
 | F2.4 | Cron STAGING (cron-job.org → `/cron/jobs`) | 200 + lote OK | CONFIG · TESTE | F2.1 | **DONE** **2026-10-23** · acta §9 · job **`TVDE - STAGING`** |
+| F2.5 | Cron PROD (cron-job.org → `/cron/jobs`) | 200 + lote OK · header **`X-Cron-Secret`** | CONFIG · TESTE | `CRON_SECRET` | **DONE** **2026-10-25** · [`W1_PROD_SMOKE.md`](ops/W1_PROD_SMOKE.md) **§7** · job **`TVDE Background Workers`** · **≠** PROD_VALIDATION M2 completo |
 
 ## F3 — Sentry prod FE/BE
 

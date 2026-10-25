@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN (painel operacional) |
 | **status** | ACTIVO |
-| **updated** | 2026-10-24 |
+| **updated** | 2026-10-25 |
 | **owner** | Frank |
 | **source_of_truth** | Estado operacional diário (GOV-DOC-002) |
 
@@ -94,6 +94,20 @@ Resolução operacional de **4** pagamentos locais antigos em `processing` (>10 
 | **R-PAY-STG-4b** | Diagnóstico individual Stripe TEST (READ-ONLY) | **Concluído** | **24/10** · 2× PI **`canceled`** · `amount_received=0` · **≠** captura/reembolso · **B:** 0,50 € local vs 4,50 € PI — **registado, não corrigido** |
 | **R-PAY-STG-4c** | Reconcile individual (2× viagens) | **Concluído** | **24/10** · dry-run **`dry_run_failed`** ×2 · apply **`updated_failed`** ×2 · auditoria `admin.reconcile_single_payment_stripe_terminal_failed` · **sem** ops financeiras Stripe |
 | **R-PAY-STG-4** | Fecho STAGING (4 stuck → 0) | **Concluído** | Saúde STG: **`degraded`/4 stuck** → após 4a **`degraded`/2** → após 4c **`ok`/0** · baseline docs `7af3635f` · **≠** PROD · **≠** LIVE |
+
+---
+
+## Painel — **PROD-CRON + PROD_VALIDATION** (**2026-10-25**)
+
+Auditoria READ-ONLY PROD + correcção operacional **cron-job.org** (sem alterações BD/Render/código/Stripe). **≠** piloto comercial pronto · **≠** webhook Stripe E2E PROD · **≠** e2e viagem+pagamento real.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-PROD-VAL-READONLY** | Auditoria PROD_VALIDATION (docs + `/health`/`/config`) | **Concluído** | **25/10** · API/ app **200** · Admin Operações: `ENV=production`, secrets **set** (sem valores), `STRIPE_MOCK=sim`, `BETA_MODE=não` · Saúde **`ok`**, 0 stuck · motorista demo offline = informativo · anomalias persist **off** |
+| **S-PROD-CRON-FIX** | Correcção header cron PROD | **Concluído** | Job **`TVDE Background Workers`** → `https://tvde-api-fd2z.onrender.com/cron/jobs` · causa: header **`CRON_SECRET`** (inválido) → **`X-Cron-Secret`** · valor/URL/GET mantidos |
+| **S-PROD-CRON-TEST** | TEST RUNs manuais pós-correcção | **Concluído** | **25/10** **08:29** e **08:31 UTC** · HTTP **200** · 2.º run: `status=ok`, `errors={}`, `system_health.status=ok`, stuck **0** |
+| **S-PROD-CRON-LIVE** | Reactivação schedule 1 min | **Concluído** | **25/10** Lisboa **08:33–08:36** · **4×** HTTP **200** consecutivos (129–307 ms) · acta [`W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) **§7** |
+| **TVDE-PROD-CRON** | Cron PROD operacional | **Concluído** | **25/10** · **≠** `PROD_VALIDATION` M2 completo · STAGING cron **inalterado** · **R-PAY-STG-4** / **C1** / **LIVE** inalterados |
 
 ---
 
@@ -597,10 +611,10 @@ _Ver painel **2026-07-15** acima para estado actual._
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | **Concluído** | gate P5 beta ✅ · prod `STRIPE_MOCK=true` · plano Jul arquivado [`FORWARD_PLAN_2026-07.md`](docs/archive/plans/FORWARD_PLAN_2026-07.md) |
+| **TVDE-PROD** | `PROD_VALIDATION` (gate P5 beta / mock) | **Concluído** | Jul 2026 · prod `STRIPE_MOCK=true` · **M2 piloto real** continua **parcial** — ver painel **2026-10-25** · cron PROD **validado 25/10** |
 | **O-STRIPE-1** | Webhook Stripe (Fase A local) | **Concluído** | 2026-07-13 · [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) |
 | **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12 · [`TVDE_BKP_RUNBOOK.md`](docs/ops/TVDE_BKP_RUNBOOK.md) |
-| **TVDE-STG** | Cron STAGING (`GET /cron/jobs` via cron-job.org) | **Concluído** | PR [#782](https://github.com/frankbexxx/tvde/pull/782) · **23/10** · job **`TVDE - STAGING`** · 14× HTTP **200** · acta runbook **§9** · **≠** saúde global STG OK · PROD cron **inalterado** |
+| **TVDE-STG** | Cron STAGING (`GET /cron/jobs` via cron-job.org) | **Concluído** | PR [#782](https://github.com/frankbexxx/tvde/pull/782) · **23/10** · job **`TVDE - STAGING`** · 14× HTTP **200** · acta runbook **§9** · PROD cron → painel **2026-10-25** |
 
 **Regra:** Frank + agente **escolhem 1 carril** (P0 vs P1 vs P5) antes de codar.
 
