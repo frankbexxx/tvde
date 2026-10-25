@@ -75,3 +75,22 @@ curl -sS -w "\nHTTP %{http_code}\n" \
 ## 6. Parceiro / papelada (paralelo)
 
 O envio do [`PARCEIRO_TVDE_CHECKLIST`](../legal/PARCEIRO_TVDE_CHECKLIST.md) a parceiros, contabilista e mentor **não bloqueia** W1 — mantém-se em curso até haver respostas para preencher §9.
+
+---
+
+## 7. Acta — cron PROD corrigido (**2026-10-25**)
+
+**Job cron-job.org:** **`TVDE Background Workers`** · **GET** `https://tvde-api-fd2z.onrender.com/cron/jobs` · header **`X-Cron-Secret`** (valor no painel — **não** registar no repo).
+
+| Fase | Detalhe |
+|------|---------|
+| **Problema** | Job **desactivado** · última execução **23/10** com erro HTTP · cabeçalho incorrecto **`CRON_SECRET`** (backend só aceita **`X-Cron-Secret`**) |
+| **Correcção** | Alterada **apenas** a *Key* do header para **`X-Cron-Secret`** · valor, URL e GET mantidos · job desactivado durante testes |
+| **TEST RUN** | **08:29 UTC** e **08:31 UTC** — HTTP **200** · 2.º corpo: `status=ok`, `errors={}`, `system_health.status=ok`, stuck **0**, aviso informativo motorista offline |
+| **Reactivação** | Schedule **1 min** · **08:33–08:36** (Lisboa) — **4×** HTTP **200** consecutivos |
+
+**Sem alterações:** BD · Render env · Stripe · código · cron STAGING.
+
+**Limitações (preservadas):** **≠** webhook Stripe E2E PROD · **≠** `PROD_VALIDATION` M2 (e2e viagem+pay real) · **≠** piloto comercial pronto.
+
+Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-10-25** · [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) (jobs TVDE).

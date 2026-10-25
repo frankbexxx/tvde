@@ -29,6 +29,15 @@ PROD_VALIDATION
     └── estado consistente DB + Stripe
 ```
 
+**Estado PROD_VALIDATION (2026-10-25):**
+
+| Ramo | Estado | Notas |
+|------|--------|-------|
+| **cron_jobs** | **Parcialmente validado PROD** | Job **`TVDE Background Workers`** · header **`X-Cron-Secret`** · TEST RUN + 4× auto **200** **25/10** · [`ops/W1_PROD_SMOKE.md`](ops/W1_PROD_SMOKE.md) **§7** |
+| **env_validation** | **Parcialmente validado PROD** | Admin Operações **25/10**: `ENV=production`, secrets set, `STRIPE_MOCK`, `BETA_MODE` — sem expor valores |
+| **stripe_webhook** | **Por validar PROD** | Secret configurado · **≠** E2E entrega/idempotência nesta intervenção |
+| **e2e_flow_real** | **Por validar** | Depende B1 LIVE / piloto · **≠** piloto pronto |
+
 ---
 
 ## 2. STAGING (A027) — obrigatório
@@ -49,7 +58,7 @@ STAGING
     └── e2e básico passa
 ```
 
-**Estado operacional (2026-10-24):** **infra** + **stripe_test** + smokes A2-02/B-STG documentados (22/10). **`cron funciona` (STAGING)** — **PASS** · PR #782 · acta [`ops/STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§9**. **OAuth II-C STG:** **T1–T4 PASS** (#783/#784/#787). **R-OAUTH-UX R1–R4 DONE** (#785 · CI/Vitest PASS). **S-R-OAUTH-UX STG:** ronda **parcial** — M4 **PASS** · M1 **PARCIAL** · **≠** cancel callback Google manual · **`R-PAY-STG-4` Concluído** (4a/4b/4c) — STG `/admin/system-health` **`ok`** · **0** stuck · acta **§12** · **≠** órfãos PI · **≠** `O-PAY-PR5`. Painel [`../TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-24**.
+**Estado operacional (2026-10-25):** **STAGING** — infra + stripe_test + smokes A2-02/B-STG (22/10); **`cron funciona` STG PASS** (#782 · §9); **`R-PAY-STG-4` Concluído** (24/10). **PROD** — **`cron funciona` PROD PASS** **25/10** (job **`TVDE Background Workers`** · §7 [`W1_PROD_SMOKE.md`](ops/W1_PROD_SMOKE.md)); Saúde admin **`ok`**; **`PROD_VALIDATION` M2** continua **parcial** (webhook E2E · e2e pay real). **C1** / **LIVE** bloqueados. Painéis [`../TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-24** / **2026-10-25**.
 
 ---
 

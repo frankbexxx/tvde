@@ -47,7 +47,12 @@ https://api-tua-app.onrender.com/cron/jobs
 
 4. Guarda o cronjob.
 
-**Jobs TVDE (actas — sem secrets):** PROD → URL `tvde-api` · STAGING → job cron-job.org **`TVDE - STAGING`** → `https://tvde-staging-api.onrender.com/cron/jobs` · fecho **2026-10-23** em [`ops/STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§9**.
+**Jobs TVDE (actas — sem secrets):**
+
+| Ambiente | Job cron-job.org | URL | Acta |
+|----------|------------------|-----|------|
+| **PROD** | **`TVDE Background Workers`** | `https://tvde-api-fd2z.onrender.com/cron/jobs` | **2026-10-25** — header **`X-Cron-Secret`** (não `CRON_SECRET`) · [`ops/W1_PROD_SMOKE.md`](ops/W1_PROD_SMOKE.md) **§7** |
+| **STAGING** | **`TVDE - STAGING`** | `https://tvde-staging-api.onrender.com/cron/jobs` | **2026-10-23** · [`ops/STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§9** |
 
 ### Alertas (cron-job.org)
 
