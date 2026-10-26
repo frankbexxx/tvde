@@ -165,7 +165,8 @@ Mesmo padrão visual que `RequestCard` (`rounded-2xl`, `bg-card/95`, `shadow-car
 ## 13. Login BETA
 
 **Ficheiro:** `web-app/src/features/auth/LoginScreen.tsx`  
-`bg-card`, `rounded-2xl`, `shadow-card`, tabs Passageiro / Motorista.
+`bg-card`, `rounded-2xl`, `shadow-card`, tabs Passageiro / Motorista.  
+Layout mobile/Android: scroll em `login-scroll-root` (`min-h-dvh`, safe-area, `scroll-pb`); cartão centrado só quando o conteúdo cabe (`login-scroll-center` com `min-h-dvh` + `justify-center`), sem `m-auto` no card (evita rodapé/versão inacessível após checkbox legal).
 
 ---
 
