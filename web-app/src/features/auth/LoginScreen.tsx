@@ -31,12 +31,11 @@ interface LoginScreenProps {
   requestedRole: 'passenger' | 'driver' | 'partner' | 'admin'
 }
 
-/** Scroll root + inner min-h-dvh center: short content stays visually centered; tall content scrolls from the top. */
-const LOGIN_SCROLL_ROOT =
-  'box-border min-h-dvh overflow-y-auto overscroll-y-contain bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] scroll-pb-[max(4.5rem,env(safe-area-inset-bottom))]'
-const LOGIN_SCROLL_CENTER = 'flex min-h-dvh w-full flex-col justify-center py-2 sm:py-4'
+/** Single scrollport at viewport height — content taller than dvh must increase scrollHeight (UX-LOGIN-MOB-02). */
+const LOGIN_PAGE_ROOT =
+  'box-border h-dvh max-h-dvh overflow-y-auto overscroll-y-contain bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] scroll-pb-[max(4.5rem,env(safe-area-inset-bottom))]'
 const LOGIN_CARD_SHELL = (radius: string) =>
-  `mx-auto w-full max-w-sm bg-card ${radius} shadow-card overflow-hidden`
+  `mx-auto my-2 w-full max-w-sm shrink-0 bg-card ${radius} shadow-card sm:my-4`
 
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const { t } = useTranslation('auth')
@@ -241,13 +240,11 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
 
   if (recoveryOpen) {
     return (
-      <div className={LOGIN_SCROLL_ROOT} data-testid="login-scroll-root">
-        <div className={LOGIN_SCROLL_CENTER}>
-          <div className={LOGIN_CARD_SHELL(SURFACE_RADIUS)}>
-            <BrandStripe />
-            <div className="p-6">
-              <PasswordRecovery initialPhone={phone} onBack={() => setRecoveryOpen(false)} />
-            </div>
+      <div className={LOGIN_PAGE_ROOT} data-testid="login-scroll-root">
+        <div className={LOGIN_CARD_SHELL(SURFACE_RADIUS)}>
+          <BrandStripe />
+          <div className="p-6">
+            <PasswordRecovery initialPhone={phone} onBack={() => setRecoveryOpen(false)} />
           </div>
         </div>
       </div>
@@ -255,11 +252,10 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   }
 
   return (
-    <div className={LOGIN_SCROLL_ROOT} data-testid="login-scroll-root">
-      <div className={LOGIN_SCROLL_CENTER} data-testid="login-scroll-center">
-        <div className={LOGIN_CARD_SHELL(SURFACE_RADIUS)}>
-          <BrandStripe />
-          <div className="p-6">
+    <div className={LOGIN_PAGE_ROOT} data-testid="login-scroll-root">
+      <div className={LOGIN_CARD_SHELL(SURFACE_RADIUS)} data-testid="login-card">
+        <BrandStripe />
+        <div className="p-6">
           <div className="flex flex-wrap items-end justify-between gap-2 mb-4" data-testid="login-brand">
             <div className="flex flex-wrap items-end gap-2 min-w-0">
               <img
@@ -439,7 +435,6 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             <LegalConsumerRights compact surface="public" className="mt-3" />
             <LegalLocaleNotice className="mt-3 text-[0.7rem] text-muted-foreground/80 leading-snug" />
           </footer>
-        </div>
         </div>
       </div>
     </div>

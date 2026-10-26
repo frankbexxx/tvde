@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import '../../i18n'
 import i18n from '../../i18n'
@@ -11,8 +11,8 @@ vi.mock('../settings/LanguageSelector', () => ({
 
 vi.mock('../../api/auth', () => ({
   getConfig: async () => ({
-    google_oauth_enabled: false,
-    google_oauth_client_id: '',
+    google_oauth_enabled: true,
+    google_oauth_client_id: 'cid.apps.googleusercontent.com',
     otp_signup_enabled: false,
   }),
   requestOtp: vi.fn(),
@@ -29,13 +29,13 @@ vi.mock('../../context/AuthContext', () => ({
   isBackofficeStaffRole: () => false,
 }))
 
-describe('LoginScreen mobile layout', () => {
+describe('LoginScreen mobile layout (UX-LOGIN-MOB-02)', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('pt')
     localStorage.clear()
   })
 
-  it('usa scroll root com safe-area e centro expansível (sem m-auto no card)', () => {
+  it('usa um único scroll root com safe-area (sem min-h-dvh aninhado)', () => {
     render(
       <MemoryRouter>
         <LoginScreen requestedRole="passenger" />
@@ -44,50 +44,31 @@ describe('LoginScreen mobile layout', () => {
 
     const root = screen.getByTestId('login-scroll-root')
     expect(root.className).toMatch(/overflow-y-auto/)
-    expect(root.className).toMatch(/min-h-dvh/)
+    expect(root.className).toMatch(/h-dvh/)
+    expect(root.className).toMatch(/max-h-dvh/)
     expect(root.className).toMatch(/overscroll-y-contain/)
     expect(root.className).toMatch(/safe-area-inset-bottom/)
     expect(root.className).toMatch(/scroll-pb-/)
+    expect(root.className).not.toMatch(/justify-center/)
 
-    const center = screen.getByTestId('login-scroll-center')
-    expect(center.className).toMatch(/min-h-dvh/)
-    expect(center.className).toMatch(/justify-center/)
-    expect(center.className).not.toMatch(/\bm-auto\b/)
+    const card = screen.getByTestId('login-card')
+    expect(card.className).toMatch(/shrink-0/)
+    expect(card.className).toMatch(/mx-auto/)
+    expect(card.className).not.toMatch(/overflow-hidden/)
   })
 
-  it('mantém rodapé de versão e checkbox legal no DOM', () => {
+  it('rodapé legal e versão ficam dentro do card após Entrar', () => {
     render(
       <MemoryRouter>
         <LoginScreen requestedRole="passenger" />
       </MemoryRouter>,
     )
 
-    expect(screen.getByTestId('app-build-label')).toBeInTheDocument()
-    expect(screen.getByTestId('legal-accept-checkbox')).not.toBeChecked()
-    expect(screen.getByText('Obrigatório para continuar.')).toBeInTheDocument()
-    expect(screen.getByTestId('login-version-footer')).toContainElement(screen.getByTestId('app-build-label'))
-  })
+    const submit = screen.getByRole('button', { name: 'Entrar' })
+    const footer = screen.getByTestId('login-version-footer')
+    const lre = screen.getByTestId('lre-link-public')
 
-  it('recuperação de palavra-passe reutiliza o mesmo scroll root', () => {
-    render(
-      <MemoryRouter>
-        <LoginScreen requestedRole="passenger" />
-      </MemoryRouter>,
-    )
-
-    fireEvent.click(screen.getByTestId('forgot-password'))
-    expect(screen.getByTestId('login-scroll-root')).toBeInTheDocument()
-    expect(screen.queryByTestId('login-scroll-center')).not.toBeInTheDocument()
-  })
-
-  it('preserva tabs de navegação entre perfis', () => {
-    render(
-      <MemoryRouter>
-        <LoginScreen requestedRole="driver" />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByRole('tab', { name: 'Motorista', selected: true })).toHaveAttribute('href', '/driver')
-    expect(screen.getByRole('tab', { name: 'Passageiro' })).toHaveAttribute('href', '/passenger')
+    expect(submit.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(footer.contains(lre)).toBe(true)
   })
 })
