@@ -4,6 +4,35 @@ Estado: **INTERNAL TESTING ACTIVE / SMOKE PASS**. Não está **CLOSED**. S-MOB-0
 
 Package `pt.vamula.app`. `versionCode` 1. `versionName` 1.0. `minSdk` 24. `compileSdk` / `targetSdk` 36. O primeiro Internal Testing usa estes números. Daí em diante o `versionCode` aumenta sempre e o `versionName` é a versão visível.
 
+## JDK e builds reproduzíveis (BUILD-ANDROID-01)
+
+Builds Android release (`bundleRelease`) exigem **JDK 21 LTS** para o Gradle launcher **e** daemon. Capacitor 8 compila com **Java source/target 21**.
+
+| JVM | Resultado típico |
+|-----|------------------|
+| **JDK 21** (ex. Eclipse Temurin 21) | **Correcto** — alvo único para releases |
+| JDK 17 | Falha: `invalid source release: 21` em `:capacitor-android:compileReleaseJavaWithJavac` |
+| Android Studio JBR 25 | Instável: `Unsupported class file major version 69` no script Gradle (Groovy/ASM) |
+
+Instalação recomendada (Windows, fonte oficial): `winget install EclipseAdoptium.Temurin.21.JDK`
+
+**Não** alterar o JBR do Android Studio nem desinstalar o JDK 17. O script de release define `JAVA_HOME` **só no processo** (ou use `-Jdk21Path` / env `TVDE_ANDROID_JDK21`).
+
+Preflight canónico (sem AAB, sem `cap:sync`):
+
+```powershell
+cd C:\dev\APP
+.\scripts\android-release.ps1 -Preflight
+```
+
+Build completo (quando autorizado):
+
+```powershell
+.\scripts\android-release.ps1 -Build
+```
+
+O preflight valida: JDK 21, SDK (`android-36`), assinatura release (keystore presente, **sem** imprimir passwords), Gradle **8.14.3**, para Gradle daemons antigos, e `gradlew :app:bundleRelease -m`.
+
 ## Estado em 2026-09-28
 
 A app `VAMULÁ` existe na Play Console, na conta `frankbex.dev@gmail.com`, idioma `pt-PT`, app gratuita. Play App Signing foi aceite. O Internal Testing está activo.
