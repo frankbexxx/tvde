@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN (painel operacional) |
 | **status** | ACTIVO |
-| **updated** | 2026-10-25 |
+| **updated** | 2026-10-26 |
 | **owner** | Frank |
 | **source_of_truth** | Estado operacional diário (GOV-DOC-002) |
 
@@ -108,6 +108,19 @@ Auditoria READ-ONLY PROD + correcção operacional **cron-job.org** (sem altera�
 | **S-PROD-CRON-TEST** | TEST RUNs manuais pós-correcção | **Concluído** | **25/10** **08:29** e **08:31 UTC** · HTTP **200** · 2.º run: `status=ok`, `errors={}`, `system_health.status=ok`, stuck **0** |
 | **S-PROD-CRON-LIVE** | Reactivação schedule 1 min | **Concluído** | **25/10** Lisboa **08:33–08:36** · **4×** HTTP **200** consecutivos (129–307 ms) · acta [`W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) **§7** |
 | **TVDE-PROD-CRON** | Cron PROD operacional | **Concluído** | **25/10** · **≠** `PROD_VALIDATION` M2 completo · STAGING cron **inalterado** · **R-PAY-STG-4** / **C1** / **LIVE** inalterados |
+
+---
+
+## Painel — **G1.1** guião piloto (**2026-10-26**)
+
+Preparação documental **G1** (Carril QA). **≠** execução humana (**G1.2**) · **≠** piloto comercial aprovado · **≠** Marco 2 fechado.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **G1.1-AUDIT** | Auditoria READ-ONLY piloto real | **Concluído** | **26/10** · matriz fluxo + cenários · baseline `abf91e34` |
+| **G1.1-GUIAO** | Guião operacional Trilho A (STG TEST) + B (PROD mock) | **Concluído** (documento) | [`G1_1_PILOT_OPERATIONAL_GUIDE.md`](docs/runbooks/G1_1_PILOT_OPERATIONAL_GUIDE.md) · rastreabilidade §F · **≠** smoke executado |
+| **G1.2** | Playwright + smoke humano piloto | **Por iniciar** | Depende execução guião + registo PASS/FAIL · roadmap **G1.2** inalterado |
+| **S-QA-01** | Suite E2E/regression comercial pré-piloto | **Por iniciar** | G1.1 = preparação · B1 LIVE continua **bloqueado** |
 
 ---
 
