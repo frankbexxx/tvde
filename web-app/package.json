@@ -1,7 +1,7 @@
 {
   "name": "web-app",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,7 +17,9 @@
     "test:e2e:pet": "playwright test e2e/pet-feature.spec.ts --project=e2e-api --no-deps",
     "test:e2e:ui": "playwright test --ui",
     "preview": "vite preview",
-    "verify-tokens": "node scripts/verify-tokens.js"
+    "verify-tokens": "node scripts/verify-tokens.js",
+    "verify:android-version": "node scripts/androidVersionPreflight.mjs",
+    "verify:android-version:new-play": "node scripts/androidVersionPreflight.mjs --require-new-play-code"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

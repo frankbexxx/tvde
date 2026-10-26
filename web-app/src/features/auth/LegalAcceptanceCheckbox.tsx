@@ -18,16 +18,16 @@ export function LegalAcceptanceCheckbox({
 }: LegalAcceptanceCheckboxProps) {
   const { t } = useTranslation('auth')
   return (
-    <label htmlFor={id} className="flex items-start gap-2 text-sm text-foreground">
+    <label htmlFor={id} className="flex items-start gap-2.5 text-sm text-foreground leading-snug">
       <input
         id={id}
         data-testid="legal-accept-checkbox"
         type="checkbox"
-        className="mt-1"
+        className="mt-0.5 size-4 shrink-0"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <span>
+      <span className="min-w-0 flex-1">
         {t('legalAcceptPrefix')}{' '}
         <a
           href={termsUrl}
