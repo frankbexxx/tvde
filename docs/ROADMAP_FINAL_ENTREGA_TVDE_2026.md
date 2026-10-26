@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN |
 | **status** | ACTIVO |
-| **updated** | 2026-10-25 (cron PROD TVDE Background Workers) |
+| **updated** | 2026-10-26 (G1.1 guião piloto) |
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
@@ -739,8 +739,8 @@ Push P1 / foundation = **CLOSED**. Push P2 / oferta ao motorista = **CLOSED**. P
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
-| G1.1 | Guião comercial (pay conforme modelo piloto) | Checklist | DOCS | B1 |
-| G1.2 | Playwright + smoke humano | PASS | TESTE | G1.1 |
+| G1.1 | Guião comercial (pay conforme modelo piloto) | Checklist · **guião preparado 26/10** ([`G1_1_PILOT_OPERATIONAL_GUIDE.md`](runbooks/G1_1_PILOT_OPERATIONAL_GUIDE.md)) · **≠** piloto executado | DOCS | B1 |
+| G1.2 | Playwright + smoke humano | PASS (**Por iniciar**) | TESTE | G1.1 |
 | G1.3 | Corrigir P0 | Verde | CÓDIGO | G1.2 |
 
 ## G2 — Testes em telemóveis reais

@@ -58,7 +58,7 @@ STAGING
     └── e2e básico passa
 ```
 
-**Estado operacional (2026-10-25):** **STAGING** — infra + stripe_test + smokes A2-02/B-STG (22/10); **`cron funciona` STG PASS** (#782 · §9); **`R-PAY-STG-4` Concluído** (24/10). **PROD** — **`cron funciona` PROD PASS** **25/10** (job **`TVDE Background Workers`** · §7 [`W1_PROD_SMOKE.md`](ops/W1_PROD_SMOKE.md)); Saúde admin **`ok`**; **`PROD_VALIDATION` M2** continua **parcial** (webhook E2E · e2e pay real). **C1** / **LIVE** bloqueados. Painéis [`../TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-24** / **2026-10-25**.
+**Estado operacional (2026-10-26):** **STAGING** — infra + stripe_test + smokes A2-02/B-STG (22/10); **`cron funciona` STG PASS** (#782 · §9); **`R-PAY-STG-4` Concluído** (24/10). **PROD** — **`cron funciona` PROD PASS** **25/10** (§7 [`W1_PROD_SMOKE.md`](ops/W1_PROD_SMOKE.md)); Saúde admin **`ok`**; **`PROD_VALIDATION` M2** **parcial**. **G1.1** guião piloto **preparado** **26/10** — [`runbooks/G1_1_PILOT_OPERATIONAL_GUIDE.md`](runbooks/G1_1_PILOT_OPERATIONAL_GUIDE.md) · **G1.2** smoke humano **Por iniciar**. **C1** / **LIVE** bloqueados. Painéis [`../TODOdoDIA.md`](../TODOdoDIA.md) **2026-10-25** / **2026-10-26**.
 
 ---
 
