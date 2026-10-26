@@ -31,7 +31,40 @@ Build completo (quando autorizado):
 .\scripts\android-release.ps1 -Build
 ```
 
-O preflight valida: JDK 21, SDK (`android-36`), assinatura release (keystore presente, **sem** imprimir passwords), Gradle **8.14.3**, para Gradle daemons antigos, e `gradlew :app:bundleRelease -m`.
+O preflight valida: JDK 21, SDK (`android-36`), assinatura release (keystore presente, **sem** imprimir passwords), Gradle **8.14.3**, para Gradle daemons antigos, alinhamento de versões (BUILD-VERSION-01), e `gradlew :app:bundleRelease -m`.
+
+## Versões — fonte canónica e incremento (BUILD-VERSION-01)
+
+| Campo | Fonte canónica | Notas |
+|-------|----------------|--------|
+| **Versão visível na app** (login «Versão X · build …») | `web-app/package.json` → `version` | Injectada em build via `vite.config.ts` (`__APP_VERSION__`) |
+| **SHA no login** | `git rev-parse --short HEAD` no momento do `vite build` | Não é versão de loja |
+| **versionName** (Play / sistema) | `web-app/android/app/build.gradle` | Deve ser **igual** a `package.json` `version` antes de cada AAB |
+| **versionCode** (Play) | `build.gradle` | Inteiro monótono; **único** identificador de upload |
+| **Último code publicado** | [`play_release_baseline.json`](play_release_baseline.json) | Actualizar manualmente após upload aceite (sem API Play) |
+
+Preflight só de versões (sem Gradle):
+
+```powershell
+cd C:\dev\APP\web-app
+npm run verify:android-version
+```
+
+Antes de **novo** upload Play (`android-release.ps1 -Build`), o script exige `versionCode` **>** `lastPublishedVersionCode` no baseline:
+
+```powershell
+npm run verify:android-version:new-play
+```
+
+### Procedimento mínimo — próximo Internal / release
+
+1. Decidir `versionName` (ex. `1.0.2`) — actualizar **`package.json` `version`** e **`build.gradle` `versionName`** (mesmo valor).
+2. Incrementar **`versionCode`** (ex. `4`) — deve ser **>** valor em `play_release_baseline.json`.
+3. Correr `npm run verify:android-version:new-play` (ou `android-release.ps1 -Preflight` + depois `-Build` quando autorizado).
+4. Após upload **aceite** na Play, actualizar `play_release_baseline.json` (`lastPublishedVersionCode`, `lastPublishedVersionName`, nota).
+5. `cap:sync` + `bundleRelease` só via `.\scripts\android-release.ps1 -Build` quando autorizado.
+
+**Não** incrementar `versionCode` só no Gradle sem alinhar `package.json` — a UI ficaria incorrecta.
 
 ## Estado em 2026-09-28
 

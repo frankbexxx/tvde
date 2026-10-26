@@ -178,6 +178,23 @@ Write-Host "== TVDE Android release ==" -ForegroundColor Cyan
 Write-Host "Repo: $repoRoot"
 Write-Host "Mode: $(if ($Build) { 'Build (preflight + cap:sync + bundleRelease)' } else { 'Preflight only' })"
 
+# --- BUILD-VERSION-01: package.json vs versionName (+ Play versionCode on -Build) ---
+$versionPreflight = Join-Path $webApp 'scripts\androidVersionPreflight.mjs'
+if (-not (Test-Path $versionPreflight)) {
+  throw "Missing version preflight script: $versionPreflight"
+}
+Write-Host "[..] Android version preflight (package.json vs versionName)..."
+$versionArgs = @($versionPreflight, "--repo-root=$repoRoot")
+if ($Build) {
+  $versionArgs += '--require-new-play-code'
+  Write-Host "     (new Play upload: versionCode must exceed docs/android/play_release_baseline.json)"
+}
+& node @versionArgs
+if ($LASTEXITCODE -ne 0) {
+  throw "Android version preflight failed (exit $LASTEXITCODE). Fix versions before building."
+}
+Write-Host "[OK] Android version preflight"
+
 # --- JDK 21 ---
 $jdk21 = Find-Jdk21Home -ExplicitPath $Jdk21Path
 if (-not $jdk21) {
