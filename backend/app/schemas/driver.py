@@ -23,7 +23,12 @@ class DriverLocationPayload(BaseModel):
     lat: float = Field(..., ge=-90.0, le=90.0)
     lng: float = Field(..., ge=-180.0, le=180.0)
     timestamp: int = Field(
-        ..., description="Client-side timestamp in milliseconds since epoch."
+        ...,
+        description=(
+            "Milliseconds since epoch. Without X-Gps-Contract this is a legacy client "
+            "clock (±1 hour). With X-Gps-Contract: fix-v1 it is the GPS fix time. "
+            "Both contracts ignore an older or equal timestamp and still return 204."
+        ),
     )
 
 

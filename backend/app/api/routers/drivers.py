@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -22,7 +22,11 @@ from app.schemas.driver_documents import (
 from app.schemas.partner_messages import DriverMessageCreateRequest, DriverMessageListItem
 from app.db.models.driver import DriverLocation
 from app.db.models.driver import Driver
-from app.services.driver_location import upsert_driver_location
+from app.services.driver_location import (
+    GPS_CONTRACT_HEADER,
+    gps_contract_from_header,
+    upsert_driver_location,
+)
 from app.services.driver_preferences import (
     decode_driver_categories_csv,
     encode_driver_categories_csv,
@@ -57,6 +61,7 @@ def _persist_driver_location(
     db: Session,
     user: UserContext,
     payload: DriverLocationPayload,
+    gps_contract_header: str | None,
 ) -> None:
     upsert_driver_location(
         db=db,
@@ -64,6 +69,7 @@ def _persist_driver_location(
         lat=payload.lat,
         lng=payload.lng,
         timestamp_ms=payload.timestamp,
+        gps_contract=gps_contract_from_header(gps_contract_header),
     )
 
 
@@ -76,13 +82,33 @@ async def update_location(
     payload: DriverLocationPayload,
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
+    x_gps_contract: str | None = Header(default=None, alias=GPS_CONTRACT_HEADER),
 ) -> None:
     """
     Receive the driver's current GPS location.
 
-    Frontend: called every few seconds when driver is online.
+    Payload stays ``{lat, lng, timestamp}``. Success, including an ignored fix, is 204
+    with an empty body.
+
+    Both contracts use one monotonic write. A timestamp older than or equal to the
+    stored value returns 204 and leaves the row unchanged. A newer timestamp advances
+    the row even when the coordinates are the same.
+
+    Without ``X-Gps-Contract``, ``timestamp`` is a legacy client clock and must stay
+    within ±1 hour (400 ``invalid_timestamp``).
+
+    With ``X-Gps-Contract: fix-v1``, ``timestamp`` is the GPS fix time:
+    - more than 60s in the future → 400 ``gps_fix_timestamp_in_future``
+    - older than 3600s → 400 ``gps_fix_timestamp_too_old``
+
+    Does not change driver availability and does not cancel trips.
     """
-    _persist_driver_location(db=db, user=user, payload=payload)
+    _persist_driver_location(
+        db=db,
+        user=user,
+        payload=payload,
+        gps_contract_header=x_gps_contract,
+    )
 
 
 @router.get(
@@ -127,9 +153,15 @@ async def update_location_alias(
     payload: DriverLocationPayload,
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
+    x_gps_contract: str | None = Header(default=None, alias=GPS_CONTRACT_HEADER),
 ) -> None:
-    """Same as POST /drivers/location."""
-    _persist_driver_location(db=db, user=user, payload=payload)
+    """Same as POST /drivers/location, including X-Gps-Contract."""
+    _persist_driver_location(
+        db=db,
+        user=user,
+        payload=payload,
+        gps_contract_header=x_gps_contract,
+    )
 
 
 @driver_router.get(

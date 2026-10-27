@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -21,6 +23,99 @@ from app.schemas.driver import DriverLocationResponse
 
 
 logger = logging.getLogger(__name__)
+
+# Legacy clients send a client clock. fix-v1 sends the GPS fix instant.
+GPS_CONTRACT_HEADER = "X-Gps-Contract"
+GPS_CONTRACT_FIX_V1 = "fix-v1"
+# Explicit fix-v1 window. Matching freshness (LOCATION_MAX_AGE_SECONDS) is unchanged.
+GPS_FIX_V1_FUTURE_SKEW_SECONDS = 60
+GPS_FIX_V1_MAX_PAST_SECONDS = 3600
+_LEGACY_TIMESTAMP_SKEW_SECONDS = 3600
+
+
+@dataclass(frozen=True)
+class _LocationWrite:
+    applied: bool
+    is_first_send: bool
+    old_lat: float | None
+    old_lng: float | None
+
+
+def gps_contract_from_header(value: str | None) -> str | None:
+    """Return fix-v1 only for the exact contract token. Anything else stays legacy."""
+    if value is None:
+        return None
+    token = value.strip()
+    if token == GPS_CONTRACT_FIX_V1:
+        return GPS_CONTRACT_FIX_V1
+    return None
+
+
+def _validate_location_timestamp(
+    *,
+    ts: datetime,
+    now: datetime,
+    gps_contract: str | None,
+) -> None:
+    delta_seconds = (ts - now).total_seconds()
+    if gps_contract == GPS_CONTRACT_FIX_V1:
+        if delta_seconds > GPS_FIX_V1_FUTURE_SKEW_SECONDS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="gps_fix_timestamp_in_future",
+            )
+        if -delta_seconds > GPS_FIX_V1_MAX_PAST_SECONDS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="gps_fix_timestamp_too_old",
+            )
+        return
+    if abs(delta_seconds) > _LEGACY_TIMESTAMP_SKEW_SECONDS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_timestamp",
+        )
+
+
+def _apply_monotonic_location(
+    db: Session,
+    *,
+    driver_id: str,
+    lat: float,
+    lng: float,
+    ts: datetime,
+) -> _LocationWrite:
+    """Insert or advance the stored position for both legacy and fix-v1 clients.
+
+    ``INSERT … ON CONFLICT DO UPDATE WHERE timestamp < incoming`` locks the primary key
+    for the statement. An equal or older timestamp matches zero rows and leaves lat/lng
+    and timestamp untouched. A newer timestamp updates even when coordinates are unchanged.
+    Contract-specific window checks happen before this write.
+    """
+    prev = db.execute(
+        select(DriverLocation).where(DriverLocation.driver_id == driver_id).limit(1)
+    ).scalar_one_or_none()
+    old_lat = float(prev.lat) if prev is not None else None
+    old_lng = float(prev.lng) if prev is not None else None
+    stmt = (
+        pg_insert(DriverLocation)
+        .values(driver_id=driver_id, lat=lat, lng=lng, timestamp=ts)
+        .on_conflict_do_update(
+            index_elements=[DriverLocation.driver_id],
+            set_={"lat": lat, "lng": lng, "timestamp": ts},
+            where=DriverLocation.timestamp < ts,
+        )
+    )
+    result = db.execute(stmt)
+    if prev is not None:
+        db.expire(prev)
+    applied = (result.rowcount or 0) > 0
+    return _LocationWrite(
+        applied=applied,
+        is_first_send=prev is None and applied,
+        old_lat=old_lat,
+        old_lng=old_lng,
+    )
 
 
 def _ensure_driver_profile(db: Session, driver_id: str) -> Driver:
@@ -62,13 +157,17 @@ def upsert_driver_location(
     lat: float,
     lng: float,
     timestamp_ms: int,
+    gps_contract: str | None = None,
 ) -> None:
     """Upsert last known location for a driver.
 
     Validation rules:
     - Latitude:  -90 <= lat <= 90
     - Longitude: -180 <= lng <= 180
-    - Timestamp within ±1 hour of server time (to avoid bogus values).
+    - Legacy (no contract): timestamp within ±1 hour of server time.
+    - fix-v1: timestamp is the GPS fix time. Future skew and max age are explicit.
+    - Both contracts share one monotonic write. An equal or older timestamp is a
+      successful no-op: no coordinate change, no freshness refresh, no side effects.
     """
     driver = _ensure_driver_profile(db, driver_id)
 
@@ -85,31 +184,18 @@ def upsert_driver_location(
 
     ts = datetime.fromtimestamp(timestamp_ms / 1000.0, tz=timezone.utc)
     now = datetime.now(timezone.utc)
-    delta = abs((ts - now).total_seconds())
-    if delta > 3600:  # older/newer than 1 hour
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="invalid_timestamp",
-        )
+    contract = gps_contract if gps_contract == GPS_CONTRACT_FIX_V1 else None
+    _validate_location_timestamp(ts=ts, now=now, gps_contract=contract)
 
-    loc = db.execute(
-        select(DriverLocation).where(DriverLocation.driver_id == driver_id).limit(1)
-    ).scalar_one_or_none()
-    is_first_send = loc is None
-    old_lat = float(loc.lat) if loc else None
-    old_lng = float(loc.lng) if loc else None
-    if loc is None:
-        loc = DriverLocation(
-            driver_id=driver_id,
-            lat=lat,
-            lng=lng,
-            timestamp=ts,
-        )
-        db.add(loc)
-    else:
-        loc.lat = lat
-        loc.lng = lng
-        loc.timestamp = ts
+    write = _apply_monotonic_location(
+        db, driver_id=driver_id, lat=lat, lng=lng, ts=ts
+    )
+    if not write.applied:
+        db.commit()
+        return
+    is_first_send = write.is_first_send
+    old_lat = write.old_lat
+    old_lng = write.old_lng
 
     # Broadcast to trip subscribers when driver has an active trip
     active_trip = db.execute(
