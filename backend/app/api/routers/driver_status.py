@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import UserContext, get_db, require_role
 from app.db.models.driver import Driver
 from app.models.enums import Role
+from app.schemas.driver import DriverAvailabilityStatusResponse
 from app.schemas.driving_compliance import DrivingHoursComplianceResponse
+from app.services.driver_matching_eligibility import evaluate_driver_matching_eligibility
 from app.services.driver_documents import (
     assert_driver_required_documents_for_new_ops,
     driver_required_documents_approved,
@@ -29,18 +31,29 @@ from app.utils.logging import log_event
 router = APIRouter(prefix="/driver/status", tags=["driver"])
 
 
-@router.get("")
+@router.get("", response_model=DriverAvailabilityStatusResponse)
 async def get_availability_status(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
-) -> dict:
-    """Current driver availability flag (for FE sync with local offline state)."""
+) -> DriverAvailabilityStatusResponse:
+    """Availability plus whether dispatch can offer this driver a new trip.
+
+    Read-only. Does not change ``is_available`` and does not cancel trips.
+    Extra fields are additive; clients that only read ``is_available`` stay valid.
+    """
     driver = db.execute(
         select(Driver).where(Driver.user_id == user.user_id)
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(status_code=404, detail="driver_not_found")
-    return {"is_available": driver.is_available}
+    eligibility = evaluate_driver_matching_eligibility(db, driver)
+    return DriverAvailabilityStatusResponse(
+        is_available=driver.is_available,
+        matching_eligible=eligibility.matching_eligible,
+        gps_fix_age_seconds=eligibility.gps_fix_age_seconds,
+        location_stale_for_matching=eligibility.location_stale_for_matching,
+        matching_ineligible_reason=eligibility.matching_ineligible_reason,
+    )
 
 
 @router.get("/compliance/driving-hours", response_model=DrivingHoursComplianceResponse)

@@ -8,6 +8,16 @@ class DriverStatusResponse(BaseModel):
     status: DriverStatus
 
 
+class DriverAvailabilityStatusResponse(BaseModel):
+    """GET /driver/status. Existing clients keep reading ``is_available`` only."""
+
+    is_available: bool
+    matching_eligible: bool
+    gps_fix_age_seconds: float | None = None
+    location_stale_for_matching: bool
+    matching_ineligible_reason: str | None = None
+
+
 class AdminDriverRejectBody(BaseModel):
     """Motivo obrigatório ao rejeitar perfil motorista (Admin Dados)."""
 
