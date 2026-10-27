@@ -285,6 +285,11 @@ export async function setDriverOffline(token: string): Promise<void> {
 
 export interface DriverAvailabilityStatus {
   is_available: boolean
+  /** Absent on older API responses. */
+  matching_eligible?: boolean
+  gps_fix_age_seconds?: number | null
+  location_stale_for_matching?: boolean
+  matching_ineligible_reason?: string | null
 }
 
 export async function getDriverStatus(token: string): Promise<DriverAvailabilityStatus> {

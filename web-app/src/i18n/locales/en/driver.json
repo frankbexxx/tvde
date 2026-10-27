@@ -143,6 +143,8 @@
   },
   "mapHome": {
     "locationFallback": "Location unavailable — using approximate position.",
+    "gpsOfferUnavailable": "Location unavailable — you are not receiving new offers.",
+    "gpsOfferStatusUnknown": "Could not confirm whether you are receiving new offers.",
     "retryLocation": "Try again",
     "docsMissingTitle": "Missing documents",
     "docsMissingBody": "Complete them in Menu → Documents to go available.",
