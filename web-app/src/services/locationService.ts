@@ -1,5 +1,7 @@
 import { apiFetch } from '../api/client'
 import {
+  GPS_CONTRACT_FIX_V1,
+  GPS_CONTRACT_HEADER,
   type DriverLocationUploadOrigin,
   shouldUploadDriverLocation,
 } from './driverLocationUpload'
@@ -25,27 +27,41 @@ export interface DriverLocationServer {
  *
  * Payload:
  *   { lat, lng, timestamp }
+ *
+ * `device_gps` sends `GeolocationPosition.timestamp` and `X-Gps-Contract: fix-v1`.
+ * It does not invent a timestamp from the send clock. Mock E2E keeps the legacy
+ * contract (no fix-v1 header) so it is not presented as a real GPS fix.
  */
 export async function sendDriverLocation(
   lat: number,
   lng: number,
   accessToken: string,
-  origin: DriverLocationUploadOrigin
+  origin: DriverLocationUploadOrigin,
+  fixTimestampMs?: number
 ): Promise<void> {
   if (!shouldUploadDriverLocation(origin)) {
+    return
+  }
+
+  const isRealFix = origin === 'device_gps'
+  if (isRealFix && (fixTimestampMs == null || !Number.isFinite(fixTimestampMs))) {
     return
   }
 
   const payload: SendDriverLocationPayload = {
     lat,
     lng,
-    timestamp: Date.now(),
+    timestamp: isRealFix ? fixTimestampMs! : Date.now(),
   }
+  const headers = isRealFix
+    ? { [GPS_CONTRACT_HEADER]: GPS_CONTRACT_FIX_V1 }
+    : undefined
 
   try {
     await apiFetch<void>('/drivers/location', {
       method: 'POST',
       body: JSON.stringify(payload),
+      headers,
       token: accessToken,
     })
   } catch (err) {
@@ -54,6 +70,7 @@ export async function sendDriverLocation(
       await apiFetch<void>('/drivers/location', {
         method: 'POST',
         body: JSON.stringify(payload),
+        headers,
         token: accessToken,
       })
     } catch (err2) {

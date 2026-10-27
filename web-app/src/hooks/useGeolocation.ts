@@ -71,8 +71,20 @@ function distanceMeters(a: { lat: number; lng: number }, b: { lat: number; lng: 
   return R * c
 }
 
+export type GpsFix = {
+  lat: number
+  lng: number
+  /** `GeolocationPosition.timestamp` for this exact coordinate pair. */
+  timestamp: number
+}
+
 export type GeolocationResult = {
   position: LatLng
+  /**
+   * Latest accepted GPS fix, including fixes that did not move the map.
+   * Null for mock, demo, fallback, and while no real fix has arrived.
+   */
+  gpsFix: GpsFix | null
   /** True when using fallback due to error/timeout (not demo mode). */
   usedFallback: boolean
   /** Source of `position` for map display vs backend upload eligibility. */
@@ -130,7 +142,8 @@ const WATCH_POSITION_TIMEOUT_MS = 15_000
  * - Returns { position, usedFallback, retry }
  * - After first failure, uses Oeiras without prompting again (sessionStorage).
  * - Uses high accuracy when possible
- * - Ignores tiny movements (< ~5m) to reduce React re-renders and jitter.
+ * - Ignores tiny movements (< 4m) only for the map position.
+ *   Every newer GPS fix is still kept in `gpsFix` with its own timestamp.
  */
 export function useGeolocation(options?: UseGeolocationOptions): GeolocationResult {
   const mockRole = options?.mockRole ?? 'passenger'
@@ -146,6 +159,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     }
     return null
   })
+  const [gpsFix, setGpsFix] = useState<GpsFix | null>(null)
   const [usedFallback, setUsedFallback] = useState(false)
   const [locationOrigin, setLocationOrigin] = useState<DriverLocationUploadOrigin>('unavailable')
   /**
@@ -155,14 +169,17 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
    */
   const [retryCounter, setRetryCounter] = useState(0)
   const lastPositionRef = useRef<LatLng>(position)
+  const lastFixTimestampRef = useRef<number | null>(null)
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (isMockLocationModeEnabled()) {
       const fixed = mockFixedPosition(mockRole)
       lastPositionRef.current = fixed
+      lastFixTimestampRef.current = null
       queueMicrotask(() => {
         setPosition(fixed)
+        setGpsFix(null)
         setUsedFallback(false)
         setLocationOrigin('mock')
       })
@@ -172,8 +189,10 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     if (isDemoLocationEnabled()) {
       const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
       lastPositionRef.current = fallback
+      lastFixTimestampRef.current = null
       queueMicrotask(() => {
         setPosition(fallback)
+        setGpsFix(null)
         setUsedFallback(false)
         setLocationOrigin('demo')
       })
@@ -182,8 +201,10 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
 
     if (!watchEnabled) {
       lastPositionRef.current = null
+      lastFixTimestampRef.current = null
       queueMicrotask(() => {
         setPosition(null)
+        setGpsFix(null)
         setUsedFallback(false)
         setLocationOrigin('unavailable')
       })
@@ -201,8 +222,10 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       if (sessionStorage.getItem(GEOLOCATION_FAILED_KEY) === '1') {
         const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
         lastPositionRef.current = fallback
+        lastFixTimestampRef.current = null
         queueMicrotask(() => {
           setPosition(fallback)
+          setGpsFix(null)
           setUsedFallback(true)
           setLocationOrigin('presentation_fallback')
         })
@@ -225,6 +248,8 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       }
       const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
       lastPositionRef.current = fallback
+      lastFixTimestampRef.current = null
+      setGpsFix(null)
       setPosition(fallback)
       setUsedFallback(true)
       setLocationOrigin('presentation_fallback')
@@ -233,6 +258,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     const onSuccess = (pos: GeolocationPosition) => {
       const { latitude, longitude } = pos.coords
       const next = { lat: latitude, lng: longitude }
+      const fixTimestamp = pos.timestamp
 
       try {
         sessionStorage.removeItem(GEOLOCATION_FAILED_KEY)
@@ -240,24 +266,29 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
         /* ignore */
       }
 
-      const prev = lastPositionRef.current
-      if (prev) {
-        const dist = distanceMeters(prev, next)
-        if (dist < METERS_THRESHOLD) {
-          return
-        }
+      if (
+        lastFixTimestampRef.current != null &&
+        fixTimestamp <= lastFixTimestampRef.current
+      ) {
+        return
       }
-
-      lastPositionRef.current = next
-      setPosition(next)
+      lastFixTimestampRef.current = fixTimestamp
+      setGpsFix({ lat: next.lat, lng: next.lng, timestamp: fixTimestamp })
       setUsedFallback(false)
       setLocationOrigin('device_gps')
 
-      // We have a real GPS fix – cancel any pending fallback.
       if (fallbackTimeoutRef.current) {
         clearTimeout(fallbackTimeoutRef.current)
         fallbackTimeoutRef.current = null
       }
+
+      const prev = lastPositionRef.current
+      if (prev && distanceMeters(prev, next) < METERS_THRESHOLD) {
+        return
+      }
+
+      lastPositionRef.current = next
+      setPosition(next)
     }
 
     const onError = (err: GeolocationPositionError) => {
@@ -304,11 +335,13 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     setUsedFallback(false)
     setLocationOrigin('unavailable')
     lastPositionRef.current = null
+    lastFixTimestampRef.current = null
+    setGpsFix(null)
     setPosition(null)
     setRetryCounter((n) => n + 1)
   }
 
-  return { position, usedFallback, locationOrigin, retry }
+  return { position, gpsFix, usedFallback, locationOrigin, retry }
 }
 
 

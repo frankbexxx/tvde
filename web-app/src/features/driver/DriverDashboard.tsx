@@ -420,6 +420,7 @@ export function DriverDashboard() {
 
   const {
     position: geoDriverPosition,
+    gpsFix: geoDriverGpsFix,
     usedFallback: geolocationUsedFallback,
     locationOrigin: geolocationUploadOrigin,
     retry: retryGeolocation,
@@ -931,12 +932,16 @@ export function DriverDashboard() {
     return () => window.clearTimeout(id)
   }, [actionLoading])
 
+  const reportingRealGps = driverLocationUploadOrigin === 'device_gps'
   const gpsReport = useDriverLocationReporter({
-    enabled: locationReportingOperational && !!driverLocation,
+    enabled:
+      locationReportingOperational &&
+      (reportingRealGps ? geoDriverGpsFix != null : !!driverLocation),
     uploadOrigin: driverLocationUploadOrigin,
     accessToken: token,
-    lat: driverLocation?.lat,
-    lng: driverLocation?.lng,
+    lat: reportingRealGps ? geoDriverGpsFix?.lat : driverLocation?.lat,
+    lng: reportingRealGps ? geoDriverGpsFix?.lng : driverLocation?.lng,
+    fixTimestampMs: reportingRealGps ? geoDriverGpsFix?.timestamp : null,
     hasActiveTrip: !!activeTripId,
   })
 
