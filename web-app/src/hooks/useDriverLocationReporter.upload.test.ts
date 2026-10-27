@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { useDriverLocationReporter } from './useDriverLocationReporter'
+import {
+  resetDriverLocationReporterDedupeForTests,
+  useDriverLocationReporter,
+} from './useDriverLocationReporter'
 
 const sendSpy = vi.fn().mockResolvedValue(undefined)
 
@@ -11,6 +14,7 @@ vi.mock('../services/locationService', () => ({
 describe('useDriverLocationReporter upload origin', () => {
   beforeEach(() => {
     sendSpy.mockClear()
+    resetDriverLocationReporterDedupeForTests()
   })
 
   it('calls sendDriverLocation when origin is device_gps', async () => {
@@ -21,12 +25,13 @@ describe('useDriverLocationReporter upload origin', () => {
         accessToken: 'jwt-test',
         lat: 1,
         lng: 2,
+        fixTimestampMs: 1_700_000_000_000,
         hasActiveTrip: false,
       })
     )
 
     await waitFor(() =>
-      expect(sendSpy).toHaveBeenCalledWith(1, 2, 'jwt-test', 'device_gps')
+      expect(sendSpy).toHaveBeenCalledWith(1, 2, 'jwt-test', 'device_gps', 1_700_000_000_000)
     )
   })
 
@@ -71,6 +76,7 @@ describe('useDriverLocationReporter upload origin', () => {
           accessToken: 'jwt-test',
           lat: 38.6973,
           lng: -9.30836,
+          fixTimestampMs: 1_700_000_000_000,
           hasActiveTrip: false,
         }),
       { initialProps: { origin: 'presentation_fallback' as import('../services/driverLocationUpload').DriverLocationUploadOrigin } }
@@ -82,7 +88,13 @@ describe('useDriverLocationReporter upload origin', () => {
     rerender({ origin: 'device_gps' })
 
     await waitFor(() =>
-      expect(sendSpy).toHaveBeenCalledWith(38.6973, -9.30836, 'jwt-test', 'device_gps')
+      expect(sendSpy).toHaveBeenCalledWith(
+        38.6973,
+        -9.30836,
+        'jwt-test',
+        'device_gps',
+        1_700_000_000_000
+      )
     )
   })
 })

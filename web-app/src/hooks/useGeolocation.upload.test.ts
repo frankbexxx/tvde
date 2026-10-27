@@ -47,10 +47,10 @@ describe('useGeolocation upload origin (G2-DRV-GPS-08)', () => {
     }
   }
 
-  function position(lat: number, lng: number): GeolocationPosition {
+  function position(lat: number, lng: number, timestamp = 1_700_000_000_000): GeolocationPosition {
     return {
       coords: coords(lat, lng),
-      timestamp: Date.now(),
+      timestamp,
       toJSON() {
         return {}
       },
@@ -108,12 +108,79 @@ describe('useGeolocation upload origin (G2-DRV-GPS-08)', () => {
     })
 
     await act(async () => {
-      watchCallbacks.success?.(position(38.72, -9.14))
+      watchCallbacks.success?.(position(38.72, -9.14, 4_000))
     })
 
     await waitFor(() => {
       expect(result.current.locationOrigin).toBe('device_gps')
       expect(result.current.usedFallback).toBe(false)
+      expect(result.current.gpsFix).toEqual({ lat: 38.72, lng: -9.14, timestamp: 4_000 })
+    })
+  })
+
+  it('keeps the map still under 4 m but records the newer fix', async () => {
+    const { result } = renderHook(() =>
+      useGeolocation({ mockRole: 'driver', watchEnabled: true })
+    )
+    const first = { lat: 38.72, lng: -9.14 }
+
+    await act(async () => {
+      watchCallbacks.success?.(position(first.lat, first.lng, 1_000))
+    })
+    await waitFor(() => expect(result.current.position).toEqual(first))
+
+    await act(async () => {
+      watchCallbacks.success?.(position(38.72001, -9.14, 2_000))
+    })
+
+    await waitFor(() => {
+      expect(result.current.position).toEqual(first)
+      expect(result.current.gpsFix).toEqual({
+        lat: 38.72001,
+        lng: -9.14,
+        timestamp: 2_000,
+      })
+      expect(result.current.locationOrigin).toBe('device_gps')
+    })
+  })
+
+  it('does not replace the latest fix with an older timestamp', async () => {
+    const { result } = renderHook(() =>
+      useGeolocation({ mockRole: 'driver', watchEnabled: true })
+    )
+
+    await act(async () => {
+      watchCallbacks.success?.(position(38.72, -9.14, 3_000))
+    })
+    await act(async () => {
+      watchCallbacks.success?.(position(38.8, -9.2, 2_000))
+    })
+
+    expect(result.current.gpsFix?.timestamp).toBe(3_000)
+    expect(result.current.position).toEqual({ lat: 38.72, lng: -9.14 })
+  })
+
+  it('clears gpsFix on fallback', async () => {
+    const { result } = renderHook(() =>
+      useGeolocation({ mockRole: 'driver', watchEnabled: true })
+    )
+
+    await act(async () => {
+      watchCallbacks.success?.(position(38.73, -9.15, 5_000))
+    })
+    await act(async () => {
+      watchCallbacks.error?.({
+        code: 2,
+        message: 'unavailable',
+        PERMISSION_DENIED: 1,
+        POSITION_UNAVAILABLE: 2,
+        TIMEOUT: 3,
+      })
+    })
+
+    await waitFor(() => {
+      expect(result.current.locationOrigin).toBe('presentation_fallback')
+      expect(result.current.gpsFix).toBeNull()
     })
   })
 })
