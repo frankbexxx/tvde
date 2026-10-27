@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { isMockLocationModeEnabled } from '../dev/mockLocation'
 import { MOCK_DRIVER_START, MOCK_PASSENGER_POSITION } from '../dev/mockPositions'
+import type { DriverLocationUploadOrigin } from '../services/driverLocationUpload'
 import { warn as logWarn } from '../utils/logger'
 
 type LatLng = {
@@ -74,6 +75,8 @@ export type GeolocationResult = {
   position: LatLng
   /** True when using fallback due to error/timeout (not demo mode). */
   usedFallback: boolean
+  /** Source of `position` for map display vs backend upload eligibility. */
+  locationOrigin: DriverLocationUploadOrigin
   /**
    * Tenta novamente obter a localização real: limpa o flag de «falha desta sessão»
    * e re-subscreve `watchPosition`. Útil quando o utilizador move-se para um
@@ -144,6 +147,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     return null
   })
   const [usedFallback, setUsedFallback] = useState(false)
+  const [locationOrigin, setLocationOrigin] = useState<DriverLocationUploadOrigin>('unavailable')
   /**
    * Contador de tentativas. Quando `retry()` é chamado, incrementamos este
    * valor — está nas dependências do `useEffect`, por isso força a re-execução
@@ -160,6 +164,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       queueMicrotask(() => {
         setPosition(fixed)
         setUsedFallback(false)
+        setLocationOrigin('mock')
       })
       return
     }
@@ -170,6 +175,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       queueMicrotask(() => {
         setPosition(fallback)
         setUsedFallback(false)
+        setLocationOrigin('demo')
       })
       return
     }
@@ -179,6 +185,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       queueMicrotask(() => {
         setPosition(null)
         setUsedFallback(false)
+        setLocationOrigin('unavailable')
       })
       return () => {
         if (fallbackTimeoutRef.current) {
@@ -197,6 +204,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
         queueMicrotask(() => {
           setPosition(fallback)
           setUsedFallback(true)
+          setLocationOrigin('presentation_fallback')
         })
       }
     } catch {
@@ -205,6 +213,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
 
     if (!('geolocation' in navigator)) {
       logWarn('Geolocation is not available in this browser.')
+      queueMicrotask(() => setLocationOrigin('unavailable'))
       return
     }
 
@@ -218,6 +227,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       lastPositionRef.current = fallback
       setPosition(fallback)
       setUsedFallback(true)
+      setLocationOrigin('presentation_fallback')
     }
 
     const onSuccess = (pos: GeolocationPosition) => {
@@ -241,6 +251,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       lastPositionRef.current = next
       setPosition(next)
       setUsedFallback(false)
+      setLocationOrigin('device_gps')
 
       // We have a real GPS fix – cancel any pending fallback.
       if (fallbackTimeoutRef.current) {
@@ -291,12 +302,13 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       /* ignore */
     }
     setUsedFallback(false)
+    setLocationOrigin('unavailable')
     lastPositionRef.current = null
     setPosition(null)
     setRetryCounter((n) => n + 1)
   }
 
-  return { position, usedFallback, retry }
+  return { position, usedFallback, locationOrigin, retry }
 }
 
 

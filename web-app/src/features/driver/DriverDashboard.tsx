@@ -68,6 +68,7 @@ import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { startTripSimulation } from '../../dev/tripSimulation'
 import { isDemoLocationEnabled, useGeolocation } from '../../hooks/useGeolocation'
 import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
+import { resolveDriverLocationUploadOrigin } from '../../services/driverLocationUpload'
 import {
   fetchDriverLastServerLocation,
   sendDriverLocation,
@@ -420,6 +421,7 @@ export function DriverDashboard() {
   const {
     position: geoDriverPosition,
     usedFallback: geolocationUsedFallback,
+    locationOrigin: geolocationUploadOrigin,
     retry: retryGeolocation,
   } = useGeolocation({
     mockRole: 'driver',
@@ -443,6 +445,10 @@ export function DriverDashboard() {
   } | null>(null)
 
   const driverLocation = mockSimulatedPosition ?? geoDriverPosition
+  const driverLocationUploadOrigin = resolveDriverLocationUploadOrigin({
+    mockSimulated: mockSimulatedPosition != null,
+    geolocationOrigin: geolocationUploadOrigin,
+  })
   const driverLocationRef = useRef(driverLocation ?? null)
   useEffect(() => {
     driverLocationRef.current = driverLocation ?? null
@@ -927,6 +933,7 @@ export function DriverDashboard() {
 
   const gpsReport = useDriverLocationReporter({
     enabled: locationReportingOperational && !!driverLocation,
+    uploadOrigin: driverLocationUploadOrigin,
     accessToken: token,
     lat: driverLocation?.lat,
     lng: driverLocation?.lng,
@@ -1007,7 +1014,7 @@ export function DriverDashboard() {
           intervalMs: 1000,
           onUpdate: (pos) => {
             setMockSimulatedPosition(pos)
-            void sendDriverLocation(pos.lat, pos.lng, token!)
+            void sendDriverLocation(pos.lat, pos.lng, token!, 'mock')
           },
         })
       } catch {
@@ -1444,7 +1451,7 @@ export function DriverDashboard() {
                   pos != null && isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
                 if (!nearPickup) {
                   setMockSimulatedPosition(pickup)
-                  void sendDriverLocation(pickup.lat, pickup.lng, token)
+                  void sendDriverLocation(pickup.lat, pickup.lng, token, 'mock')
                 }
                 const routeFrom = nearPickup && pos ? pos : pickup
                 window.setTimeout(() => {

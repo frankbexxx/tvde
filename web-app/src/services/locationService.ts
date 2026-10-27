@@ -1,4 +1,8 @@
 import { apiFetch } from '../api/client'
+import {
+  type DriverLocationUploadOrigin,
+  shouldUploadDriverLocation,
+} from './driverLocationUpload'
 import { warn as logWarn } from '../utils/logger'
 
 interface SendDriverLocationPayload {
@@ -25,8 +29,13 @@ export interface DriverLocationServer {
 export async function sendDriverLocation(
   lat: number,
   lng: number,
-  accessToken: string
+  accessToken: string,
+  origin: DriverLocationUploadOrigin
 ): Promise<void> {
+  if (!shouldUploadDriverLocation(origin)) {
+    return
+  }
+
   const payload: SendDriverLocationPayload = {
     lat,
     lng,
