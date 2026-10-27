@@ -17,6 +17,7 @@ describe('useDriverLocationReporter', () => {
     renderHook(() =>
       useDriverLocationReporter({
         enabled: true,
+        uploadOrigin: 'device_gps',
         accessToken: 'jwt-test',
         lat: 1,
         lng: 2,
@@ -24,13 +25,16 @@ describe('useDriverLocationReporter', () => {
       })
     )
 
-    await waitFor(() => expect(sendSpy).toHaveBeenCalledWith(1, 2, 'jwt-test'))
+    await waitFor(() =>
+      expect(sendSpy).toHaveBeenCalledWith(1, 2, 'jwt-test', 'device_gps')
+    )
   })
 
   it('does not send when disabled', () => {
     renderHook(() =>
       useDriverLocationReporter({
         enabled: false,
+        uploadOrigin: 'device_gps',
         accessToken: 'jwt-test',
         lat: 1,
         lng: 2,
