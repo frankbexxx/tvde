@@ -26,12 +26,15 @@ from app.services.vehicle_compliance_gate import (
 from app.services.vehicle_operational import (
     batch_driver_ids_blocked_by_inactive_vehicle,
 )
+from app.services.location_freshness import (
+    LOCATION_MAX_AGE_SECONDS as LOCATION_MAX_AGE_SECONDS,
+    location_age_seconds,
+    location_is_fresh_for_matching,
+)
 from app.utils.geo import haversine_km
 from app.utils.logging import log_debug_event, log_event
 
 logger = logging.getLogger(__name__)
-
-LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
 
 
 def _driver_matches_trip_category(driver: Driver, trip: Trip) -> bool:
@@ -225,14 +228,11 @@ def create_offers_for_trip(
         ).all()
     )
 
-    # A006: filter by location freshness
+    # A006: filter by location freshness (shared predicate with eligibility).
     fresh: list[tuple[Driver, DriverLocation]] = []
     for driver, loc in drivers_with_loc:
-        loc_ts = loc.timestamp
-        if loc_ts.tzinfo is None:
-            loc_ts = loc_ts.replace(tzinfo=timezone.utc)
-        age_sec = (now - loc_ts).total_seconds()
-        if age_sec <= LOCATION_MAX_AGE_SECONDS:
+        age_sec = location_age_seconds(loc.timestamp, now=now)
+        if location_is_fresh_for_matching(loc.timestamp, now=now):
             fresh.append((driver, loc))
         else:
             log_event(
@@ -521,10 +521,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         drivers_with_loc = list(db.execute(q).all())
         candidates: list[tuple[Driver, float]] = []
         for driver, loc in drivers_with_loc:
-            loc_ts = loc.timestamp
-            if loc_ts.tzinfo is None:
-                loc_ts = loc_ts.replace(tzinfo=timezone.utc)
-            if (now - loc_ts).total_seconds() > LOCATION_MAX_AGE_SECONDS:
+            if not location_is_fresh_for_matching(loc.timestamp, now=now):
                 continue
             dist_km = haversine_km(
                 origin_lat, origin_lng, float(loc.lat), float(loc.lng)
