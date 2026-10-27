@@ -59,6 +59,8 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 | **Build Command** | `pip install -r requirements.txt` |
 | **Start Command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
 
+**TLS / Certifi (eMudhra):** `requirements.txt` inclui `certifi>=2026.10.19` (pin explícito). Após merge, redeploy **staging-api** e depois **tvde-api** para refrescar o venv e a CA de sistema do runtime nativo Render. Ver [advisory eMudhra](https://render.com/docs/advisory-emudhra).
+
 ### L-SEC-11 — single worker / single instance (obrigatório enquanto ACCEPTED DEBT)
 
 Os rate limits de **OTP request/verify**, **login**, **Google exchange** e **trip create** vivem **em memória por processo**. Enquanto **L-SEC-11** estiver **ACCEPTED DEBT** (sem store partilhado):
