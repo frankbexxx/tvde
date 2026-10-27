@@ -212,7 +212,13 @@ import {
   DRIVER_OPEN_ACTIVITY_LOG_EVENT,
 } from './driverShellEvents'
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
+import { DriverGpsOfferBanner } from './DriverGpsOfferBanner'
 import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
+import {
+  INITIAL_GPS_OFFER_NOTICE,
+  reduceGpsOfferNotice,
+  type GpsOfferNoticeState,
+} from './driverGpsOfferNotice'
 import {
   blockingDocumentStatuses,
   driverAvailabilityBlockMessage,
@@ -378,12 +384,14 @@ export function DriverDashboard() {
   const [offline, setOffline] = useState(true)
   const [availabilityHydrated, setAvailabilityHydrated] = useState(false)
   const [availabilitySyncing, setAvailabilitySyncing] = useState(false)
+  const [gpsOfferNotice, setGpsOfferNotice] = useState<GpsOfferNoticeState>(INITIAL_GPS_OFFER_NOTICE)
   const offlineRef = useRef(offline)
   const availabilitySyncingRef = useRef(availabilitySyncing)
   /** Bumped on local POST availability changes so in-flight remote GETs cannot undo them. */
   const availabilityEpochRef = useRef(0)
   useEffect(() => {
     offlineRef.current = offline
+    if (offline) setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'went_offline' }))
   }, [offline])
   useEffect(() => {
     availabilitySyncingRef.current = availabilitySyncing
@@ -1155,12 +1163,15 @@ export function DriverDashboard() {
   useEffect(() => {
     if (!token || sessionRole !== 'driver') {
       setAvailabilityHydrated(false)
+      setGpsOfferNotice(INITIAL_GPS_OFFER_NOTICE)
       return
     }
     let cancelled = false
     let hydratedOnce = false
     let fetchSeq = 0
+    const eligibilityBySeq = new Map<number, { ok: true; status: Awaited<ReturnType<typeof getDriverStatus>> } | { ok: false }>()
     setAvailabilityHydrated(false)
+    setGpsOfferNotice(INITIAL_GPS_OFFER_NOTICE)
 
     const tick = () => {
       if (availabilitySyncingRef.current) return
@@ -1168,7 +1179,16 @@ export function DriverDashboard() {
       const responseSeq = ++fetchSeq
       const epochAtStart = availabilityEpochRef.current
       void fetchRemoteAvailabilityOfflineUpdate({
-        getStatus: () => getDriverStatus(token),
+        getStatus: async () => {
+          try {
+            const status = await getDriverStatus(token)
+            eligibilityBySeq.set(responseSeq, { ok: true, status })
+            return status
+          } catch (err) {
+            eligibilityBySeq.set(responseSeq, { ok: false })
+            throw err
+          }
+        },
         canGoOnline,
         getLocalOffline: () => offlineRef.current,
         getSyncing: () => availabilitySyncingRef.current,
@@ -1184,7 +1204,17 @@ export function DriverDashboard() {
               currentEpoch: availabilityEpochRef.current,
             })
           ) {
+            eligibilityBySeq.delete(responseSeq)
             return
+          }
+          const sample = eligibilityBySeq.get(responseSeq)
+          eligibilityBySeq.delete(responseSeq)
+          if (sample?.ok) {
+            setGpsOfferNotice((prev) =>
+              reduceGpsOfferNotice(prev, { type: 'status', status: sample.status }),
+            )
+          } else if (sample && !sample.ok) {
+            setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'fetch_failed' }))
           }
           if (nextOffline !== null) {
             setOffline(nextOffline)
@@ -1675,6 +1705,7 @@ export function DriverDashboard() {
                   />
                   <div className="pointer-events-none absolute inset-0 z-[5] flex min-h-0 flex-col gap-2 p-2">
                     <div className={`${MAP_BANNER_STACK} pointer-events-auto`}>
+                      <DriverGpsOfferBanner offline={offline} notice={gpsOfferNotice} />
                       {geolocationUsedFallback && (
                         <div
                           className={MAP_WARNING_BANNER}
@@ -2028,6 +2059,7 @@ export function DriverDashboard() {
               >
                 <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-2 pb-20 pointer-events-none">
                   <div className={`${MAP_BANNER_STACK} pointer-events-auto`}>
+                    <DriverGpsOfferBanner offline={offline} notice={gpsOfferNotice} />
                     {geolocationUsedFallback && (
                       <div
                         className={MAP_WARNING_BANNER}
@@ -2322,6 +2354,9 @@ export function DriverDashboard() {
               className={driverMapStageLayout ? 'hidden' : 'flex min-h-0 flex-1 flex-col overflow-y-auto'}
               id={driverMapStageLayout ? undefined : 'driver-main-scroll'}
             >
+              {!showDriverHomeStep1 && !driverMapStageLayout ? (
+                <DriverGpsOfferBanner offline={offline} notice={gpsOfferNotice} />
+              ) : null}
               {geolocationUsedFallback && (
                 <div
                   className={MAP_WARNING_BANNER}

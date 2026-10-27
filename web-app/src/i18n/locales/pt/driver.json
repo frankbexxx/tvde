@@ -143,6 +143,8 @@
   },
   "mapHome": {
     "locationFallback": "Localização indisponível — a usar posição aproximada.",
+    "gpsOfferUnavailable": "Localização indisponível — não estás a receber novas ofertas.",
+    "gpsOfferStatusUnknown": "Não foi possível confirmar se estás a receber novas ofertas.",
     "retryLocation": "Tentar outra vez",
     "docsMissingTitle": "Documentos em falta",
     "docsMissingBody": "Completa em Menu → Documentos para ficares disponível.",
