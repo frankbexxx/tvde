@@ -26,6 +26,9 @@ stripe>=8.0.0
 # CVE-2026-25645 (pip-audit)
 requests>=2.33.0
 
+# Render eMudhra advisory (SEC-RENDER-04): requests/httpx use Certifi for TLS trust store.
+certifi>=2026.10.19
+
 # Error tracking (opcional, só activa se SENTRY_DSN estiver definido).
 sentry-sdk[fastapi]>=2.20.0
 
