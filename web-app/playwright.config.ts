@@ -47,7 +47,7 @@ export default defineConfig({
   projects: [
     {
       name: 'e2e-ui',
-      testMatch: /(driver-passenger-flow|admin-health-tab|admin-trips-deeplink|partner-shell|extra-panel-smoke|passenger-base-capability|login-screen-mobile|login-screen-desktop)\.spec\.ts$/,
+      testMatch: /(driver-passenger-flow|admin-health-tab|admin-trips-deeplink|partner-shell|extra-panel-smoke|passenger-base-capability|login-screen-mobile|login-screen-desktop|gps-offer-notice-mobile)\.spec\.ts$/,
     },
     {
       name: 'e2e-api',
