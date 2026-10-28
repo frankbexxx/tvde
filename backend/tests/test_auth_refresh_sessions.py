@@ -17,7 +17,11 @@ from sqlalchemy.orm import Session
 
 from app.auth import refresh_sessions as refresh_module
 from app.auth.passwords import hash_password
-from app.auth.refresh_crypto import InsecureRefreshKey, require_refresh_key
+from app.auth.refresh_crypto import (
+    InsecureRefreshKey,
+    _decode_urlsafe_key,
+    require_refresh_key,
+)
 from app.auth.refresh_sessions import (
     begin_refresh,
     digest,
@@ -651,6 +655,69 @@ def test_web_cookie_and_android_body_are_separate(
     mismatch = _refresh(client, android_secret, str(uuid.uuid4()), client_type="web")
     assert mismatch.status_code == 401
     assert _family(db, _android_family).revoked_at is None
+
+
+def _unpadded_refresh_key() -> tuple[bytes, str]:
+    raw = secrets.token_bytes(32)
+    encoded = base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+    assert len(encoded) == 43
+    assert "=" not in encoded
+    return raw, encoded
+
+
+def test_refresh_key_accepts_urlsafe_with_or_without_padding(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    raw, unpadded = _unpadded_refresh_key()
+    monkeypatch.setattr(settings, "REFRESH_SUCCESSOR_KEY", unpadded, raising=False)
+    assert require_refresh_key() == raw
+    monkeypatch.setattr(settings, "REFRESH_SUCCESSOR_KEY", unpadded + "=", raising=False)
+    assert require_refresh_key() == raw
+
+
+def test_refresh_key_rejects_noncanonical_padding() -> None:
+    _raw, unpadded = _unpadded_refresh_key()
+    needs_two = base64.urlsafe_b64encode(b"\x02" * 31).decode("ascii").rstrip("=")
+    assert len(needs_two) % 4 == 2
+    displaced = unpadded[:10] + "=" + unpadded[10:]
+    for value in (unpadded + "==", unpadded + "===", displaced, needs_two + "="):
+        with pytest.raises(InsecureRefreshKey) as caught:
+            _decode_urlsafe_key(value)
+        assert value not in str(caught.value)
+        assert value not in str(caught.value.__cause__)
+
+
+def test_refresh_key_rejects_malformed_short_and_weak_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    short = base64.urlsafe_b64encode(b"\x01" * 16).decode("ascii").rstrip("=")
+    for value in ("abc$def", "!!!!", "ABCDE", short, "changeme"):
+        monkeypatch.setattr(settings, "REFRESH_SUCCESSOR_KEY", value, raising=False)
+        with pytest.raises(InsecureRefreshKey) as caught:
+            require_refresh_key()
+        assert value not in str(caught.value)
+        assert value not in str(caught.value.__cause__)
+
+
+def test_unpadded_key_rotates_replays_and_revokes_reuse(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _raw, unpadded = _unpadded_refresh_key()
+    monkeypatch.setattr(settings, "REFRESH_SUCCESSOR_KEY", unpadded, raising=False)
+    _user_ignored, secret, family_id = _open(db)
+    key = str(uuid.uuid4())
+    first = _refresh(client, secret, key)
+    replay = _refresh(client, secret, key)
+    assert first.status_code == 200, first.text
+    assert replay.status_code == 200, replay.text
+    assert first.json()["refresh_token"] == replay.json()["refresh_token"]
+    assert replay.json()["refresh_token"] != secret
+    reused = _refresh(client, secret, str(uuid.uuid4()))
+    assert reused.status_code == 401
+    assert reused.json()["detail"] == "invalid_grant"
+    family = _family(db, family_id)
+    assert family.revoked_at is not None
+    assert family.revoke_reason == "reuse"
 
 
 def test_weak_key_is_refused_and_purge_clears_expired_ciphertext(
