@@ -34,6 +34,8 @@ LOCK_TIMEOUT = "2s"
 STATUS_ACTIVE = "active"
 STATUS_ROTATED = "rotated"
 STATUS_REVOKED = "revoked"
+# OAuth 2.0 token type (RFC 6749); not a credential.
+TOKEN_TYPE_BEARER = "bearer"  # nosec B105
 _TIMEOUT_RE = re.compile(r"^[0-9]{1,5}(ms|s)$")
 
 _POLICIES: dict[Role, tuple[timedelta, timedelta]] = {
@@ -350,7 +352,7 @@ def _rotate(
     expires_at = access["expires_at"]
     payload = {
         "access_token": access["token"],
-        "token_type": "bearer",
+        "token_type": TOKEN_TYPE_BEARER,
         "user_id": str(user.id),
         "role": user.role.value,
         "expires_at": expires_at.isoformat(),
