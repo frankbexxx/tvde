@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 import secrets
 from typing import Any
@@ -35,6 +36,31 @@ class SuccessorUnreadable(Exception):
     """O ciphertext não abre com a chave actual."""
 
 
+_URLSAFE_ALPHABET = frozenset(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+)
+
+
+def _decode_urlsafe_key(value: str) -> bytes:
+    """Aceita Base64 URL-safe sem padding ou com o padding canónico."""
+    padding = len(value) - len(value.rstrip("="))
+    if value.count("=") != padding or padding > 2:
+        raise InsecureRefreshKey
+    body = value[:-padding] if padding else value
+    if not body or any(char not in _URLSAFE_ALPHABET for char in body):
+        raise InsecureRefreshKey
+    remainder = len(body) % 4
+    if remainder == 1:
+        raise InsecureRefreshKey
+    canonical = 0 if remainder == 0 else 4 - remainder
+    if padding not in (0, canonical):
+        raise InsecureRefreshKey
+    try:
+        return base64.urlsafe_b64decode(body + ("=" * canonical))
+    except (binascii.Error, ValueError) as exc:
+        raise InsecureRefreshKey from exc
+
+
 def require_refresh_key() -> bytes:
     raw = settings.REFRESH_SUCCESSOR_KEY
     if raw is None:
@@ -46,10 +72,7 @@ def require_refresh_key() -> bytes:
     otp_secret = (settings.OTP_SECRET or "").strip()
     if value == jwt_secret or value == otp_secret:
         raise InsecureRefreshKey
-    try:
-        key = base64.urlsafe_b64decode(value)
-    except Exception as exc:
-        raise InsecureRefreshKey from exc
+    key = _decode_urlsafe_key(value)
     if len(key) != 32 or len(set(key)) < 8:
         raise InsecureRefreshKey
     return key
