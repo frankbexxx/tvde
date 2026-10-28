@@ -146,13 +146,15 @@ describe('renovação web', () => {
   it('uma resposta atrasada não substitui o token mais recente', async () => {
     localStorage.setItem(LS_AUTH_CONTRACT, 'web')
     localStorage.setItem(LS_ACCESS_TOKEN, 'old')
-    let release: (() => void) | null = null
+    let refreshParked = false
+    let release = (): void => {}
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string) => {
         if (String(url).includes('/auth/refresh')) {
           await new Promise<void>((resolve) => {
-            release = resolve
+            release = () => resolve()
+            refreshParked = true
           })
           return jsonResponse(200, { access_token: 'late' })
         }
@@ -160,9 +162,9 @@ describe('renovação web', () => {
       }),
     )
     const pending = apiFetch('/driver/status')
-    await vi.waitFor(() => expect(release).not.toBeNull())
+    await vi.waitFor(() => expect(refreshParked).toBe(true))
     const preparing = prepareNewCredentials()
-    release?.()
+    release()
     await preparing
     localStorage.setItem(LS_ACCESS_TOKEN, 'newer')
     await expect(pending).rejects.toMatchObject({ status: 503 })
