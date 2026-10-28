@@ -4,6 +4,12 @@
  */
 import { reportApiServerError } from '../sentry'
 import { getStoredAccessToken } from '../utils/authStorage'
+import {
+  authRequestExtras,
+  mustNotRefresh,
+  noteIssuerSuccess,
+  refreshSession,
+} from './sessionRefresh'
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
 
@@ -52,21 +58,33 @@ function fetchWithTimeout(
 
 export async function apiFetch<T>(
   path: string,
-  options: RequestInit & { token?: string | null; timeoutMs?: number } = {}
+  options: RequestInit & { token?: string | null; timeoutMs?: number; authRetry?: boolean } = {}
 ): Promise<T> {
   const authToken = options.token ?? tokenGetter?.() ?? getStoredAccessToken()
+  const extras = authRequestExtras(path)
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
+    ...extras.headers,
   }
-  if (authToken) {
+  const pathName = path.split('?')[0]
+  if (authToken && pathName !== '/auth/refresh' && pathName !== '/auth/logout') {
     (headers as Record<string, string>)['Authorization'] = `Bearer ${authToken}`
   }
-  const { token: _omitToken, timeoutMs = DEFAULT_TIMEOUT_MS, ...init } = options
+  const {
+    token: _omitToken,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    authRetry = false,
+    ...init
+  } = options
   void _omitToken
   let res: Response
   try {
-    res = await fetchWithTimeout(`${API_BASE}${path}`, { ...init, headers }, timeoutMs)
+    res = await fetchWithTimeout(
+      `${API_BASE}${path}`,
+      { ...init, headers, credentials: extras.credentials ?? init.credentials },
+      timeoutMs
+    )
   } catch (e) {
     if (e instanceof Error && e.name === 'AbortError') {
       throw { status: 0, detail: 'timeout' } as ApiError
@@ -74,10 +92,26 @@ export async function apiFetch<T>(
     throw e
   }
   if (res.status === 401) {
-    window.dispatchEvent(new CustomEvent('api:401'))
     const requestId = res.headers.get('X-Request-ID') ?? undefined
     const body = await res.json().catch(() => ({}))
     const detail = body.detail ?? body.message ?? res.statusText
+    const exempt = mustNotRefresh(path)
+    if (!authRetry && !exempt) {
+      const outcome = await refreshSession()
+      if (outcome === 'refreshed') {
+        return apiFetch<T>(path, {
+          ...options,
+          authRetry: true,
+          token: getStoredAccessToken(),
+        })
+      }
+      if (outcome === 'transient' || outcome === 'stale') {
+        throw { status: 503, detail: 'refresh_unavailable', request_id: requestId } as ApiError
+      }
+    }
+    if (!exempt) {
+      window.dispatchEvent(new CustomEvent('api:401'))
+    }
     throw { status: 401, detail, request_id: requestId } as ApiError
   }
   if (!res.ok) {
@@ -89,6 +123,7 @@ export async function apiFetch<T>(
     }
     throw { status: res.status, detail, request_id: requestId } as ApiError
   }
+  noteIssuerSuccess(path)
   if (res.status === 204 || res.headers.get('content-length') === '0') {
     return undefined as T
   }

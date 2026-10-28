@@ -7,6 +7,7 @@ from typing import Optional
 import anyio
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import func, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError
@@ -35,6 +36,10 @@ from app.auth.otp import (
     verify_otp_code,
 )
 from app.auth.password_reset import issue_password_reset_proof, read_password_reset_proof
+from app.api.routers.auth_sessions import (
+    refresh_login_response,
+    requested_refresh_client,
+)
 from app.auth.refresh_sessions import revoke_user_families
 from app.auth.security import (
     create_access_token,
@@ -134,6 +139,19 @@ def _token_response(user: User, token_data: dict) -> TokenResponse:
     )
 
 
+def _finish_login(
+    db: Session,
+    request: Request,
+    user: User,
+    token_data: dict,
+) -> TokenResponse | JSONResponse:
+    """Legado devolve o contrato antigo. refresh-v1 cria uma família."""
+    client = requested_refresh_client(request)
+    if client is None:
+        return _token_response(user, token_data)
+    return refresh_login_response(db, user, token_data, client)
+
+
 def _reject_otp_when_deployed() -> None:
     """OTP code stays for a future SMS track. Deployed has no delivery channel."""
     if settings.is_deployed_environment():
@@ -203,7 +221,8 @@ async def verify_otp(
     payload: OtpVerifyRequest,
     request: Request,
     db: Session = Depends(get_db),
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
+    requested_refresh_client(request)
     _reject_otp_when_deployed()
     now = datetime.now(timezone.utc)
     phone = _normalize_phone(payload.phone)
@@ -288,7 +307,7 @@ async def verify_otp(
         token_version=int(user.token_version),
     )
 
-    return _token_response(user, token_data)
+    return _finish_login(db, request, user, token_data)
 
 
 def _verify_login_password(user: User, password: str) -> None:
@@ -357,8 +376,9 @@ async def login(
     payload: LoginRequest,
     request: Request,
     db: Session = Depends(get_db),
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     """Login existente com phone + password (independente de BETA_MODE)."""
+    requested_refresh_client(request)
     phone = _normalize_phone(payload.phone)
     check_beta_login_rate_limit(request, phone)
     if settings.enforce_pt_phone() and not _pt_phone_ok(phone):
@@ -392,7 +412,7 @@ async def login(
         token_version=int(user.token_version),
     )
 
-    return _token_response(user, token_data)
+    return _finish_login(db, request, user, token_data)
 
 
 def _is_google_passenger_onboarding(db: Session, user: User) -> bool:
@@ -473,10 +493,11 @@ def _normalize_onboarding_phone(phone: str) -> str:
 
 def _session_from_google_claims(
     db: Session,
+    request: Request,
     claims: dict,
     *,
     echo_id_token: str | None = None,
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     name = str(claims.get("name") or "").strip()[:120]
     sub = str(claims.get("sub") or "").strip()
     email = str(claims.get("email") or "").strip().lower()
@@ -548,7 +569,7 @@ def _session_from_google_claims(
         role=user.role.value,
         token_version=int(user.token_version),
     )
-    return _token_response(user, token_data)
+    return _finish_login(db, request, user, token_data)
 
 
 def _phone_link_is_provable(owner: User) -> bool:
@@ -596,12 +617,13 @@ def _refuse_unproven_phone_owner(owner: User) -> None:
 
 def _complete_google_passenger_onboarding(
     db: Session,
+    request: Request,
     claims: dict,
     *,
     name: str,
     phone: str,
     accept_legal: bool,
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     sub = str(claims.get("sub") or "").strip()
     email = str(claims.get("email") or "").strip().lower()
     if not sub:
@@ -634,6 +656,7 @@ def _complete_google_passenger_onboarding(
     if identity is None:
         return _create_google_passenger(
             db,
+            request,
             sub=sub,
             email=email,
             name=cleaned_name,
@@ -713,17 +736,18 @@ def _complete_google_passenger_onboarding(
         role=user.role.value,
         token_version=int(user.token_version),
     )
-    return _token_response(user, token_data)
+    return _finish_login(db, request, user, token_data)
 
 
 def _create_google_passenger(
     db: Session,
+    request: Request,
     *,
     sub: str,
     email: str,
     name: str,
     phone: str,
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     """Cria o User só no fim do onboarding, com telefone real e identity primária."""
     owner = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if owner is not None:
@@ -798,7 +822,7 @@ def _create_google_passenger(
         role=user.role.value,
         token_version=int(user.token_version),
     )
-    return _token_response(user, token_data)
+    return _finish_login(db, request, user, token_data)
 
 
 @router.post("/google/exchange", response_model=TokenResponse)
@@ -806,8 +830,9 @@ async def google_exchange(
     payload: GoogleExchangeRequest,
     request: Request,
     db: Session = Depends(get_db),
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     """`GOOGLE_OAUTH_*`: troca `code` por JWT. O papel vem da conta, não do ecrã."""
+    requested_refresh_client(request)
     check_google_exchange_rate_limit(request)
     if not _google_oauth_configured():
         raise HTTPException(
@@ -849,7 +874,7 @@ async def google_exchange(
         )
 
     return _session_from_google_claims(
-        db, claims, echo_id_token=tok_pack["id_token"]
+        db, request, claims, echo_id_token=tok_pack["id_token"]
     )
 
 
@@ -858,8 +883,9 @@ async def google_id_token(
     payload: GoogleIdTokenRequest,
     request: Request,
     db: Session = Depends(get_db),
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     """Login nativo: valida o id_token da Google. Não aceita redirect do cliente."""
+    requested_refresh_client(request)
     check_google_exchange_rate_limit(request)
     if not _google_oauth_configured():
         raise HTTPException(
@@ -887,7 +913,7 @@ async def google_id_token(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="google_email_not_verified",
         )
-    return _session_from_google_claims(db, claims)
+    return _session_from_google_claims(db, request, claims)
 
 
 @router.post("/google/onboarding", response_model=TokenResponse)
@@ -895,8 +921,9 @@ async def google_onboarding(
     payload: GoogleOnboardingRequest,
     request: Request,
     db: Session = Depends(get_db),
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     """Conclui o passageiro Google. Revalida o id_token. Não emite JWT antes disso."""
+    requested_refresh_client(request)
     check_google_exchange_rate_limit(request)
     if not _google_oauth_configured():
         raise HTTPException(
@@ -918,6 +945,7 @@ async def google_onboarding(
         ) from None
     return _complete_google_passenger_onboarding(
         db,
+        request,
         claims,
         name=payload.name,
         phone=payload.phone,
@@ -963,12 +991,13 @@ def _reject_google_link(
 
 def _link_google_to_phone_owner(
     db: Session,
+    request: Request,
     claims: dict,
     *,
     phone: str,
     password: str,
     accept_legal: bool,
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     """Liga o Google à conta do telefone. Não cria nem apaga Users."""
     sub = str(claims.get("sub") or "").strip()
     email = str(claims.get("email") or "").strip().lower()
@@ -1085,7 +1114,7 @@ def _link_google_to_phone_owner(
         role=owner.role.value,
         token_version=int(owner.token_version),
     )
-    return _token_response(owner, token_data)
+    return _finish_login(db, request, owner, token_data)
 
 
 @router.post("/google/link", response_model=TokenResponse)
@@ -1093,8 +1122,9 @@ async def google_link_existing_account(
     payload: GoogleLinkRequest,
     request: Request,
     db: Session = Depends(get_db),
-) -> TokenResponse:
+) -> TokenResponse | JSONResponse:
     """Confirma a conta do telefone com palavra-passe e liga o Google a ela."""
+    requested_refresh_client(request)
     check_google_exchange_rate_limit(request)
     if not _google_oauth_configured():
         raise HTTPException(
@@ -1108,6 +1138,7 @@ async def google_link_existing_account(
     )
     return _link_google_to_phone_owner(
         db,
+        request,
         claims,
         phone=normalized_phone,
         password=payload.password,

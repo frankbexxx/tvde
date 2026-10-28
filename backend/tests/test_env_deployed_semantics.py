@@ -64,7 +64,7 @@ def test_environment_helper_matrix(
     assert settings.is_development_environment() is dev
     assert settings.is_test_environment() is test
     assert settings.is_deployed_environment() is deployed
-    assert settings.uses_permissive_cors() is (not deployed)
+    assert settings.uses_permissive_cors() is (label == "test")
     assert settings.should_run_alembic_on_startup() is deployed
 
 
@@ -197,3 +197,27 @@ def test_settings_class_raw_label_trim_case() -> None:
     )
     assert s._raw_environment_label() == "dev"
     assert s.is_development_environment() is True
+
+
+def test_browser_origins_allow_the_refresh_cookie(monkeypatch: pytest.MonkeyPatch) -> None:
+    _apply_env(monkeypatch, env="dev")
+    cors = _cors_middleware_params()
+    assert cors["allow_credentials"] is True
+    assert cors["allow_origins"] != ["*"]
+    for origin in (
+        "https://tvde-app-j51f.onrender.com",
+        "https://tvde-staging-app.onrender.com",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://localhost",
+    ):
+        assert origin in cors["allow_origins"]
+
+
+def test_automated_tests_keep_wildcard_without_credentials(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _apply_env(monkeypatch, env="test")
+    cors = _cors_middleware_params()
+    assert cors["allow_origins"] == ["*"]
+    assert cors["allow_credentials"] is False

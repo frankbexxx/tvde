@@ -1,4 +1,4 @@
-"""Sessões renováveis (G2-AUTH-1). O login real ainda não emite refresh."""
+"""Sessões renováveis. O login emite refresh só para o contrato refresh-v1."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ from app.db.models.auth_session import AuthRefreshToken, AuthSessionFamily
 from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.db.session import SessionLocal
-from app.models.enums import Role, UserStatus
+from app.models.enums import Role, TripStatus, UserStatus
 from tests.support.unique_phone import unique_test_phone
 
 TEST_REFRESH_KEY = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("ascii")
@@ -401,7 +401,6 @@ def test_legacy_login_stays_unchanged_without_a_refresh_family(
     login = client.post(
         "/auth/login",
         json={"phone": user.phone, "password": PASSWORD},
-        headers=_headers("web"),
     )
     assert login.status_code == 200, login.text
     assert set(login.json()) == {
@@ -431,6 +430,202 @@ def test_legacy_login_stays_unchanged_without_a_refresh_family(
     refused = client.post("/auth/refresh", json={"idempotency_key": str(uuid.uuid4())})
     assert refused.status_code == 400
     assert refused.json()["detail"] == "auth_contract_required"
+
+
+def _cookie_secret(response) -> str:
+    raw = response.headers["set-cookie"]
+    pair = raw.split(";", 1)[0]
+    name, value = pair.split("=", 1)
+    assert name == "vamula_refresh"
+    return value
+
+
+def _jwt_ttl(token: str) -> int:
+    payload = jwt.decode(
+        token,
+        settings.JWT_SECRET_KEY,
+        algorithms=[settings.JWT_ALGORITHM],
+    )
+    return int(payload["exp"]) - int(payload["iat"])
+
+
+def test_refresh_v1_login_splits_web_cookie_and_android_json(
+    client: TestClient, db: Session, caplog: pytest.LogCaptureFixture
+) -> None:
+    user = _user(db, Role.passenger, password=PASSWORD)
+    trip = Trip(
+        passenger_id=user.id,
+        status=TripStatus.ongoing,
+        origin_lat=38.72,
+        origin_lng=-9.14,
+        destination_lat=38.73,
+        destination_lng=-9.15,
+        estimated_price=10.0,
+    )
+    db.add(trip)
+    db.commit()
+    before = db.execute(select(func.count()).select_from(AuthSessionFamily)).scalar()
+    rejected = client.post(
+        "/auth/login",
+        json={"phone": user.phone, "password": PASSWORD},
+        headers={"X-Auth-Contract": "refresh-v1", "X-Auth-Client": "ios"},
+    )
+    assert rejected.status_code == 400
+    assert rejected.json()["detail"] == "auth_contract_required"
+    assert db.execute(select(func.count()).select_from(AuthSessionFamily)).scalar() == before
+
+    with caplog.at_level(logging.DEBUG):
+        web = client.post(
+            "/auth/login",
+            json={"phone": user.phone, "password": PASSWORD},
+            headers=_headers("web"),
+        )
+    assert web.status_code == 200, web.text
+    web_body = web.json()
+    assert "refresh_token" not in web_body
+    assert web_body["session_id"]
+    assert _jwt_ttl(web_body["access_token"]) == 60 * 60
+    cookie = web.headers["set-cookie"]
+    assert "HttpOnly" in cookie
+    assert "Secure" in cookie
+    assert "SameSite=lax" in cookie
+    assert "Path=/auth" in cookie
+    web_secret = _cookie_secret(web)
+    assert web_secret not in web.text
+    assert web_secret not in caplog.text
+    assert web_body["access_token"] not in caplog.text
+
+    android = client.post(
+        "/auth/login",
+        json={"phone": user.phone, "password": PASSWORD},
+        headers=_headers("android"),
+    )
+    assert android.status_code == 200, android.text
+    android_body = android.json()
+    assert android_body["refresh_token"]
+    assert "set-cookie" not in {name.lower() for name in android.headers}
+    assert android_body["refresh_token"] not in caplog.text
+    assert _jwt_ttl(android_body["access_token"]) == 60 * 60
+    families = list(
+        db.execute(
+            select(AuthSessionFamily).where(AuthSessionFamily.user_id == user.id)
+        ).scalars()
+    )
+    assert {row.client_type for row in families} == {"web", "android"}
+    assert all(row.revoked_at is None for row in families)
+
+    refreshed = _refresh(client, web_secret, str(uuid.uuid4()), client_type="web")
+    assert refreshed.status_code == 200, refreshed.text
+    assert "refresh_token" not in refreshed.json()
+    db.refresh(trip)
+    assert trip.status == TripStatus.ongoing
+    assert db.execute(select(func.count()).select_from(Trip)).scalar() >= 1
+
+    web_family_id = next(row.id for row in families if row.client_type == "web")
+    android_family_id = next(row.id for row in families if row.client_type == "android")
+    client.cookies.set("vamula_refresh", _cookie_secret(refreshed))
+    logged_out = client.post("/auth/logout", headers=_headers("web"))
+    client.cookies.clear()
+    assert logged_out.status_code == 204, logged_out.text
+    assert _family(db, web_family_id).revoke_reason == "logout"
+    assert _family(db, android_family_id).revoked_at is None
+    assert _refresh(
+        client, android_body["refresh_token"], str(uuid.uuid4()), client_type="android"
+    ).status_code == 200
+
+    from app.auth.security import create_access_token
+
+    access = create_access_token(
+        subject=str(user.id),
+        role=user.role.value,
+        token_version=int(user.token_version or 0),
+    )
+    changed = client.post(
+        "/auth/me/password",
+        json={"current_password": PASSWORD, "new_password": NEW_PASSWORD},
+        headers={"Authorization": f"Bearer {access['token']}"},
+    )
+    assert changed.status_code == 200, changed.text
+    assert _family(db, android_family_id).revoke_reason == "password_change"
+    db.refresh(trip)
+    assert trip.status == TripStatus.ongoing
+
+
+def test_otp_and_google_keep_legacy_and_accept_the_contract(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ENVIRONMENT", "test", raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "", raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "", raising=False)
+    from app.api.routers import auth as auth_module
+
+    monkeypatch.setattr(auth_module, "active_beta_user_count", lambda _db: 0)
+    monkeypatch.setattr(auth_module, "generate_otp_code", lambda: "123456")
+    existing = _user(db, Role.passenger, password=PASSWORD)
+    phone = existing.phone
+    requested = client.post(
+        "/auth/otp/request",
+        json={"phone": phone, "requested_role": "passenger"},
+    )
+    assert requested.status_code == 200, requested.text
+    legacy = client.post(
+        "/auth/otp/verify",
+        json={"phone": phone, "code": "123456", "accept_legal": True},
+    )
+    assert legacy.status_code == 200, legacy.text
+    assert set(legacy.json()) == {
+        "access_token",
+        "token_type",
+        "user_id",
+        "role",
+        "expires_at",
+        "display_name",
+        "phone",
+    }
+    assert "set-cookie" not in {name.lower() for name in legacy.headers}
+    assert _jwt_ttl(legacy.json()["access_token"]) == 60 * 60
+    before = db.execute(select(func.count()).select_from(AuthSessionFamily)).scalar()
+
+    monkeypatch.setattr(auth_module, "generate_otp_code", lambda: "654321")
+    other_user = _user(db, Role.passenger, password=PASSWORD)
+    other = other_user.phone
+    assert client.post("/auth/otp/request", json={"phone": other}).status_code == 200
+    web = client.post(
+        "/auth/otp/verify",
+        json={"phone": other, "code": "654321", "accept_legal": True},
+        headers=_headers("web"),
+    )
+    assert web.status_code == 200, web.text
+    assert "refresh_token" not in web.json()
+    assert "HttpOnly" in web.headers["set-cookie"]
+    assert _cookie_secret(web) not in web.text
+
+    disabled = client.post(
+        "/auth/google/exchange",
+        json={"code": "x", "redirect_uri": "http://localhost:5173/oauth"},
+    )
+    assert disabled.status_code == 503
+    assert disabled.json()["detail"] == "google_oauth_disabled"
+    rejected = client.post(
+        "/auth/google/id-token",
+        json={"id_token": "x" * 20, "nonce": "n" * 16},
+        headers={"X-Auth-Contract": "refresh-v1"},
+    )
+    assert rejected.status_code == 400
+    assert rejected.json()["detail"] == "auth_contract_required"
+    still = client.post(
+        "/auth/google/onboarding",
+        json={
+            "id_token": "x" * 20,
+            "name": "Ana",
+            "phone": other,
+            "accept_legal": True,
+        },
+        headers=_headers("android"),
+    )
+    assert still.status_code == 503
+    families = db.execute(select(func.count()).select_from(AuthSessionFamily)).scalar()
+    assert families == before + 1
 
 
 def test_web_cookie_and_android_body_are_separate(
@@ -551,7 +746,6 @@ def test_legacy_login_and_password_flows_work_without_refresh_key(
     login = client.post(
         "/auth/login",
         json={"phone": user.phone, "password": PASSWORD},
-        headers=_headers("web"),
     )
     assert login.status_code == 200, login.text
     assert "refresh_token" not in login.json()
@@ -560,6 +754,26 @@ def test_legacy_login_and_password_flows_work_without_refresh_key(
         db.execute(select(func.count()).select_from(AuthSessionFamily)).scalar()
         == before
     )
+    web = client.post(
+        "/auth/login",
+        json={"phone": user.phone, "password": PASSWORD},
+        headers=_headers("web"),
+    )
+    assert web.status_code == 200, web.text
+    assert "refresh_token" not in web.json()
+    assert "HttpOnly" in web.headers["set-cookie"]
+    secret = _cookie_secret(web)
+    assert (
+        db.execute(select(func.count()).select_from(AuthSessionFamily)).scalar()
+        == before + 1
+    )
+    refused = _refresh(client, secret, str(uuid.uuid4()), client_type="web")
+    assert refused.status_code == 503
+    assert refused.json()["detail"] == "refresh_unavailable"
+    kept = db.execute(
+        select(AuthSessionFamily).where(AuthSessionFamily.user_id == user.id)
+    ).scalar_one()
+    assert kept.revoked_at is None
     me = client.get(
         "/auth/me",
         headers={"Authorization": f"Bearer {login.json()['access_token']}"},

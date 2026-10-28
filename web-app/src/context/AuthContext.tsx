@@ -48,6 +48,7 @@ import {
   setStoredLastPhone,
   setStoredSessionDisplayName,
 } from '../utils/authStorage'
+import { logoutBrowserSession, subscribeAccessToken } from '../api/sessionRefresh'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { AUTH_LOGOUT_EVENT } from '../constants/events'
 import { writePassengerActiveTripIdToStorage } from '../features/passenger/passengerActiveTripRecovery'
@@ -593,6 +594,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setAppRouteRole = syncAppRouteRole
 
   const logout = useCallback(() => {
+    logoutBrowserSession()
     deactivatePushOnLogout(token)
     // L-FE-02: drop passenger active-trip sessionStorage before auth wipe
     writePassengerActiveTripIdToStorage(null)
@@ -628,6 +630,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setTokenGetter(() => token)
   }, [token])
+
+  useEffect(() => subscribeAccessToken((next) => {
+    setSessionAccessToken(next)
+  }), [])
 
   useEffect(() => {
     void ensurePushListeners()

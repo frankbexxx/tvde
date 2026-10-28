@@ -9,6 +9,8 @@ export const LS_SESSION_DISPLAY_NAME = 'tvde_session_display_name'
 
 export const LS_ACCESS_TOKEN = 'access_token'
 export const LS_REFRESH_TOKEN = 'refresh_token'
+/** Marca que este browser tem cookie HttpOnly. A WebView Capacitor não a grava. */
+export const LS_AUTH_CONTRACT = 'tvde_auth_contract'
 /** Legado — migrar para access_token */
 export const LS_TOKEN_LEGACY = 'token'
 
@@ -89,6 +91,7 @@ export function setStoredSessionDisplayName(name: string): void {
 export function clearAuthStorage(): void {
   localStorage.removeItem(LS_ACCESS_TOKEN)
   localStorage.removeItem(LS_REFRESH_TOKEN)
+  localStorage.removeItem(LS_AUTH_CONTRACT)
   localStorage.removeItem(LS_TOKEN_LEGACY)
   localStorage.removeItem(LS_APP_ROUTE_ROLE)
   localStorage.removeItem(LS_SESSION_DISPLAY_NAME)
