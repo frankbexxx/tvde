@@ -1,4 +1,4 @@
-"""POST /auth/refresh e POST /auth/logout. O login existente não emite refresh."""
+"""POST /auth/refresh e POST /auth/logout. O login emite refresh só com refresh-v1."""
 
 from __future__ import annotations
 
@@ -13,11 +13,15 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.auth.refresh_sessions import (
     REFRESH_CONTRACT,
+    TOKEN_TYPE_BEARER,
     RefreshOutcome,
     begin_refresh,
+    issue_session,
     logout_family,
     purge_expired_successor_ciphertexts,
 )
+from app.db.models.auth_session import AuthSessionFamily
+from app.db.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -33,6 +37,74 @@ _PUBLIC_FIELDS = (
     "phone",
     "session_id",
 )
+
+
+def requested_refresh_client(request: Request) -> str | None:
+    """None = cliente legado. Cabeçalho parcial ou inválido não emite sessão."""
+    contract = request.headers.get("x-auth-contract")
+    client = request.headers.get("x-auth-client")
+    if contract is None and client is None:
+        return None
+    if contract != REFRESH_CONTRACT or client not in ("web", "android"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="auth_contract_required",
+        )
+    return client
+
+
+def refresh_login_response(
+    db: Session,
+    user: User,
+    token_data: dict,
+    client: str,
+) -> JSONResponse:
+    """Cria a família e só depois escreve a resposta. O segredo não vai para o log."""
+    issued = issue_session(db, user, client_type=client)  # type: ignore[arg-type]
+    family = db.get(AuthSessionFamily, issued.family_id)
+    if family is None:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="refresh_unavailable",
+        )
+    absolute = family.absolute_expires_at
+    secret = issued.refresh_token
+    try:
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="refresh_unavailable",
+        ) from exc
+    expires_at = token_data["expires_at"]
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    body = {
+        "access_token": token_data["token"],
+        "token_type": TOKEN_TYPE_BEARER,
+        "user_id": str(user.id),
+        "role": user.role.value,
+        "expires_at": expires_at.isoformat(),
+        "expires_in": max(0, int((expires_at - now).total_seconds())),
+        "display_name": (user.name or "").strip(),
+        "phone": (user.phone or "").strip(),
+        "session_id": str(issued.family_id),
+    }
+    if client == "android":
+        body["refresh_token"] = secret
+    response = JSONResponse(body)
+    if client == "web":
+        _set_refresh_cookie(
+            response,
+            {
+                "refresh_token": secret,
+                "absolute_expires_at": absolute.isoformat(),
+            },
+        )
+    return _no_store(response)
 
 
 def _client_type(

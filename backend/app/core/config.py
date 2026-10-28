@@ -60,10 +60,15 @@ class Settings(BaseSettings):
     # Allow is_test_account + TEST_ACCOUNT_PASSWORD login. None = inherit BETA_MODE.
     ENABLE_DEMO_USERS: bool | None = None
 
-    # CORS: comma-separated origins (no "*"). Em deployed (prod/staging) é obrigatório ter pelo menos uma.
-    # Em development/test, o middleware pode usar "*" sem credentials (ver main.py).
+    # CORS: origens separadas por vírgula (sem "*"). O browser real envia o cookie
+    # de refresh com credentials, por isso a lista tem de ser explícita.
+    # Testes automatizados continuam com "*" sem credentials.
     CORS_ALLOWED_ORIGINS: str = (
-        "https://tvde-app-j51f.onrender.com,http://localhost:5173,https://localhost"
+        "https://tvde-app-j51f.onrender.com,"
+        "https://tvde-staging-app.onrender.com,"
+        "http://localhost:5173,"
+        "http://127.0.0.1:5173,"
+        "https://localhost"
     )
 
     # Owner/operator phone: seed protection + admin mutation guards. Does NOT grant
@@ -206,8 +211,8 @@ class Settings(BaseSettings):
         return True
 
     def uses_permissive_cors(self) -> bool:
-        """Wildcard CORS only outside deployed environments."""
-        return not self.is_deployed_environment()
+        """Wildcard sem credentials só nos testes. Dev e deployed usam a lista explícita."""
+        return self.is_test_environment()
 
     def should_run_alembic_on_startup(self) -> bool:
         """Prod + staging (+ unknown) run upgrade_to_head on lifespan startup."""

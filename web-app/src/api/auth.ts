@@ -1,4 +1,5 @@
 import { apiFetch, COLD_START_FIRST_TIMEOUT_MS, DEFAULT_TIMEOUT_MS } from './client'
+import { prepareNewCredentials } from './sessionRefresh'
 
 export interface TokenResponse {
   access_token: string
@@ -53,6 +54,7 @@ export async function login(
   password: string,
   requestedRole?: string
 ): Promise<TokenResponse> {
+  await prepareNewCredentials()
   return apiFetch<TokenResponse>('/auth/login', {
     method: 'POST',
     body: JSON.stringify({
@@ -70,6 +72,7 @@ export async function linkGoogleAccount(body: {
   password: string
   acceptLegal: boolean
 }): Promise<TokenResponse> {
+  await prepareNewCredentials()
   return apiFetch<TokenResponse>('/auth/google/link', {
     method: 'POST',
     body: JSON.stringify({
@@ -89,6 +92,7 @@ export async function completeGoogleOnboarding(body: {
   phone: string
   acceptLegal: boolean
 }): Promise<TokenResponse> {
+  await prepareNewCredentials()
   return apiFetch<TokenResponse>('/auth/google/onboarding', {
     method: 'POST',
     body: JSON.stringify({
@@ -106,6 +110,7 @@ export async function exchangeGoogleIdToken(
   nonce: string,
   acceptLegal = false,
 ): Promise<TokenResponse> {
+  await prepareNewCredentials()
   return apiFetch<TokenResponse>('/auth/google/id-token', {
     method: 'POST',
     body: JSON.stringify({
@@ -121,6 +126,7 @@ export async function exchangeGoogleCode(
   redirect_uri: string,
   acceptLegal = false
 ): Promise<TokenResponse> {
+  await prepareNewCredentials()
   return apiFetch<TokenResponse>('/auth/google/exchange', {
     method: 'POST',
     body: JSON.stringify({
@@ -144,6 +150,7 @@ export async function verifyOtp(
   acceptLegal: boolean,
   requestedRole?: string
 ): Promise<TokenResponse> {
+  await prepareNewCredentials()
   return apiFetch<TokenResponse>('/auth/otp/verify', {
     method: 'POST',
     body: JSON.stringify({

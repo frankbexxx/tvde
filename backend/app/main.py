@@ -144,7 +144,12 @@ def _cors_allowed_origins_list() -> list[str]:
 
 
 def _cors_middleware_params() -> dict:
-    """Deployed → lista explícita + credentials. Development/test → * sem credentials."""
+    """Teste → * sem credentials. Browser real → origens explícitas e credentials.
+
+    O cookie de refresh é SameSite=Lax e host-only na API. O cabeçalho
+    X-Auth-Contract não é simples, por isso o browser faz preflight e a origem
+    tem de estar nesta lista. Sem o cabeçalho, o refresh recusa o pedido.
+    """
     if settings.uses_permissive_cors():
         return {"allow_origins": ["*"], "allow_credentials": False}
     origins = _cors_allowed_origins_list()
