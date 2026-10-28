@@ -1,3 +1,4 @@
+from app.db.models.auth_session import AuthRefreshToken, AuthSessionFamily
 from app.db.models.audit_event import AuditEvent
 from app.db.models.complaint import Complaint, ComplaintAttachment, ComplaintHistory
 from app.db.models.driver import Driver
@@ -24,6 +25,8 @@ from app.db.models.vehicle import Vehicle
 from app.db.models.vehicle_document import VehicleDocument
 
 __all__ = [
+    "AuthRefreshToken",
+    "AuthSessionFamily",
     "User",
     "UserIdentity",
     "DevicePushToken",

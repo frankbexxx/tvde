@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_MINUTES: int = 60
+    # Cifra do sucessor de refresh (G2-AUTH-1). Base64 url-safe de 32 bytes.
+    # Ausente ou fraca: /auth/refresh recusa. Não há derivação a partir do JWT.
+    REFRESH_SUCCESSOR_KEY: str | None = None
 
     OTP_SECRET: str
     OTP_EXPIRATION_MINUTES: int = 5

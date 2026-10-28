@@ -35,6 +35,7 @@ from app.auth.otp import (
     verify_otp_code,
 )
 from app.auth.password_reset import issue_password_reset_proof, read_password_reset_proof
+from app.auth.refresh_sessions import revoke_user_families
 from app.auth.security import (
     create_access_token,
     create_strong_auth_proof,
@@ -1697,6 +1698,7 @@ async def complete_password_recovery(
         )
     user.password_hash = hash_password(payload.new_password)
     user.token_version = int(user.token_version or 0) + 1
+    revoke_user_families(db, user.id, reason="password_recovery", now=now)
     if not claim_unconsumed_otp(db, otp.id, now):
         db.rollback()
         raise HTTPException(
@@ -1736,5 +1738,6 @@ async def change_my_password(
             )
     user.password_hash = hash_password(payload.new_password)
     user.token_version = int(user.token_version or 0) + 1
+    revoke_user_families(db, user.id, reason="password_change")
     db.commit()
     return {"status": "ok"}
