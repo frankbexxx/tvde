@@ -94,7 +94,8 @@ public class DriverLocationRuntimeTest {
         String activity = read(moduleFile("src/main/java/pt/vamula/app/MainActivity.java"));
         assertFalse(activity.contains("DriverLocationService"));
         assertFalse(activity.contains("startForegroundService"));
-        assertTrue(activity.contains("vamulaGps"));
+        assertFalse(activity.contains("addJavascriptInterface"));
+        assertTrue(activity.contains("GpsOwnershipJs.install"));
         assertTrue(activity.contains("DriverLocationHost"));
         String ownership = read(moduleFile("src/main/java/pt/vamula/app/location/DriverLocationOwnership.java"));
         assertFalse(ownership.contains("SharedPreferences"));

@@ -21,7 +21,7 @@ public class MainActivity extends BridgeActivity {
         WebView webView = findViewById(R.id.webview);
         VaultChannel.install(webView, SessionVaults.get(this));
         if (webView != null) {
-            webView.addJavascriptInterface(new pt.vamula.app.location.GpsOwnershipJs(), "vamulaGps");
+            pt.vamula.app.location.GpsOwnershipJs.install(webView);
         }
         super.load();
     }
