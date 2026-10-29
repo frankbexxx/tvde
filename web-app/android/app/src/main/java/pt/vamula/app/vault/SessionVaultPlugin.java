@@ -8,8 +8,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import java.util.Map;
 
 /**
- * Leitura e limpeza para a WebView. A escrita com segredos fica em {@link SessionVaultJs}.
- * O login actual não chama este plugin.
+ * Leitura e limpeza sem segredos. A escrita entra por {@link VaultChannel}, não por argumentos Capacitor.
  */
 @CapacitorPlugin(name = "SessionVault")
 public class SessionVaultPlugin extends Plugin {
