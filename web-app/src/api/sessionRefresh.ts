@@ -7,6 +7,8 @@ import {
   resetAndroidRefreshForTests,
 } from '../features/auth/androidSession'
 import { LS_AUTH_CONTRACT, setStoredAccessToken } from '../utils/authStorage'
+import { releaseDriverLocationOwnership } from '../services/gpsOwnership'
+import { noteSessionFamily } from '../features/driver/driverSessionFamily'
 
 export const AUTH_CONTRACT = 'refresh-v1'
 
@@ -196,6 +198,8 @@ async function performAndroidRefresh(started: number): Promise<RefreshOutcome> {
 export function logoutBrowserSession(): void {
   epoch += 1
   inflightAbort?.abort()
+  releaseDriverLocationOwnership()
+  noteSessionFamily(null)
   if (androidRefreshEnabled()) {
     void logoutAndroidSession()
     return

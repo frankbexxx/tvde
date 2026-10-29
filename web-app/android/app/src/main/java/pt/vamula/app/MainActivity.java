@@ -20,6 +20,22 @@ public class MainActivity extends BridgeActivity {
     protected void load() {
         WebView webView = findViewById(R.id.webview);
         VaultChannel.install(webView, SessionVaults.get(this));
+        if (webView != null) {
+            pt.vamula.app.location.GpsOwnershipJs.install(webView);
+        }
         super.load();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        pt.vamula.app.location.DriverLocationHost.attach(this);
+        pt.vamula.app.location.DriverLocationHost.resumed();
+    }
+
+    @Override
+    public void onPause() {
+        pt.vamula.app.location.DriverLocationHost.paused();
+        super.onPause();
     }
 }

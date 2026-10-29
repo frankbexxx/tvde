@@ -11,6 +11,8 @@ export interface TokenResponse {
   display_name?: string
   /** Telefone ou identificador sintético (login Google). */
   phone?: string
+  /** Família de refresh já emitida pelo login. A renovação do access token não a altera. */
+  session_id?: string
 }
 
 export interface AuthTokens {

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Só na build de depuração. Não tem intent-filter e não entra na APK de distribuição. -->
+    <application>
+        <activity
+            android:name=".location.DriverLocationHarnessActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.NoTitleBar" />
+        <activity
+            android:name=".location.DriverLocationProofActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.NoTitleBar" />
+    </application>
+</manifest>

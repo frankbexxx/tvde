@@ -3,6 +3,10 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { AUTH_LOGOUT_EVENT } from '../constants/events'
 import {
+  noteSessionFamily,
+  resetSessionFamilyForTests,
+} from '../features/driver/driverSessionFamily'
+import {
   ActiveTripProvider,
   useActiveTrip,
 } from './ActiveTripContext'
@@ -18,10 +22,12 @@ function wrapper({ children }: { children: ReactNode }) {
 describe('ActiveTripContext logout cleanup (L-FE-02)', () => {
   beforeEach(() => {
     sessionStorage.clear()
+    resetSessionFamilyForTests()
   })
 
   afterEach(() => {
     sessionStorage.clear()
+    resetSessionFamilyForTests()
   })
 
   it('clears passenger storage + React state on AUTH_LOGOUT_EVENT', async () => {
@@ -59,6 +65,31 @@ describe('ActiveTripContext logout cleanup (L-FE-02)', () => {
     // Simulate next login / new provider mount (passenger B) — storage empty
     const { result: resultB } = renderHook(() => useActiveTrip(), { wrapper })
     expect(resultB.current.passengerActiveTripId).toBeNull()
+    expect(sessionStorage.getItem(PASSENGER_ACTIVE_TRIP_STORAGE_KEY)).toBeNull()
+  })
+
+  it('a segunda conta não herda a viagem e a mesma família conserva-a', async () => {
+    const { result } = renderHook(() => useActiveTrip(), { wrapper })
+    act(() => {
+      noteSessionFamily('family-a')
+    })
+    act(() => {
+      result.current.setDriverActiveTripId('trip-a')
+      result.current.setPassengerActiveTripId('passenger-a')
+    })
+    expect(result.current.driverActiveTripId).toBe('trip-a')
+
+    act(() => {
+      noteSessionFamily('family-a')
+    })
+    expect(result.current.driverActiveTripId).toBe('trip-a')
+    expect(result.current.passengerActiveTripId).toBe('passenger-a')
+
+    act(() => {
+      noteSessionFamily('family-b')
+    })
+    expect(result.current.driverActiveTripId).toBeNull()
+    expect(result.current.passengerActiveTripId).toBeNull()
     expect(sessionStorage.getItem(PASSENGER_ACTIVE_TRIP_STORAGE_KEY)).toBeNull()
   })
 })

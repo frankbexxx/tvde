@@ -55,8 +55,14 @@ export function useDriverLocationReporter(options: {
       lastSentFixByToken.set(accessToken, stamp)
       let cancelled = false
       void sendDriverLocation(lat, lng, accessToken, uploadOrigin, stamp)
-        .then(() => {
+        .then((result) => {
           if (cancelled) return
+          if (result === 'blocked' || result === 'skipped') {
+            if (lastSentFixByToken.get(accessToken) === stamp) {
+              lastSentFixByToken.delete(accessToken)
+            }
+            return
+          }
           setLastOkAt(stamp)
           setLastError(null)
         })
@@ -75,8 +81,8 @@ export function useDriverLocationReporter(options: {
 
     let cancelled = false
     void sendDriverLocation(lat, lng, accessToken, uploadOrigin)
-      .then(() => {
-        if (cancelled) return
+      .then((result) => {
+        if (cancelled || result === 'blocked' || result === 'skipped') return
         setLastOkAt(Date.now())
         setLastError(null)
       })

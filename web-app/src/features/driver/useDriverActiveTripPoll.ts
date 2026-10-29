@@ -1,6 +1,8 @@
 import { useCallback } from 'react'
 import { getDriverTripDetail } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
+import { currentSessionFamily } from './driverSessionFamily'
+import { resolveDriverTripPollFailure } from './driverAvailabilitySync'
 import { driverTripPollEquals, type DriverTripPollResult } from './driverTripPollEquals'
 
 export type DriverActiveTripPollState = {
@@ -19,12 +21,21 @@ export function useDriverActiveTripPoll(
 ): DriverActiveTripPollState {
   const fetchTrip = useCallback((): Promise<DriverTripPollResult> => {
     if (!tripId || !token) return Promise.resolve({ trip: null, notFound: false })
+    const requestFamily = currentSessionFamily()
     return getDriverTripDetail(tripId, token)
-      .then((t) => ({ trip: t, notFound: false }))
+      .then((t) => {
+        if (currentSessionFamily() !== requestFamily) return { trip: null, notFound: true }
+        return { trip: t, notFound: false }
+      })
       .catch((e: unknown) => {
         const st = (e as { status?: number })?.status
-        if (st === 404) return { trip: null, notFound: true }
-        throw e
+        const decision = resolveDriverTripPollFailure({
+          requestFamily,
+          currentFamily: currentSessionFamily(),
+          httpStatus: st,
+        })
+        if (decision === 'keep') throw e
+        return { trip: null, notFound: true }
       })
   }, [tripId, token])
 

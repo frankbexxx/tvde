@@ -50,6 +50,7 @@ import {
   setStoredSessionDisplayName,
 } from '../utils/authStorage'
 import { logoutBrowserSession, refreshSession, subscribeAccessToken } from '../api/sessionRefresh'
+import { noteLoginSession } from '../features/driver/driverSessionFamily'
 import { androidRefreshEnabled, restoreAndroidSession } from '../features/auth/androidSession'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { AUTH_LOGOUT_EVENT } from '../constants/events'
@@ -539,6 +540,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (phone: string, password: string, requestedRole?: string) => {
       setStatus('A entrar...')
       const res = await loginApi(phone, password, requestedRole)
+      noteLoginSession(res.session_id)
       const token = res.access_token
       setStoredAccessToken(token)
       const serverRole = res.role as Role
@@ -575,6 +577,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const applyGoogleSession = useCallback(
     (res: TokenResponse) => {
+      noteLoginSession(res.session_id)
       const token = res.access_token
       setStoredAccessToken(token)
       const serverRole = res.role as Role
