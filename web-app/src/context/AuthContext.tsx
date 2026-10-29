@@ -43,12 +43,14 @@ import {
   getStoredLastPhone,
   getStoredSessionDisplayName,
   LS_E2E_DEV_TOKENS_JSON,
+  LS_LAST_PHONE,
   setStoredAccessToken,
   setStoredAppRouteRole,
   setStoredLastPhone,
   setStoredSessionDisplayName,
 } from '../utils/authStorage'
-import { logoutBrowserSession, subscribeAccessToken } from '../api/sessionRefresh'
+import { logoutBrowserSession, refreshSession, subscribeAccessToken } from '../api/sessionRefresh'
+import { androidRefreshEnabled, restoreAndroidSession } from '../features/auth/androidSession'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { AUTH_LOGOUT_EVENT } from '../constants/events'
 import { writePassengerActiveTripIdToStorage } from '../features/passenger/passengerActiveTripRecovery'
@@ -306,6 +308,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const loadTokens = useCallback(async () => {
+    const rememberAccount = (phone: string | null, displayName: string | null) => {
+      localStorage.removeItem(LS_LAST_PHONE)
+      if (phone) {
+        setStoredLastPhone(phone)
+        setSessionPhone(phone)
+      } else {
+        setSessionPhone(null)
+      }
+      if (displayName) {
+        setStoredSessionDisplayName(displayName)
+        setSessionDisplayName(displayName)
+      } else {
+        setStoredSessionDisplayName('')
+        setSessionDisplayName(null)
+      }
+    }
     setIsLoading(true)
     setLoadError(null)
     setSplashPrimary(i18n.t('auth:splashStarting'))
@@ -331,34 +349,95 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSessionUserId(null)
         setSplashPrimary('A verificar sessão…')
         setStatus('A verificar sessão…')
-        const tok = getStoredAccessToken()
-        if (tok) {
-          if (isJwtExpired(tok)) {
-            clearAuthStorage()
-            clearLoginSessionState()
-            addLog('Sessão expirada (token)', 'info')
-          } else {
-            const p = parseJwtPayload(tok)
-            if (!p?.sub) {
+        let announceReady = true
+        if (androidRefreshEnabled()) {
+          const restored = await restoreAndroidSession()
+          if (restored.kind === 'ready' || restored.kind === 'refreshed') {
+            const tok = restored.accessToken
+            const payload = tok ? parseJwtPayload(tok) : null
+            if (!tok || !payload?.sub || isJwtExpired(tok)) {
               clearAuthStorage()
               clearLoginSessionState()
             } else {
-              const r = (p.role as Role) ?? 'passenger'
-              applyLoginSessionFromJwt(tok, r, p.sub)
-              const ok = await validateAccessToken(tok)
-              if (!ok) {
+              const role = (restored.role as Role) || ((payload.role as Role) ?? 'passenger')
+              setStoredAccessToken(tok)
+              applyLoginSessionFromJwt(tok, role, payload.sub)
+              const accepted = await validateAccessToken(tok)
+              if (!accepted) {
+                const again = await refreshSession()
+                const next = getStoredAccessToken()
+                const nextPayload = next ? parseJwtPayload(next) : null
+                if (again === 'refreshed' && next && nextPayload?.sub && !isJwtExpired(next)) {
+                  applyLoginSessionFromJwt(next, (nextPayload.role as Role) ?? 'passenger', nextPayload.sub)
+                  rememberAccount(restored.phone, restored.displayName)
+                  addLog('Sessão restaurada', 'success')
+                } else if (again === 'transient' || again === 'stale') {
+                  clearAuthStorage()
+                  clearLoginSessionState()
+                  const offline = 'Sem rede para renovar a sessão. Tenta novamente.'
+                  setLoadError(offline)
+                  setStatus(offline)
+                  announceReady = false
+                } else {
+                  clearAuthStorage()
+                  clearLoginSessionState()
+                  addLog('Sessão revogada', 'info')
+                }
+              } else {
+                rememberAccount(restored.phone, restored.displayName)
+                addLog('Sessão restaurada', 'success')
+              }
+            }
+          } else if (restored.kind === 'offline') {
+            clearAuthStorage()
+            clearLoginSessionState()
+            const offline = 'Sem rede para renovar a sessão. Tenta novamente.'
+            setLoadError(offline)
+            setStatus(offline)
+            announceReady = false
+          } else if (restored.kind === 'unavailable') {
+            clearAuthStorage()
+            clearLoginSessionState()
+            const unavailable = 'A sessão segura não está disponível neste dispositivo.'
+            setLoadError(unavailable)
+            setStatus(unavailable)
+            announceReady = false
+          } else {
+            clearAuthStorage()
+            clearLoginSessionState()
+          }
+        } else {
+          const tok = getStoredAccessToken()
+          if (tok) {
+            if (isJwtExpired(tok)) {
+              clearAuthStorage()
+              clearLoginSessionState()
+              addLog('Sessão expirada (token)', 'info')
+            } else {
+              const p = parseJwtPayload(tok)
+              if (!p?.sub) {
                 clearAuthStorage()
                 clearLoginSessionState()
-                addLog('Sessão inválida no servidor', 'info')
               } else {
-                setSessionPhone(getStoredLastPhone())
-                setSessionDisplayName(getStoredSessionDisplayName())
-                addLog('Sessão restaurada', 'success')
+                const r = (p.role as Role) ?? 'passenger'
+                applyLoginSessionFromJwt(tok, r, p.sub)
+                const ok = await validateAccessToken(tok)
+                if (!ok) {
+                  clearAuthStorage()
+                  clearLoginSessionState()
+                  addLog('Sessão inválida no servidor', 'info')
+                } else {
+                  setSessionPhone(getStoredLastPhone())
+                  setSessionDisplayName(getStoredSessionDisplayName())
+                  addLog('Sessão restaurada', 'success')
+                }
               }
             }
           }
         }
-        setStatus('Pronto')
+        if (announceReady) {
+          setStatus('Pronto')
+        }
         if (config.beta_mode) {
           addLog('Modo BETA ativo', 'info')
         } else {

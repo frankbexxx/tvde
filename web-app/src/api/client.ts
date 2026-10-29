@@ -4,8 +4,10 @@
  */
 import { reportApiServerError } from '../sentry'
 import { getStoredAccessToken } from '../utils/authStorage'
+import { activateAndroidRefreshIfReady, androidRefreshEnabled, sealAndroidIssuer } from '../features/auth/androidSession'
 import {
   authRequestExtras,
+  isSessionIssuer,
   mustNotRefresh,
   noteIssuerSuccess,
   refreshSession,
@@ -60,6 +62,7 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string | null; timeoutMs?: number; authRetry?: boolean } = {}
 ): Promise<T> {
+  await activateAndroidRefreshIfReady()
   const authToken = options.token ?? tokenGetter?.() ?? getStoredAccessToken()
   const extras = authRequestExtras(path)
   const headers: HeadersInit = {
@@ -127,7 +130,11 @@ export async function apiFetch<T>(
   if (res.status === 204 || res.headers.get('content-length') === '0') {
     return undefined as T
   }
-  return res.json() as Promise<T>
+  const body = (await res.json()) as T
+  if (androidRefreshEnabled() && isSessionIssuer(path)) {
+    return sealAndroidIssuer(body)
+  }
+  return body
 }
 
 export function delay(ms: number): Promise<void> {

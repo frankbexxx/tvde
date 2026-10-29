@@ -1,4 +1,11 @@
 import { isCapacitorNative } from '../features/auth/capacitorPlatform'
+import {
+  activateAndroidRefreshIfReady,
+  androidRefreshEnabled,
+  logoutAndroidSession,
+  refreshAndroidSession,
+  resetAndroidRefreshForTests,
+} from '../features/auth/androidSession'
 import { LS_AUTH_CONTRACT, setStoredAccessToken } from '../utils/authStorage'
 
 export const AUTH_CONTRACT = 'refresh-v1'
@@ -13,6 +20,7 @@ let inflightAbort: AbortController | null = null
 const listeners = new Set<(token: string) => void>()
 
 export function resetSessionRefreshState(): void {
+  resetAndroidRefreshForTests()
   epoch = 0
   inflight = null
   inflightAbort?.abort()
@@ -74,8 +82,20 @@ export function authRequestExtras(path: string): {
   headers: Record<string, string>
   credentials?: RequestCredentials
 } {
-  if (isCapacitorNative()) return { headers: {} }
   const pathName = pathOnly(path)
+  if (androidRefreshEnabled()) {
+    const sending =
+      isSessionIssuer(pathName) || pathName === '/auth/refresh' || pathName === '/auth/logout'
+    if (!sending) return { headers: {} }
+    return {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Auth-Contract': AUTH_CONTRACT,
+        'X-Auth-Client': 'android',
+      },
+    }
+  }
+  if (isCapacitorNative()) return { headers: {} }
   const sending =
     isSessionIssuer(pathName) ||
     ((pathName === '/auth/refresh' || pathName === '/auth/logout') && browserUsesRefresh())
@@ -133,8 +153,18 @@ async function performRefresh(started: number): Promise<RefreshOutcome> {
   return 'refreshed'
 }
 
-export function refreshSession(): Promise<RefreshOutcome> {
-  if (!browserUsesRefresh()) return Promise.resolve('invalid')
+export async function refreshSession(): Promise<RefreshOutcome> {
+  await activateAndroidRefreshIfReady()
+  if (androidRefreshEnabled()) {
+    if (!inflight) {
+      const started = epoch
+      inflight = performAndroidRefresh(started).finally(() => {
+        inflight = null
+      })
+    }
+    return inflight
+  }
+  if (!browserUsesRefresh()) return 'invalid'
   if (!inflight) {
     const started = epoch
     inflight = performRefresh(started).finally(() => {
@@ -144,9 +174,32 @@ export function refreshSession(): Promise<RefreshOutcome> {
   return inflight
 }
 
+async function performAndroidRefresh(started: number): Promise<RefreshOutcome> {
+  let outcome: Awaited<ReturnType<typeof refreshAndroidSession>>
+  try {
+    outcome = await refreshAndroidSession()
+  } catch {
+    return started === epoch ? 'transient' : 'stale'
+  }
+  if (started !== epoch) return 'stale'
+  if (outcome.kind === 'refreshed' && outcome.accessToken) {
+    setStoredAccessToken(outcome.accessToken)
+    if (started !== epoch) return 'stale'
+    const token = outcome.accessToken
+    listeners.forEach((listener) => listener(token))
+    return 'refreshed'
+  }
+  if (outcome.kind === 'transient' || outcome.kind === 'stale') return outcome.kind
+  return 'invalid'
+}
+
 export function logoutBrowserSession(): void {
   epoch += 1
   inflightAbort?.abort()
+  if (androidRefreshEnabled()) {
+    void logoutAndroidSession()
+    return
+  }
   if (!browserUsesRefresh()) return
   void fetch(`${API_BASE}/auth/logout`, {
     method: 'POST',

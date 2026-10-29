@@ -21,4 +21,7 @@ export const SESSION_VAULT_PUBLIC_FIELDS = [
 /** Métodos Capacitor. A escrita com segredos não entra nesta lista. */
 export const SESSION_VAULT_METHODS = ['read', 'clear'] as const
 
-export const SESSION_VAULT_SAVE_BRIDGE = 'VamulaSessionVault'
+/** Canal WebMessage. Só https://localhost, no frame principal. */
+export const SESSION_VAULT_CHANNEL = 'vamulaVault'
+
+export const ANDROID_REFRESH_CONTRACT = 'android-refresh-v1'

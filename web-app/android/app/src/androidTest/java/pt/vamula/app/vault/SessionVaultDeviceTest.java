@@ -67,9 +67,10 @@ public class SessionVaultDeviceTest {
         assertNull(key.getEncoded());
         assertTrue(key.getClass().getName().contains("AndroidKeyStore"));
 
-        SessionVaultJs bridge = new SessionVaultJs(vault);
-        String saved = call(() -> bridge.save(ACCESS, REFRESH, "family-probe", 1, "abs", "idle"));
-        assertEquals("ok", saved);
+        call(() -> {
+            vault.save(new SessionRecord(ACCESS, REFRESH, "family-probe", 1, "abs", "idle", null, false));
+            return null;
+        });
         SessionRecord read = call(() -> vault.read().orElseThrow());
         assertEquals(ACCESS, read.accessToken());
         assertEquals(REFRESH, read.refreshToken());
