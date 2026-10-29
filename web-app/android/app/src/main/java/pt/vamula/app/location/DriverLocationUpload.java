@@ -28,6 +28,7 @@ public final class DriverLocationUpload {
     private boolean authPaused;
     private int flight;
     private String apiBase;
+    private String grantedFamily = "";
     private VaultHttp http;
     private DriverLocationAuth auth;
     private int sent;
@@ -53,12 +54,24 @@ public final class DriverLocationUpload {
         if (VaultApiBase.endpoint(apiBase, PATH) == null || http == null || auth == null) {
             return false;
         }
+        String family = auth.sessionFamily() == null ? "" : auth.sessionFamily();
+        if (family.trim().isEmpty()) {
+            return false;
+        }
+        this.flight++;
+        this.queue.clear();
+        this.inFlight = false;
+        this.authPaused = false;
         this.apiBase = apiBase.trim();
         this.http = http;
         this.auth = auth;
+        this.grantedFamily = family;
         this.armed = true;
-        this.authPaused = false;
         return true;
+    }
+
+    public synchronized String grantedFamily() {
+        return grantedFamily;
     }
 
     public synchronized boolean functional() {
@@ -88,6 +101,7 @@ public final class DriverLocationUpload {
         http = null;
         auth = null;
         apiBase = null;
+        grantedFamily = "";
     }
 
     public synchronized void reset() {
@@ -116,12 +130,13 @@ public final class DriverLocationUpload {
     }
 
     public void drain(long nowMillis) {
-        QueuedFix fix;
-        String token;
-        String url;
-        VaultHttp client;
-        DriverLocationAuth currentAuth;
-        int ticket;
+        QueuedFix fix = null;
+        String token = null;
+        String url = null;
+        VaultHttp client = null;
+        DriverLocationAuth currentAuth = null;
+        int ticket = -1;
+        boolean sessionMismatch = false;
         synchronized (this) {
             if (!armed || inFlight || authPaused) {
                 return;
@@ -131,15 +146,25 @@ public final class DriverLocationUpload {
             if (fix == null) {
                 return;
             }
-            token = auth.accessToken();
-            url = VaultApiBase.endpoint(apiBase, PATH);
-            if (token == null || token.trim().isEmpty() || token.indexOf('\n') >= 0 || token.indexOf('\r') >= 0 || url == null) {
-                return;
+            String live = auth.sessionFamily() == null ? "" : auth.sessionFamily();
+            if (grantedFamily.isEmpty() || !grantedFamily.equals(live)) {
+                sessionMismatch = true;
+            } else {
+                token = auth.accessToken();
+                url = VaultApiBase.endpoint(apiBase, PATH);
+                if (token == null || token.trim().isEmpty() || token.indexOf('\n') >= 0 || token.indexOf('\r') >= 0 || url == null) {
+                    return;
+                }
+                client = http;
+                currentAuth = auth;
+                inFlight = true;
+                ticket = flight;
             }
-            client = http;
-            currentAuth = auth;
-            inFlight = true;
-            ticket = flight;
+        }
+        if (sessionMismatch) {
+            stop();
+            DriverLocationOwnership.release("session");
+            return;
         }
         if (!DriverLocationOwnership.beginNativePost()) {
             synchronized (this) {
@@ -150,6 +175,7 @@ public final class DriverLocationUpload {
             return;
         }
         int status = 0;
+        boolean familyBroke = false;
         try {
             status = post(client, url, token, fix);
             if (status == 401) {
@@ -163,7 +189,17 @@ public final class DriverLocationUpload {
                 if (refreshNow) {
                     DriverLocationAuth.Refresh refresh = currentAuth.refresh(apiBase);
                     if (refresh.kind == DriverLocationAuth.Refresh.Kind.SUCCESS && refresh.accessToken != null) {
-                        status = post(client, url, refresh.accessToken, fix);
+                        String liveNow;
+                        boolean sameFamily;
+                        synchronized (this) {
+                            liveNow = currentAuth.sessionFamily() == null ? "" : currentAuth.sessionFamily();
+                            sameFamily = ticket == flight && armed && !grantedFamily.isEmpty() && grantedFamily.equals(liveNow);
+                        }
+                        if (sameFamily) {
+                            status = post(client, url, refresh.accessToken, fix);
+                        } else {
+                            familyBroke = true;
+                        }
                     } else if (refresh.kind != DriverLocationAuth.Refresh.Kind.INVALID) {
                         status = 0;
                     }
@@ -173,6 +209,11 @@ public final class DriverLocationUpload {
             status = 0;
         } finally {
             DriverLocationOwnership.endNativePost();
+        }
+        if (familyBroke) {
+            stop();
+            DriverLocationOwnership.release("session");
+            return;
         }
         boolean paused = false;
         synchronized (this) {

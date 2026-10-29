@@ -154,6 +154,10 @@ public final class DriverLocationService extends Service {
         return UPLOAD.armed();
     }
 
+    public static String grantedFamily() {
+        return UPLOAD.grantedFamily();
+    }
+
     public static boolean sending() {
         return DriverLocationOwnership.nativeOwnsUpload() && UPLOAD.armed() && UPLOAD.functional() && SESSION.listening();
     }
@@ -162,8 +166,40 @@ public final class DriverLocationService extends Service {
         return UPLOAD.sent();
     }
 
+    static int queuedFixes() {
+        return UPLOAD.queued();
+    }
+
+    /** O serviço pára. A fila e o POST em curso morrem; a autorização da família fica. */
+    static void parkSender() {
+        UPLOAD.suspend();
+        DriverLocationOwnership.release("stopped");
+    }
+
     static boolean armUpload(android.content.Context context, String apiBase, VaultHttp http, DriverLocationAuth auth) {
         if (context == null || (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0) {
+            return false;
+        }
+        if (!DriverLocationEndpoint.isDebugSupplied(apiBase)) {
+            return false;
+        }
+        boolean armed = UPLOAD.arm(apiBase, http, auth);
+        if (armed) {
+            scheduleReconcile();
+        }
+        return armed;
+    }
+
+    /**
+     * Concessão de release. O URL tem de ser o endpoint configurado.
+     * Serviço operacional, sozinho, não chega: quem chama continua a passar pela reconciliação.
+     */
+    static boolean grantProduction(String apiBase, String family, VaultHttp http, DriverLocationAuth auth) {
+        if (!DriverLocationEndpoint.isReleaseDestination(apiBase) || http == null || auth == null) {
+            return false;
+        }
+        String live = auth.sessionFamily() == null ? "" : auth.sessionFamily();
+        if (family == null || family.trim().isEmpty() || !family.equals(live)) {
             return false;
         }
         boolean armed = UPLOAD.arm(apiBase, http, auth);
@@ -189,8 +225,9 @@ public final class DriverLocationService extends Service {
     }
 
     private static boolean reconcileUpload() {
+        boolean eligible = RUNTIME.phase() == DriverLocationPhase.OPERATIONAL && DriverLocationHost.needed();
         int decision = DriverLocationOwnership.reconcile(
-            RUNTIME.phase() == DriverLocationPhase.OPERATIONAL,
+            eligible,
             UPLOAD.armed(),
             UPLOAD.functional() && SESSION.listening(),
             UPLOAD.sessionFamily()
@@ -291,7 +328,7 @@ public final class DriverLocationService extends Service {
             }
             lastFailure = exception.getClass().getSimpleName() + ": " + exception.getMessage();
             logPhase(DriverLocationPhase.ERROR);
-            UPLOAD.stop();
+            UPLOAD.suspend();
             DriverLocationOwnership.release("start_failed");
             leaveForeground();
             stopSelf();
@@ -306,8 +343,7 @@ public final class DriverLocationService extends Service {
         } catch (RuntimeException exception) {
             // A limpeza dos callbacks não pode impedir o fecho do serviço.
         }
-        UPLOAD.stop();
-        DriverLocationOwnership.release("stopped");
+        parkSender();
         synchronized (DriverLocationService.class) {
             if (drain != null) {
                 drain.shutdownNow();

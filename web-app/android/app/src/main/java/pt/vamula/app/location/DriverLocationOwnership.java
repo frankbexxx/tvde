@@ -24,6 +24,8 @@ public final class DriverLocationOwnership {
     private static String leaseFamily = "";
     private static int webViewInFlight;
     private static int nativeInFlight;
+    private static int documentGeneration;
+    private static int leaseDocument;
     private static String lastRelease = "";
 
     private DriverLocationOwnership() {}
@@ -35,6 +37,8 @@ public final class DriverLocationOwnership {
             leaseFamily = "";
             webViewInFlight = 0;
             nativeInFlight = 0;
+            documentGeneration = 0;
+            leaseDocument = 0;
             lastRelease = "";
             LOCK.notifyAll();
         }
@@ -65,8 +69,55 @@ public final class DriverLocationOwnership {
             if (webViewInFlight > 0) {
                 return false;
             }
+            leaseDocument = documentGeneration;
             webViewInFlight++;
             return true;
+        }
+    }
+
+    /** Novo documento da WebView. O anterior só larga o POST se ainda era o responsável. */
+    public static int replaceDocument() {
+        int previous;
+        synchronized (LOCK) {
+            previous = documentGeneration;
+            documentGeneration++;
+        }
+        abandonDocument(previous);
+        synchronized (LOCK) {
+            return documentGeneration;
+        }
+    }
+
+    public static int currentDocument() {
+        synchronized (LOCK) {
+            return documentGeneration;
+        }
+    }
+
+    public static boolean abandonDocument(int documentId) {
+        if (documentId <= 0) {
+            return false;
+        }
+        synchronized (LOCK) {
+            return clearWebLease(documentId);
+        }
+    }
+
+    /** A vista já não existe. Não há prazo que abra o outro emissor. */
+    public static void onWebViewGone() {
+        synchronized (LOCK) {
+            if (webViewInFlight <= 0) {
+                return;
+            }
+            if (documentGeneration <= 0) {
+                if (leaseDocument <= 0) {
+                    webViewInFlight = 0;
+                    leaseDocument = 0;
+                    LOCK.notifyAll();
+                }
+                return;
+            }
+            clearWebLease(documentGeneration);
         }
     }
 
@@ -162,6 +213,16 @@ public final class DriverLocationOwnership {
             }
             releaseLocked("session");
         }
+    }
+
+    private static boolean clearWebLease(int documentId) {
+        if (documentId <= 0 || webViewInFlight <= 0 || leaseDocument != documentId) {
+            return false;
+        }
+        webViewInFlight = 0;
+        leaseDocument = 0;
+        LOCK.notifyAll();
+        return true;
     }
 
     private static void releaseLocked(String reason) {

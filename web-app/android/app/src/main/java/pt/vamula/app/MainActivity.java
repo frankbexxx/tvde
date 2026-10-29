@@ -1,6 +1,8 @@
 package pt.vamula.app;
 
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.android.R;
@@ -21,9 +23,21 @@ public class MainActivity extends BridgeActivity {
         WebView webView = findViewById(R.id.webview);
         VaultChannel.install(webView, SessionVaults.get(this));
         if (webView != null) {
+            // O laboratório local é HTTP. A origem da WebView é HTTPS, por isso só a build
+            // depurável aceita esse conteúdo. O release não entra neste ramo.
+            if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+                webView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            }
             pt.vamula.app.location.GpsOwnershipJs.install(webView);
         }
         super.load();
+        WebView loaded = findViewById(R.id.webview);
+        if (loaded != null) {
+            if (loaded != webView) {
+                pt.vamula.app.location.GpsOwnershipJs.install(loaded);
+            }
+            pt.vamula.app.location.GpsOwnershipJs.watchDocuments(loaded);
+        }
     }
 
     @Override

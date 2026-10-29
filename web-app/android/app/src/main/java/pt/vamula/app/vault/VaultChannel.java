@@ -9,6 +9,7 @@ import androidx.webkit.WebViewFeature;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import pt.vamula.app.location.DriverLocationArmament;
 
 /** Canal limitado a https://localhost no frame principal. A mensagem não é registada. */
 public final class VaultChannel {
@@ -32,12 +33,13 @@ public final class VaultChannel {
             webView,
             NAME,
             Collections.singleton(VaultOrigin.APP_ORIGIN),
-            (view, message, sourceOrigin, isMainFrame, replyProxy) -> EXECUTOR.execute(() -> answer(coordinator, message, sourceOrigin, isMainFrame, replyProxy))
+            (view, message, sourceOrigin, isMainFrame, replyProxy) -> EXECUTOR.execute(() -> answer(vault, coordinator, message, sourceOrigin, isMainFrame, replyProxy))
         );
         return true;
     }
 
     private static void answer(
+        SessionVault vault,
         AndroidRefreshCoordinator coordinator,
         WebMessageCompat message,
         Uri sourceOrigin,
@@ -46,13 +48,13 @@ public final class VaultChannel {
     ) {
         try {
             String origin = VaultOrigin.accepts(isMainFrame, sourceOrigin) ? VaultOrigin.APP_ORIGIN : "";
-            replyProxy.postMessage(reply(coordinator, !origin.isEmpty(), origin, message == null ? null : message.getData()));
+            replyProxy.postMessage(reply(vault, coordinator, !origin.isEmpty(), origin, message == null ? null : message.getData()));
         } catch (RuntimeException exception) {
             // A página já pode ter sido fechada. Não registar a resposta.
         }
     }
 
-    static String reply(AndroidRefreshCoordinator coordinator, boolean mainFrame, String origin, String data) {
+    public static String reply(SessionVault vault, AndroidRefreshCoordinator coordinator, boolean mainFrame, String origin, String data) {
         if (!VaultOrigin.accepts(mainFrame, origin)) {
             return error(idOf(data), "origin_rejected");
         }
@@ -81,6 +83,7 @@ public final class VaultChannel {
             if (!"committed".equals(outcome.kind)) {
                 return error(id, outcome.kind);
             }
+            DriverLocationArmament.onSessionCommitted(vault, coordinator, text(request, "api_base"), text(request, "session_id"));
             return base(id, true).emit();
         }
         if ("refresh".equals(op)) {
@@ -88,10 +91,17 @@ public final class VaultChannel {
         }
         if ("logout".equals(op)) {
             AndroidRefreshCoordinator.Outcome outcome = coordinator.logout(text(request, "api_base"));
+            DriverLocationArmament.onSessionEnded();
             return base(id, true).put("kind", outcome.kind).put("revoked", outcome.revoked).emit();
         }
         if ("restore".equals(op)) {
-            return refreshReply(id, coordinator.restore(text(request, "api_base")));
+            AndroidRefreshCoordinator.Outcome outcome = coordinator.restore(text(request, "api_base"));
+            if ("ready".equals(outcome.kind) || "refreshed".equals(outcome.kind)) {
+                DriverLocationArmament.onSessionRestored(vault, coordinator, text(request, "api_base"), outcome.kind);
+            } else if ("empty".equals(outcome.kind) || "revoked".equals(outcome.kind)) {
+                DriverLocationArmament.onSessionEnded();
+            }
+            return refreshReply(id, outcome);
         }
         return error(id, "rejected");
     }
