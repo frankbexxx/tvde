@@ -250,8 +250,8 @@ public class AndroidRefreshCoordinatorTest {
     public void originGateRejectsFramesAndOtherOriginsWithoutEchoingTheToken() throws Exception {
         Harness harness = harness();
         String planted = "{\"id\":\"1\",\"op\":\"commit\",\"refresh_token\":\"refresh-planted\",\"access_token\":\"access-planted\",\"session_id\":\"family-1\",\"api_base\":\"" + API + "\"}";
-        String iframe = VaultChannel.reply(harness.coordinator, false, "https://localhost", planted);
-        String foreign = VaultChannel.reply(harness.coordinator, true, "https://evil.example", planted);
+        String iframe = VaultChannel.reply(null, harness.coordinator, false, "https://localhost", planted);
+        String foreign = VaultChannel.reply(null, harness.coordinator, true, "https://evil.example", planted);
         assertTrue(iframe.contains("origin_rejected"));
         assertTrue(foreign.contains("origin_rejected"));
         assertFalse(iframe.contains("refresh-planted"));
@@ -259,7 +259,7 @@ public class AndroidRefreshCoordinatorTest {
         assertFalse(VaultOrigin.accepts(false, "https://localhost"));
         assertFalse(VaultOrigin.accepts(true, "https://localhost:443"));
         assertTrue(harness.vault.read().isEmpty());
-        String contract = VaultChannel.reply(harness.coordinator, true, "https://localhost", "{\"id\":\"2\",\"op\":\"contract\",\"refresh_token\":\"refresh-planted\"}");
+        String contract = VaultChannel.reply(null, harness.coordinator, true, "https://localhost", "{\"id\":\"2\",\"op\":\"contract\",\"refresh_token\":\"refresh-planted\"}");
         assertTrue(contract.contains("android-refresh-v1"));
         assertFalse(contract.contains("refresh-planted"));
     }

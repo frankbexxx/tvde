@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Só na build de depuração. Não tem intent-filter e não entra na APK de distribuição. -->
-    <application>
+    <!-- Cleartext só para o laboratório local. Não entra na APK de release. -->
+    <application android:networkSecurityConfig="@xml/debug_network_security">
         <activity
             android:name=".location.DriverLocationHarnessActivity"
             android:exported="false"

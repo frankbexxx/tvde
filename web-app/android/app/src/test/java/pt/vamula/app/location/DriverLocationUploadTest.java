@@ -119,6 +119,7 @@ public class DriverLocationUploadTest {
         assertEquals(2, http.calls.size());
         assertEquals(1, upload.refreshAttempts());
         assertEquals(1, upload.sent());
+        assertTrue(DriverLocationOwnership.nativeOwnsUpload());
         assertEquals(timestamp(http.calls.get(0)), timestamp(http.calls.get(1)));
         assertTrue(http.calls.get(1).headers.get("Authorization").endsWith("access-new"));
         assertFalse(http.calls.get(0).body.contains("access-old"));
@@ -132,6 +133,7 @@ public class DriverLocationUploadTest {
         assertEquals(0, retained.sent());
         assertEquals(1, retained.queued());
         assertEquals(0, retained.refreshAttempts());
+        assertTrue(DriverLocationOwnership.nativeOwnsUpload());
 
         ScriptedHttp offline = new ScriptedHttp(0);
         DriverLocationUpload disconnected = armed(offline, new ScriptAuth());
@@ -139,6 +141,7 @@ public class DriverLocationUploadTest {
         disconnected.drain(NOW);
         assertEquals(0, disconnected.sent());
         assertEquals(1, disconnected.queued());
+        assertTrue(DriverLocationOwnership.nativeOwnsUpload());
 
         ScriptedHttp rejected = new ScriptedHttp(400);
         DriverLocationUpload dropped = armed(rejected, new ScriptAuth());
@@ -147,6 +150,91 @@ public class DriverLocationUploadTest {
         assertEquals(0, dropped.sent());
         assertEquals(0, dropped.queued());
         assertEquals(0, dropped.refreshAttempts());
+    }
+
+    @Test
+    public void redirectIsNotSuccessAndDoesNotReplaceTheEndpoint() {
+        ScriptedHttp http = new ScriptedHttp(302);
+        DriverLocationUpload upload = armed(http, new ScriptAuth());
+        assertTrue(upload.offer(sample(NOW - 1_000L, "fused"), NOW));
+        upload.drain(NOW);
+        assertEquals(1, http.calls.size());
+        assertEquals(LOOPBACK + "/drivers/location", http.calls.get(0).url);
+        assertEquals(0, upload.sent());
+        assertEquals(1, upload.queued());
+        assertTrue(DriverLocationOwnership.nativeOwnsUpload());
+        assertTrue(upload.armed());
+    }
+
+    @Test
+    public void familyChangeDropsTheQueueAndANewGrantDoesNotReuseIt() {
+        ScriptAuth auth = new ScriptAuth();
+        ScriptedHttp http = new ScriptedHttp(204);
+        DriverLocationUpload upload = armed(http, auth);
+        assertTrue(upload.offer(sample(NOW - 1_000L, "fused"), NOW));
+        auth.family = "other-family";
+        upload.drain(NOW);
+        assertEquals(0, http.calls.size());
+        assertEquals(0, upload.queued());
+        assertFalse(upload.armed());
+        assertEquals("", upload.grantedFamily());
+
+        ScriptAuth again = new ScriptAuth();
+        assertTrue(upload.arm(LOOPBACK, http, again));
+        assertTrue(upload.offer(sample(NOW - 2_000L, "gps"), NOW));
+        assertEquals(1, upload.queued());
+        assertTrue(upload.arm(LOOPBACK, http, again));
+        assertEquals(0, upload.queued());
+        assertEquals("family-test", upload.grantedFamily());
+        upload.drain(NOW);
+        assertEquals(0, http.calls.size());
+    }
+
+    @Test
+    public void refreshThatChangesFamilyDoesNotRetry() {
+        ScriptedHttp http = new ScriptedHttp(401, 204);
+        ScriptAuth auth = new ScriptAuth();
+        auth.changeFamilyOnRefresh = true;
+        DriverLocationUpload upload = armed(http, auth);
+        assertTrue(upload.offer(sample(NOW - 1_000L, "fused"), NOW));
+        upload.drain(NOW);
+        assertEquals(1, http.calls.size());
+        assertEquals(0, upload.sent());
+        assertEquals(0, upload.queued());
+        assertFalse(upload.armed());
+        assertEquals("session", DriverLocationOwnership.lastRelease());
+    }
+
+    @Test
+    public void lateCompletionAfterStopIsIgnored() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ScriptedHttp http = new ScriptedHttp(204);
+        http.gate = () -> {
+            entered.countDown();
+            release.await();
+        };
+        DriverLocationUpload upload = armed(http, new ScriptAuth());
+        assertTrue(upload.offer(sample(NOW - 1_000L, "fused"), NOW));
+        Thread worker = new Thread(() -> upload.drain(NOW));
+        worker.start();
+        assertTrue(entered.await(2, TimeUnit.SECONDS));
+        upload.stop();
+        release.countDown();
+        worker.join(2_000L);
+        assertEquals(1, http.calls.size());
+        assertEquals(0, upload.sent());
+        assertFalse(upload.armed());
+        assertEquals(0, upload.queued());
+    }
+
+    @Test
+    public void emptyFamilyCannotArm() {
+        ScriptAuth auth = new ScriptAuth();
+        auth.family = " ";
+        DriverLocationUpload upload = new DriverLocationUpload();
+        assertFalse(upload.arm(LOOPBACK, new ScriptedHttp(204), auth));
+        assertFalse(upload.armed());
     }
 
     @Test
@@ -161,6 +249,11 @@ public class DriverLocationUploadTest {
         assertEquals(1, http.calls.size());
         assertEquals(1, upload.refreshAttempts());
         assertEquals(0, upload.sent());
+        assertEquals(1, upload.queued());
+        assertTrue(upload.armed());
+        assertFalse(upload.functional());
+        assertFalse(DriverLocationOwnership.nativeOwnsUpload());
+        assertEquals("auth", DriverLocationOwnership.lastRelease());
 
         DriverLocationUpload stopping = armed(new ScriptedHttp(204), new ScriptAuth());
         assertTrue(stopping.offer(sample(NOW - 1_000L, "fused"), NOW));
@@ -210,6 +303,40 @@ public class DriverLocationUploadTest {
         assertEquals(1, max.get());
         upload.drain(NOW);
         assertEquals(2, http.calls.size());
+    }
+
+    @Test
+    public void suspendDropsTheOpenPostAndKeepsTheFamilyGrant() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ScriptedHttp http = new ScriptedHttp(204);
+        http.gate = () -> {
+            entered.countDown();
+            release.await();
+        };
+        DriverLocationUpload upload = armed(http, new ScriptAuth());
+        assertTrue(upload.offer(sample(NOW - 1_000L, "fused"), NOW));
+        Thread worker = new Thread(() -> upload.drain(NOW));
+        worker.start();
+        assertTrue(entered.await(2, TimeUnit.SECONDS));
+        upload.suspend();
+        DriverLocationOwnership.release("stopped");
+        release.countDown();
+        worker.join(2_000L);
+        assertEquals(1, http.calls.size());
+        assertEquals(0, upload.sent());
+        assertEquals(0, upload.queued());
+        assertTrue(upload.armed());
+        assertEquals("family-test", upload.grantedFamily());
+        assertTrue(DriverLocationOwnership.webViewBeginSend());
+        DriverLocationOwnership.webViewEndSend();
+        assertEquals(DriverLocationOwnership.NATIVE, DriverLocationOwnership.reconcile(true, true, true, "family-test"));
+        assertFalse(DriverLocationOwnership.webViewBeginSend());
+        assertTrue(upload.offer(sample(NOW - 500L, "gps"), NOW));
+        upload.drain(NOW);
+        assertEquals(2, http.calls.size());
+        assertEquals(1, upload.sent());
+        assertFalse(http.calls.get(1).body.contains(String.valueOf(NOW - 1_000L)));
     }
 
     @Test
@@ -279,6 +406,8 @@ public class DriverLocationUploadTest {
 
     private static final class ScriptAuth implements DriverLocationAuth {
         private String token = "access-old";
+        private String family = "family-test";
+        private boolean changeFamilyOnRefresh;
         private DriverLocationAuth.Refresh.Kind refreshKind = DriverLocationAuth.Refresh.Kind.SUCCESS;
 
         @Override
@@ -288,11 +417,14 @@ public class DriverLocationUploadTest {
 
         @Override
         public String sessionFamily() {
-            return "family-test";
+            return family;
         }
 
         @Override
         public Refresh refresh(String apiBase) {
+            if (changeFamilyOnRefresh) {
+                family = "other-family";
+            }
             if (refreshKind == Refresh.Kind.SUCCESS) {
                 token = "access-new";
                 return Refresh.success(token);

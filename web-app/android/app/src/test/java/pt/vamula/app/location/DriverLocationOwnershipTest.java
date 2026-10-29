@@ -130,4 +130,39 @@ public class DriverLocationOwnershipTest {
         DriverLocationOwnership.webViewEndSend();
         webView.join(1_000L);
     }
+
+    @Test
+    public void orphanWebViewLeaseClearsOnlyWhenThatDocumentIsGone() {
+        assertTrue(DriverLocationOwnership.webViewBeginSend());
+        assertFalse(DriverLocationOwnership.abandonDocument(0));
+        assertFalse(DriverLocationOwnership.webViewBeginSend());
+        DriverLocationOwnership.webViewEndSend();
+
+        int first = DriverLocationOwnership.replaceDocument();
+        assertTrue(DriverLocationOwnership.webViewBeginSend());
+        assertFalse(DriverLocationOwnership.abandonDocument(first + 3));
+        assertFalse(DriverLocationOwnership.beginNativePost());
+        assertEquals(DriverLocationOwnership.NATIVE, DriverLocationOwnership.reconcile(true, true, true, "family-a"));
+        assertFalse(DriverLocationOwnership.beginNativePost());
+        assertTrue(DriverLocationOwnership.abandonDocument(first));
+        assertTrue(DriverLocationOwnership.beginNativePost());
+        DriverLocationOwnership.endNativePost();
+
+        int second = DriverLocationOwnership.replaceDocument();
+        assertTrue(second != first);
+        assertFalse(DriverLocationOwnership.webViewBeginSend());
+        DriverLocationOwnership.release("stopped");
+        assertTrue(DriverLocationOwnership.webViewBeginSend());
+        DriverLocationOwnership.onWebViewGone();
+        assertTrue(DriverLocationOwnership.webViewBeginSend());
+        DriverLocationOwnership.webViewEndSend();
+    }
+
+    @Test
+    public void operationalWithoutAuthorizationStaysWithTheWebView() {
+        assertEquals(DriverLocationOwnership.WEBVIEW, DriverLocationOwnership.reconcile(true, false, true, "family-a"));
+        assertFalse(DriverLocationOwnership.nativeOwnsUpload());
+        assertTrue(DriverLocationOwnership.webViewBeginSend());
+        DriverLocationOwnership.webViewEndSend();
+    }
 }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Variante stagingProof. Não é a release. O cleartext só alcança o laboratório local. -->
+    <application android:networkSecurityConfig="@xml/staging_proof_network_security" />
+</manifest>

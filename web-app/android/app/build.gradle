@@ -2,6 +2,9 @@ apply plugin: 'com.android.application'
 
 android {
     namespace = "pt.vamula.app"
+    if (project.hasProperty("stagingProofTest")) {
+        testBuildType "stagingProof"
+    }
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "pt.vamula.app"
@@ -44,13 +47,28 @@ android {
             }
         }
     }
+    buildFeatures {
+        buildConfig true
+    }
     buildTypes {
+        debug {
+            buildConfigField "String", "GPS_UPLOAD_BASE", '"https://tvde-api-fd2z.onrender.com"'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "GPS_UPLOAD_BASE", '"https://tvde-api-fd2z.onrender.com"'
             if (releaseSigningReady) {
                 signingConfig signingConfigs.release
             }
+        }
+        // Prova de distribuição. Não é a release de produção e não entra no fluxo de assinatura.
+        stagingProof {
+            initWith debug
+            matchingFallbacks = ['debug']
+            debuggable true
+            versionNameSuffix "-staging-proof"
+            buildConfigField "String", "GPS_UPLOAD_BASE", '"https://tvde-staging-api.onrender.com"'
         }
     }
 }

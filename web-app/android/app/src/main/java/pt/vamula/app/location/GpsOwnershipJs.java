@@ -1,7 +1,11 @@
 package pt.vamula.app.location;
 
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
+import java.util.Collections;
 
 /** Ponte síncrona. Não devolve tokens nem coordenadas e não arranca o serviço. */
 public final class GpsOwnershipJs {
@@ -12,6 +16,29 @@ public final class GpsOwnershipJs {
             return;
         }
         webView.addJavascriptInterface(new GpsOwnershipJs(), "vamulaGps");
+    }
+
+    /** Depois do load do Capacitor. Não substitui o WebViewClient. */
+    public static void watchDocuments(WebView webView) {
+        if (webView == null) {
+            return;
+        }
+        webView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View view) {}
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {
+                DriverLocationOwnership.onWebViewGone();
+            }
+        });
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            WebViewCompat.addDocumentStartJavaScript(
+                webView,
+                "try{vamulaGps.documentReplaced();}catch(e){}",
+                Collections.singleton("https://localhost")
+            );
+        }
     }
 
     @JavascriptInterface
@@ -27,6 +54,11 @@ public final class GpsOwnershipJs {
     @JavascriptInterface
     public void endWebViewSend() {
         DriverLocationOwnership.webViewEndSend();
+    }
+
+    @JavascriptInterface
+    public void documentReplaced() {
+        DriverLocationOwnership.replaceDocument();
     }
 
     @JavascriptInterface
