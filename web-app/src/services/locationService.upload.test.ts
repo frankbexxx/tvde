@@ -18,6 +18,7 @@ describe('sendDriverLocation upload gate (G2-DRV-GPS-08)', () => {
 
   afterEach(() => {
     vi.unstubAllEnvs()
+    delete window.vamulaGps
   })
 
   it('POSTs when origin is device_gps', async () => {
@@ -65,5 +66,50 @@ describe('sendDriverLocation upload gate (G2-DRV-GPS-08)', () => {
     const init = fetchMock.mock.calls[0][1] as { body: string; headers: Record<string, string> }
     expect(JSON.parse(init.body).timestamp).toBe(FIX_TS)
     expect(init.headers[GPS_CONTRACT_HEADER]).toBe(GPS_CONTRACT_FIX_V1)
+  })
+
+  it('does not POST when the native service owns the upload', async () => {
+    window.vamulaGps = {
+      nativeOwnsUpload: () => true,
+      beginWebViewSend: () => false,
+      endWebViewSend: () => undefined,
+      sessionChanged: () => undefined,
+    }
+    await expect(sendDriverLocation(38.7, -9.3, 'jwt', 'device_gps', FIX_TS)).resolves.toBe('blocked')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('does not retry a failed POST after the native service takes ownership', async () => {
+    let owned = false
+    window.vamulaGps = {
+      nativeOwnsUpload: () => owned,
+      beginWebViewSend: () => !owned,
+      endWebViewSend: () => undefined,
+      sessionChanged: () => undefined,
+    }
+    fetchMock.mockImplementationOnce(async () => {
+      owned = true
+      throw new Error('network')
+    })
+    await expect(sendDriverLocation(38.7, -9.3, 'jwt', 'device_gps', FIX_TS)).rejects.toThrow('network')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const init = fetchMock.mock.calls[0][1] as { body: string; headers: Record<string, string> }
+    expect(JSON.parse(init.body).timestamp).toBe(FIX_TS)
+  })
+
+  it('sends again after the native lease is released', async () => {
+    let owned = true
+    window.vamulaGps = {
+      nativeOwnsUpload: () => owned,
+      beginWebViewSend: () => !owned,
+      endWebViewSend: () => undefined,
+      sessionChanged: () => {
+        owned = false
+      },
+    }
+    await expect(sendDriverLocation(38.7, -9.3, 'jwt', 'device_gps', FIX_TS)).resolves.toBe('blocked')
+    window.vamulaGps.sessionChanged()
+    await sendDriverLocation(38.7, -9.3, 'jwt', 'device_gps', FIX_TS)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

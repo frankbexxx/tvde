@@ -4,4 +4,8 @@
     <string name="title_activity_main">VAMULÁ</string>
     <string name="package_name">pt.vamula.app</string>
     <string name="custom_url_scheme">pt.vamula.app</string>
+    <string name="vamula_location_channel_name">VAMULÁ</string>
+    <string name="vamula_location_channel_description">Serviço em primeiro plano da VAMULÁ</string>
+    <string name="vamula_location_notification_title">VAMULÁ</string>
+    <string name="vamula_location_notification_text">Serviço em primeiro plano</string>
 </resources>

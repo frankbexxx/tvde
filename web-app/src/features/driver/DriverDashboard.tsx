@@ -68,6 +68,7 @@ import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { startTripSimulation } from '../../dev/tripSimulation'
 import { isDemoLocationEnabled, useGeolocation } from '../../hooks/useGeolocation'
 import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
+import { useNativeLocationServiceLifecycle } from '../../hooks/useNativeLocationServiceLifecycle'
 import { resolveDriverLocationUploadOrigin } from '../../services/driverLocationUpload'
 import {
   fetchDriverLastServerLocation,
@@ -227,13 +228,17 @@ import {
   DRIVER_REMOTE_AVAILABILITY_POLL_MS,
   fetchRemoteAvailabilityOfflineUpdate,
   formatDriverAvailabilityError,
+  isConfirmedActiveDriverTrip,
   isDriverAvailabilityOperational,
   isDriverLocationReportingOperational,
   isDrivingHoursBlockedError,
+  isEndedDriverTrip,
   offlineFromBackendAvailability,
+  recoveryAfterTripProbe,
   shouldAcceptRemoteAvailabilityResponse,
   shouldBootstrapDriverActiveTrip,
 } from './driverAvailabilitySync'
+import { sessionEpoch, subscribeSessionFamily } from './driverSessionFamily'
 import { driverAcceptComplianceI18nKey } from '../shared/vehicleComplianceGateMessages'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
@@ -376,6 +381,10 @@ export function DriverDashboard() {
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
   const [activeTripBootstrapPending, setActiveTripBootstrapPending] = useState(false)
+  const [tripRecoveryUnresolved, setTripRecoveryUnresolved] = useState(false)
+  const [confirmedActiveTrip, setConfirmedActiveTrip] = useState(false)
+  const tokenRef = useRef(token)
+  tokenRef.current = token
   const availableTripLabel = driverAvailableTripStatusLabel()
   const newTripHint = driverNewTripListHint()
 
@@ -409,15 +418,6 @@ export function DriverDashboard() {
     hydrated: availabilityHydrated,
     syncing: availabilitySyncing,
   })
-  const locationReportingOperational = isDriverLocationReportingOperational({
-    token,
-    offline,
-    hydrated: availabilityHydrated,
-    syncing: availabilitySyncing,
-    activeTripId,
-    activeTripBootstrapPending,
-  })
-
   const geoWatchEnabled =
     isMockLocationModeEnabled() ||
     isDemoLocationEnabled() ||
@@ -560,7 +560,10 @@ export function DriverDashboard() {
 
   const restoreDriverActiveTrip = useCallback(async (): Promise<TripDetailResponse | null> => {
     if (!token) return null
-    const trip = await withColdStartRetries((timeoutMs) => getDriverActiveTrip(token, timeoutMs))
+    const epochAtStart = sessionEpoch()
+    const tokenAtStart = token
+    const trip = await withColdStartRetries((timeoutMs) => getDriverActiveTrip(tokenAtStart, timeoutMs))
+    if (sessionEpoch() !== epochAtStart || tokenRef.current !== tokenAtStart) return null
     if (!trip) return null
     setDriverActiveTripId(trip.trip_id)
     setAcceptedDetailFallback(trip)
@@ -568,6 +571,16 @@ export function DriverDashboard() {
     setStatus(driverActiveTripUi(trip.status).label)
     return trip
   }, [token, setDriverActiveTripId, setStatus])
+
+  useEffect(() => {
+    return subscribeSessionFamily(() => {
+      setDriverStatusOverride(null)
+      setAcceptedDetailFallback(null)
+      setTripRecoveryUnresolved(false)
+      setConfirmedActiveTrip(false)
+      setActiveTripBootstrapPending(false)
+    })
+  }, [])
 
   const handleDriverAvailabilityChange = useCallback(
     async (checked: boolean) => {
@@ -648,6 +661,48 @@ export function DriverDashboard() {
     driverStatusOverride ??
     driverActiveTripPoll.poll?.trip?.status ??
     acceptedDetailFallback?.status
+
+  const locationReportingOperational = isDriverLocationReportingOperational({
+    token,
+    offline,
+    hydrated: availabilityHydrated,
+    syncing: availabilitySyncing,
+    activeTripId,
+    tripStatus: driverEmergencyStatus ?? null,
+    tripRecoveryUnresolved,
+    confirmedActiveTrip,
+  })
+
+  useEffect(() => {
+    if (isConfirmedActiveDriverTrip(driverEmergencyStatus)) {
+      setConfirmedActiveTrip(true)
+      return
+    }
+    if (isEndedDriverTrip(driverEmergencyStatus) || !activeTripId) {
+      setConfirmedActiveTrip(false)
+    }
+  }, [driverEmergencyStatus, activeTripId])
+
+  useEffect(() => {
+    setTripRecoveryUnresolved(
+      recoveryAfterTripProbe({
+        confirmedActiveTrip,
+        networkError: driverActiveTripPoll.pollFault,
+        tripStatus: driverEmergencyStatus ?? null,
+      })
+    )
+  }, [confirmedActiveTrip, driverActiveTripPoll.pollFault, driverEmergencyStatus])
+
+  useNativeLocationServiceLifecycle({
+    token,
+    offline,
+    hydrated: availabilityHydrated,
+    syncing: availabilitySyncing,
+    activeTripBootstrapPending,
+    tripRecoveryUnresolved,
+    confirmedActiveTrip,
+    tripStatus: driverEmergencyStatus ?? null,
+  })
 
   const showDriverEmergencySos =
     Boolean(activeTripId && token && isDriverEmergencyStatus(driverEmergencyStatus))
@@ -1136,15 +1191,24 @@ export function DriverDashboard() {
     setActiveTripBootstrapPending(true)
     void restoreDriverActiveTrip()
       .then((trip) => {
-        if (cancelled || !trip) return
+        if (cancelled) return
+        setTripRecoveryUnresolved(false)
+        if (!trip) return
         addLog('Viagem activa recuperada após recarregar', 'info')
       })
       .catch((err: unknown) => {
         if (cancelled) return
-        const msg =
-          isTimeoutLikeError(err) || (err as { status?: number })?.status === 0
-            ? 'Sem ligação para confirmar viagem activa. Mantemos o GPS pronto e voltamos quando a ligação recuperar.'
-            : 'Não foi possível confirmar viagem activa. Verifica a ligação se estiveres em viagem.'
+        const network = isTimeoutLikeError(err) || (err as { status?: number })?.status === 0
+        setTripRecoveryUnresolved(
+          recoveryAfterTripProbe({
+            confirmedActiveTrip: false,
+            networkError: network,
+            tripStatus: null,
+          })
+        )
+        const msg = network
+          ? 'Sem ligação para confirmar viagem activa. Sem uma viagem já confirmada, o GPS fica inactivo.'
+          : 'Não foi possível confirmar viagem activa. Verifica a ligação se estiveres em viagem.'
         setToast(msg)
         addLog(`Erro ao recuperar viagem activa: ${msg}`, 'error')
       })

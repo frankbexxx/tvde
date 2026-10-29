@@ -5,6 +5,11 @@ import {
   type DriverLocationUploadOrigin,
   shouldUploadDriverLocation,
 } from './driverLocationUpload'
+import {
+  beginWebViewLocationSend,
+  endWebViewLocationSend,
+  nativeOwnsDriverLocation,
+} from './gpsOwnership'
 import { warn as logWarn } from '../utils/logger'
 
 interface SendDriverLocationPayload {
@@ -38,14 +43,17 @@ export async function sendDriverLocation(
   accessToken: string,
   origin: DriverLocationUploadOrigin,
   fixTimestampMs?: number
-): Promise<void> {
+): Promise<'sent' | 'skipped' | 'blocked'> {
   if (!shouldUploadDriverLocation(origin)) {
-    return
+    return 'skipped'
   }
 
   const isRealFix = origin === 'device_gps'
   if (isRealFix && (fixTimestampMs == null || !Number.isFinite(fixTimestampMs))) {
-    return
+    return 'skipped'
+  }
+  if (!beginWebViewLocationSend()) {
+    return 'blocked'
   }
 
   const payload: SendDriverLocationPayload = {
@@ -58,14 +66,6 @@ export async function sendDriverLocation(
     : undefined
 
   try {
-    await apiFetch<void>('/drivers/location', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers,
-      token: accessToken,
-    })
-  } catch (err) {
-    logWarn('sendDriverLocation failed, retrying once...', err)
     try {
       await apiFetch<void>('/drivers/location', {
         method: 'POST',
@@ -73,11 +73,30 @@ export async function sendDriverLocation(
         headers,
         token: accessToken,
       })
-    } catch (err2) {
-      logWarn('sendDriverLocation retry failed, giving up.', err2)
-      throw err2
+    } catch (err) {
+      if (nativeOwnsDriverLocation()) {
+        throw err
+      }
+      logWarn('sendDriverLocation failed, retrying once...', err)
+      try {
+        if (nativeOwnsDriverLocation()) {
+          throw err
+        }
+        await apiFetch<void>('/drivers/location', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          headers,
+          token: accessToken,
+        })
+      } catch (err2) {
+        logWarn('sendDriverLocation retry failed, giving up.', err2)
+        throw err2
+      }
     }
+  } finally {
+    endWebViewLocationSend()
   }
+  return 'sent'
 }
 
 export async function fetchDriverLastServerLocation(

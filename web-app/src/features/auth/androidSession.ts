@@ -1,4 +1,6 @@
 import { isCapacitorNative } from './capacitorPlatform'
+import { releaseDriverLocationOwnership } from '../../services/gpsOwnership'
+import { noteSessionFamily } from '../driver/driverSessionFamily'
 
 export const ANDROID_REFRESH_CONTRACT = 'android-refresh-v1'
 
@@ -99,6 +101,7 @@ export async function commitAndroidLogin(input: {
   familyId: string
   absoluteExpiresAt: string | null
 }): Promise<boolean> {
+  releaseDriverLocationOwnership()
   try {
     const reply = await call('commit', {
       api_base: apiBase(),
@@ -107,6 +110,7 @@ export async function commitAndroidLogin(input: {
       session_id: input.familyId,
       absolute_expires_at: input.absoluteExpiresAt,
     })
+    if (reply.ok === true) noteSessionFamily(input.familyId)
     return reply.ok === true
   } catch {
     return false

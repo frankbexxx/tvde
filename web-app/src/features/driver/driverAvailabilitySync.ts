@@ -89,17 +89,75 @@ export function isDriverAvailabilityOperational(opts: {
   return Boolean(opts.token && !opts.offline && opts.hydrated && !opts.syncing)
 }
 
-export function isDriverLocationReportingOperational(opts: {
+const ACTIVE_DRIVER_TRIP = new Set(['accepted', 'arriving', 'ongoing'])
+const ENDED_DRIVER_TRIP = new Set(['completed', 'cancelled', 'failed'])
+
+export function isConfirmedActiveDriverTrip(status: string | null | undefined): boolean {
+  return Boolean(status && ACTIVE_DRIVER_TRIP.has(status))
+}
+
+export function isEndedDriverTrip(status: string | null | undefined): boolean {
+  return Boolean(status && ENDED_DRIVER_TRIP.has(status))
+}
+
+type DriverLocationNeed = {
   token: string | null
   offline: boolean
   hydrated: boolean
   syncing: boolean
-  activeTripId: string | null | undefined
+  tripStatus?: string | null
+  /** Só depois de uma viagem activa já confirmada perder a rede. */
+  tripRecoveryUnresolved?: boolean
+  confirmedActiveTrip?: boolean
+}
+
+/**
+ * Reporter e serviço nativo usam a mesma decisão.
+ * Um id local, o primeiro GET ou um timeout sem viagem confirmada não ligam o GPS.
+ */
+export function isDriverLocationNeeded(opts: DriverLocationNeed): boolean {
+  if (!opts.token) return false
+  if (isEndedDriverTrip(opts.tripStatus)) return isDriverAvailabilityOperational(opts)
+  if (isConfirmedActiveDriverTrip(opts.tripStatus)) return true
+  if (opts.tripRecoveryUnresolved && opts.confirmedActiveTrip) return true
+  return isDriverAvailabilityOperational(opts)
+}
+
+/** Timeout ou falha de rede. Sem viagem confirmada, a recuperação fica desligada. */
+export function recoveryAfterTripProbe(opts: {
+  confirmedActiveTrip: boolean
+  networkError: boolean
+  tripStatus?: string | null
+}): boolean {
+  if (!opts.networkError || !opts.confirmedActiveTrip) return false
+  if (isEndedDriverTrip(opts.tripStatus)) return false
+  if (opts.tripStatus && !isConfirmedActiveDriverTrip(opts.tripStatus)) return false
+  return true
+}
+
+/** drop: resposta de outra família. missing: esta sessão já não tem a viagem. keep: falha transitória da mesma família. */
+export function resolveDriverTripPollFailure(opts: {
+  requestFamily: string | null
+  currentFamily: string | null
+  httpStatus: number | undefined
+}): 'drop' | 'missing' | 'keep' {
+  if (opts.requestFamily !== opts.currentFamily) return 'drop'
+  if (opts.httpStatus === 403 || opts.httpStatus === 404) return 'missing'
+  return 'keep'
+}
+
+export function isDriverLocationReportingOperational(opts: DriverLocationNeed & {
+  activeTripId?: string | null
   activeTripBootstrapPending?: boolean
 }): boolean {
-  if (!opts.token) return false
-  if (opts.activeTripId || opts.activeTripBootstrapPending) return true
-  return isDriverAvailabilityOperational(opts)
+  return isDriverLocationNeeded(opts)
+}
+
+/** Viagem confirmada. Um id local sem estado não chega. */
+export function isNativeDriverLocationServiceNeeded(opts: DriverLocationNeed & {
+  activeTripBootstrapPending?: boolean
+}): boolean {
+  return isDriverLocationNeeded(opts)
 }
 
 export function shouldBootstrapDriverActiveTrip(opts: {

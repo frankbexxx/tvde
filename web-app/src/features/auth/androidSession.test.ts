@@ -14,6 +14,12 @@ import { apiFetch } from '../../api/client'
 import { logoutBrowserSession, prepareNewCredentials, resetSessionRefreshState } from '../../api/sessionRefresh'
 import { LS_ACCESS_TOKEN, LS_AUTH_CONTRACT, LS_REFRESH_TOKEN } from '../../utils/authStorage'
 import { AUTH_LOGOUT_EVENT } from '../../constants/events'
+import {
+  currentSessionFamily,
+  noteSessionFamily,
+  resetSessionFamilyForTests,
+  subscribeSessionFamily,
+} from '../driver/driverSessionFamily'
 
 function jsonResponse(status: number, body: unknown) {
   return {
@@ -45,6 +51,7 @@ describe('circuito Android', () => {
     resetSessionRefreshState()
     delete window.vamulaVault
     vi.unstubAllGlobals()
+    resetSessionFamilyForTests()
   })
 
   it('sem o contrato android-refresh-v1 não envia cabeçalhos', async () => {
@@ -90,6 +97,7 @@ describe('circuito Android', () => {
     expect(headers['X-Auth-Contract']).toBe('refresh-v1')
     expect(headers['X-Auth-Client']).toBe('android')
     expect(init.credentials).toBeUndefined()
+    expect(currentSessionFamily()).toBe('family-1')
   })
 
   it('uma escrita falhada não deixa token de acesso', async () => {
@@ -121,6 +129,11 @@ describe('circuito Android', () => {
         return jsonResponse(200, { status: 'online' })
       }),
     )
+    noteSessionFamily('family-keep')
+    let familyChanges = 0
+    const stopFamily = subscribeSessionFamily(() => {
+      familyChanges += 1
+    })
     const on401 = vi.fn()
     const onLogout = vi.fn()
     window.addEventListener('api:401', on401)
@@ -131,6 +144,9 @@ describe('circuito Android', () => {
     expect(localStorage.getItem(LS_REFRESH_TOKEN)).toBeNull()
     expect(on401).not.toHaveBeenCalled()
     expect(onLogout).not.toHaveBeenCalled()
+    expect(familyChanges).toBe(0)
+    expect(currentSessionFamily()).toBe('family-keep')
+    stopFamily()
     window.removeEventListener('api:401', on401)
     window.removeEventListener(AUTH_LOGOUT_EVENT, onLogout)
   })

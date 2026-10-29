@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { AUTH_LOGOUT_EVENT } from '../constants/events'
+import { subscribeSessionFamily } from '../features/driver/driverSessionFamily'
 import {
   readPassengerActiveTripIdFromStorage,
   writePassengerActiveTripIdToStorage,
@@ -51,11 +52,18 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const onLogout = () => {
+    const clear = () => {
       clearActiveTripSessionState(setPassengerActiveTripIdState, setDriverActiveTripIdState)
     }
-    window.addEventListener(AUTH_LOGOUT_EVENT, onLogout)
-    return () => window.removeEventListener(AUTH_LOGOUT_EVENT, onLogout)
+    window.addEventListener(AUTH_LOGOUT_EVENT, clear)
+    const unsubscribe = subscribeSessionFamily((_next, previous) => {
+      if (_next === previous) return
+      clear()
+    })
+    return () => {
+      window.removeEventListener(AUTH_LOGOUT_EVENT, clear)
+      unsubscribe()
+    }
   }, [])
 
   const value = useMemo<ActiveTripContextValue>(

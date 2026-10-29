@@ -4,7 +4,11 @@ import {
   fetchRemoteAvailabilityOfflineUpdate,
   formatDriverAvailabilityError,
   isDriverAvailabilityOperational,
+  isDriverLocationNeeded,
   isDriverLocationReportingOperational,
+  isNativeDriverLocationServiceNeeded,
+  recoveryAfterTripProbe,
+  resolveDriverTripPollFailure,
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
   remoteAvailabilityOfflineUpdate,
@@ -210,7 +214,7 @@ describe('isDriverAvailabilityOperational', () => {
 describe('isDriverLocationReportingOperational', () => {
   const base = { token: 'tok', offline: false, hydrated: true, syncing: false }
 
-  it('viagem activa → reporter activo mesmo se disponibilidade backend está false', () => {
+  it('viagem confirmada → reporter activo mesmo se disponibilidade backend está false', () => {
     expect(
       isDriverLocationReportingOperational({
         ...base,
@@ -218,11 +222,12 @@ describe('isDriverLocationReportingOperational', () => {
         hydrated: false,
         syncing: true,
         activeTripId: 'trip-1',
+        tripStatus: 'accepted',
       })
     ).toBe(true)
   })
 
-  it('bootstrap de viagem activa pendente → reporter activo durante retry', () => {
+  it('primeiro GET pendente, sem viagem confirmada, não liga o reporter', () => {
     expect(
       isDriverLocationReportingOperational({
         ...base,
@@ -232,7 +237,7 @@ describe('isDriverLocationReportingOperational', () => {
         activeTripId: null,
         activeTripBootstrapPending: true,
       })
-    ).toBe(true)
+    ).toBe(false)
   })
 
   it('sem viagem activa → segue a disponibilidade operacional para ofertas', () => {
@@ -246,14 +251,230 @@ describe('isDriverLocationReportingOperational', () => {
     ).toBe(false)
   })
 
+  it('timeout sem viagem confirmada não mantém o reporter', () => {
+    expect(
+      isDriverLocationReportingOperational({
+        ...base,
+        offline: true,
+        activeTripId: null,
+        tripRecoveryUnresolved: true,
+      })
+    ).toBe(false)
+  })
+
+  it('viagem confirmada e falha de rede mantém o reporter offline', () => {
+    expect(
+      isDriverLocationReportingOperational({
+        ...base,
+        offline: true,
+        hydrated: false,
+        activeTripId: 'trip-1',
+        tripStatus: null,
+        tripRecoveryUnresolved: true,
+        confirmedActiveTrip: true,
+      })
+    ).toBe(true)
+  })
+
+  it('id residual de viagem terminada não autoriza o reporter offline', () => {
+    expect(
+      isDriverLocationReportingOperational({
+        ...base,
+        offline: true,
+        activeTripId: 'trip-1',
+        tripStatus: 'completed',
+        tripRecoveryUnresolved: true,
+        confirmedActiveTrip: true,
+      })
+    ).toBe(false)
+  })
+
   it('sem token → reporter inactivo mesmo com viagem activa', () => {
     expect(
       isDriverLocationReportingOperational({
         ...base,
         token: null,
         activeTripId: 'trip-1',
+        tripStatus: 'ongoing',
       })
     ).toBe(false)
+  })
+})
+
+describe('isNativeDriverLocationServiceNeeded', () => {
+  const base = { token: 'tok', offline: false, hydrated: true, syncing: false }
+
+  it('online confirmado pede o serviço', () => {
+    expect(isNativeDriverLocationServiceNeeded({ ...base, tripStatus: null })).toBe(true)
+  })
+
+  it('offline sem viagem não pede o serviço', () => {
+    expect(isNativeDriverLocationServiceNeeded({ ...base, offline: true, tripStatus: null })).toBe(false)
+    expect(isNativeDriverLocationServiceNeeded({ ...base, offline: true, tripStatus: 'assigned' })).toBe(false)
+  })
+
+  it('viagem accepted, arriving ou ongoing pede o serviço mesmo offline', () => {
+    for (const tripStatus of ['accepted', 'arriving', 'ongoing']) {
+      expect(
+        isNativeDriverLocationServiceNeeded({
+          ...base,
+          offline: true,
+          hydrated: false,
+          syncing: true,
+          tripStatus,
+        })
+      ).toBe(true)
+    }
+  })
+
+  it('primeiro GET e timeout sem viagem confirmada não pedem o serviço', () => {
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        offline: true,
+        activeTripBootstrapPending: true,
+      })
+    ).toBe(false)
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        offline: true,
+        tripRecoveryUnresolved: true,
+      })
+    ).toBe(false)
+  })
+
+  it('viagem confirmada e falha de rede mantêm o serviço', () => {
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        offline: true,
+        hydrated: false,
+        tripStatus: 'ongoing',
+        tripRecoveryUnresolved: true,
+        confirmedActiveTrip: true,
+      })
+    ).toBe(true)
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        offline: true,
+        tripStatus: null,
+        tripRecoveryUnresolved: true,
+        confirmedActiveTrip: true,
+      })
+    ).toBe(true)
+  })
+
+  it('viagem terminada segue o online', () => {
+    expect(isNativeDriverLocationServiceNeeded({ ...base, tripStatus: 'completed' })).toBe(true)
+    expect(
+      isNativeDriverLocationServiceNeeded({ ...base, offline: true, tripStatus: 'cancelled' })
+    ).toBe(false)
+    expect(
+      isNativeDriverLocationServiceNeeded({ ...base, offline: true, tripStatus: 'failed' })
+    ).toBe(false)
+  })
+
+  it('id local sem estado confirmado não pede o serviço offline', () => {
+    expect(isNativeDriverLocationServiceNeeded({ ...base, offline: true })).toBe(false)
+  })
+
+  it('id residual sem estado ou com viagem terminada não pede o serviço offline', () => {
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        offline: true,
+        tripStatus: 'completed',
+      })
+    ).toBe(false)
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        offline: true,
+        tripRecoveryUnresolved: true,
+        confirmedActiveTrip: true,
+        tripStatus: 'cancelled',
+      })
+    ).toBe(false)
+  })
+
+  it('logout não pede o serviço', () => {
+    expect(
+      isNativeDriverLocationServiceNeeded({ ...base, token: null, tripStatus: 'ongoing' })
+    ).toBe(false)
+  })
+
+  it('reporter e serviço nativo coincidem', () => {
+    const cases = [
+      { ...base, offline: true, activeTripBootstrapPending: true },
+      { ...base, offline: true, tripRecoveryUnresolved: true },
+      { ...base, offline: true, tripStatus: 'accepted' as const },
+      { ...base, offline: true, tripStatus: 'completed' as const, confirmedActiveTrip: true },
+      {
+        ...base,
+        offline: true,
+        tripStatus: null,
+        tripRecoveryUnresolved: true,
+        confirmedActiveTrip: true,
+      },
+    ]
+    for (const entry of cases) {
+      expect(isDriverLocationReportingOperational(entry)).toBe(isNativeDriverLocationServiceNeeded(entry))
+      expect(isDriverLocationNeeded(entry)).toBe(isNativeDriverLocationServiceNeeded(entry))
+    }
+  })
+})
+
+describe('recuperação e poll entre contas', () => {
+  it('timeout do primeiro GET não cria recuperação', () => {
+    expect(
+      recoveryAfterTripProbe({ confirmedActiveTrip: false, networkError: true, tripStatus: null })
+    ).toBe(false)
+  })
+
+  it('falha de rede depois de uma viagem confirmada cria recuperação', () => {
+    expect(
+      recoveryAfterTripProbe({
+        confirmedActiveTrip: true,
+        networkError: true,
+        tripStatus: 'arriving',
+      })
+    ).toBe(true)
+    expect(
+      recoveryAfterTripProbe({ confirmedActiveTrip: true, networkError: true, tripStatus: null })
+    ).toBe(true)
+  })
+
+  it('viagem terminada não recupera', () => {
+    expect(
+      recoveryAfterTripProbe({
+        confirmedActiveTrip: true,
+        networkError: true,
+        tripStatus: 'failed',
+      })
+    ).toBe(false)
+  })
+
+  it('403 e 5xx da nova conta não mantêm a viagem anterior', () => {
+    expect(
+      resolveDriverTripPollFailure({ requestFamily: 'family-a', currentFamily: 'family-b', httpStatus: 403 })
+    ).toBe('drop')
+    expect(
+      resolveDriverTripPollFailure({ requestFamily: 'family-a', currentFamily: 'family-b', httpStatus: 500 })
+    ).toBe('drop')
+    expect(
+      resolveDriverTripPollFailure({ requestFamily: 'family-a', currentFamily: 'family-b', httpStatus: 200 })
+    ).toBe('drop')
+  })
+
+  it('5xx da mesma família mantém a viagem e 403 da mesma família não a recupera', () => {
+    expect(
+      resolveDriverTripPollFailure({ requestFamily: 'family-a', currentFamily: 'family-a', httpStatus: 503 })
+    ).toBe('keep')
+    expect(
+      resolveDriverTripPollFailure({ requestFamily: 'family-a', currentFamily: 'family-a', httpStatus: 403 })
+    ).toBe('missing')
   })
 })
 
