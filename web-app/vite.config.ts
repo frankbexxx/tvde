@@ -32,6 +32,29 @@ function readGitShortSha(): string {
 
 const appVersion = readPackageVersion()
 const appGitSha = readGitShortSha()
+const stagingWebProof = process.env.VAMULA_STAGING_WEB === '1'
+
+function dropLayoutProbeForStagingWeb() {
+  const inert = [
+    'export function isDia23DebugEnabled() { return false }',
+    'export function installDia23LayoutProbe() { return function () {} }',
+  ].join('\n')
+  return {
+    name: 'staging-web-drop-layout-probe',
+    enforce: 'pre' as const,
+    resolveId(source: string) {
+      if (source.includes('dia23LayoutProbe.inert')) return null
+      if (source.endsWith('dia23LayoutProbe') || source.endsWith('dia23LayoutProbe.ts')) {
+        return '\0staging-dia23-inert'
+      }
+      return null
+    },
+    load(id: string) {
+      if (id === '\0staging-dia23-inert') return inert
+      return null
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -39,7 +62,7 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(appVersion),
     __APP_GIT_SHA__: JSON.stringify(appGitSha),
   },
-  plugins: [react()],
+  plugins: [react(), ...(stagingWebProof ? [dropLayoutProbeForStagingWeb()] : [])],
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

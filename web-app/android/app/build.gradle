@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+def productionGpsBase = "https://tvde-api-fd2z.onrender.com"
+def stagingGpsBase = "https://tvde-staging-api.onrender.com"
+def stagingWebDist = rootProject.file("../dist/staging-release")
+
 android {
     namespace = "pt.vamula.app"
     if (project.hasProperty("stagingProofTest")) {
@@ -52,12 +56,12 @@ android {
     }
     buildTypes {
         debug {
-            buildConfigField "String", "GPS_UPLOAD_BASE", '"https://tvde-api-fd2z.onrender.com"'
+            buildConfigField "String", "GPS_UPLOAD_BASE", "\"${productionGpsBase}\""
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "GPS_UPLOAD_BASE", '"https://tvde-api-fd2z.onrender.com"'
+            buildConfigField "String", "GPS_UPLOAD_BASE", "\"${productionGpsBase}\""
             if (releaseSigningReady) {
                 signingConfig signingConfigs.release
             }
@@ -69,6 +73,15 @@ android {
             debuggable true
             versionNameSuffix "-staging-proof"
             buildConfigField "String", "GPS_UPLOAD_BASE", '"https://tvde-staging-api.onrender.com"'
+        }
+        // APK não depurável só para a prova TLS contra STAGING. Não usa a chave da Play.
+        stagingRelease {
+            initWith release
+            matchingFallbacks = ['release']
+            debuggable false
+            versionNameSuffix "-staging-release"
+            buildConfigField "String", "GPS_UPLOAD_BASE", "\"${stagingGpsBase}\""
+            signingConfig signingConfigs.debug
         }
     }
 }
@@ -103,6 +116,147 @@ try {
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+tasks.register("syncStagingReleaseWeb", Sync) {
+    from(stagingWebDist)
+    into(layout.buildDirectory.dir("generated/stagingReleaseWeb/public"))
+}
+
+tasks.configureEach { task ->
+    if (task.name == "mergeStagingReleaseAssets") {
+        task.dependsOn("syncStagingReleaseWeb")
+        task.doLast {
+            File merged = task.outputs.files.singleFile
+            File webRoot = findAssetDir(merged, "public")
+            if (webRoot == null) {
+                throw new GradleException("stagingRelease assets have no public web root.")
+            }
+            webRoot.deleteDir()
+            copy {
+                from(stagingWebDist)
+                into(webRoot)
+            }
+            assertWebAligns(webRoot, stagingGpsBase, productionGpsBase, stagingWebDist, true)
+        }
+    }
+    if (task.name == "mergeReleaseAssets") {
+        task.doLast {
+            File merged = task.outputs.files.singleFile
+            File webRoot = findAssetDir(merged, "public")
+            if (webRoot == null) {
+                return
+            }
+            assertWebAligns(webRoot, stagingGpsBase, productionGpsBase, stagingWebDist, false)
+        }
+    }
+}
+
+def findAssetDir(File root, String name) {
+    if (root == null || !root.exists()) {
+        return null
+    }
+    if (root.isDirectory() && root.name == name) {
+        return root
+    }
+    File[] children = root.listFiles()
+    if (children == null) {
+        return null
+    }
+    for (File child : children) {
+        File found = findAssetDir(child, name)
+        if (found != null) {
+            return found
+        }
+    }
+    return null
+}
+
+def assertWebAligns(File webRoot, String stagingBase, String productionBase, File webDist, boolean stagingVariant) {
+    if (stagingVariant && !webDist.exists()) {
+        throw new GradleException("Missing STAGING web bundle at " + webDist + ". Build it with VITE_API_URL set to the staging HTTPS origin. Do not use --mode android and do not copy it into src/main/assets.")
+    }
+    def origins = collectOrigins(webRoot)
+    def staging = originOf(stagingBase)
+    def production = originOf(productionBase)
+    boolean sawStaging = false
+    for (def origin : origins) {
+        if (sameGpsOrigin(origin, staging)) {
+            sawStaging = true
+        }
+        if (stagingVariant && (origin.host == production.host || forbiddenLoopback(origin) || (origin.host == staging.host && !sameGpsOrigin(origin, staging)))) {
+            throw new GradleException("stagingRelease web origin " + origin.scheme + "://" + origin.host + ":" + origin.port + " diverges from the STAGING GPS base.")
+        }
+        if (!stagingVariant && sameGpsOrigin(origin, staging)) {
+            throw new GradleException("Release web bundle contains the STAGING GPS origin. Refusing to reuse the stagingRelease bundle.")
+        }
+    }
+    if (stagingVariant && !sawStaging) {
+        throw new GradleException("stagingRelease web bundle does not contain the configured STAGING GPS origin.")
+    }
+}
+
+def collectOrigins(File root) {
+    def found = []
+    if (root == null || !root.exists()) {
+        return found
+    }
+    root.eachFileRecurse { File file ->
+        String name = file.name
+        if (!file.isFile() || !(name.endsWith(".js") || name.endsWith(".html") || name.endsWith(".css"))) {
+            return
+        }
+        def matcher = (file.getText("UTF-8") =~ /https?:\/\/[^\s"'<>\\)]+/)
+        matcher.each { String raw ->
+            String cleaned = raw.replaceAll(/[),.;]+$/, "")
+            def origin = parseOrigin(cleaned)
+            if (origin != null) {
+                found << origin
+            }
+        }
+    }
+    return found
+}
+
+def parseOrigin(String raw) {
+    URI uri
+    try {
+        uri = new URI(raw)
+    } catch (Exception ignored) {
+        return null
+    }
+    if (uri.scheme == null || uri.host == null || uri.rawUserInfo != null || uri.rawQuery != null || uri.rawFragment != null) {
+        return null
+    }
+    int port = uri.port
+    if (port < 0) {
+        port = "https".equals(uri.scheme) ? 443 : 80
+    }
+    String path = uri.rawPath == null ? "" : uri.rawPath
+    return [scheme: uri.scheme, host: uri.host.toLowerCase(java.util.Locale.US), port: port, path: path]
+}
+
+def originOf(String base) {
+    def origin = parseOrigin(base)
+    if (origin == null || origin.scheme != "https" || origin.port != 443 || !(origin.path == "" || origin.path == "/")) {
+        throw new GradleException("GPS base must be HTTPS with an empty path: " + base)
+    }
+    return origin
+}
+
+def sameGpsOrigin(def left, def right) {
+    return left.scheme == right.scheme && left.host == right.host && left.port == right.port && (left.path == "" || left.path == "/") && (right.path == "" || right.path == "/")
+}
+
+def forbiddenLoopback(def origin) {
+    if (origin.host == "10.0.2.2" || origin.host == "127.0.0.1" || origin.host == "[::1]") {
+        return true
+    }
+    // O router traz `new URL("http://localhost")` como base de URLs relativas, sem porta nem caminho.
+    if (origin.host == "localhost") {
+        return !(origin.scheme == "http" && origin.port == 80 && (origin.path == "" || origin.path == "/"))
+    }
+    return false
 }
 
 gradle.taskGraph.whenReady { taskGraph ->

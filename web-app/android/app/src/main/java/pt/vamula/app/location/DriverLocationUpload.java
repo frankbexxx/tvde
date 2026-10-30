@@ -1,5 +1,6 @@
 package pt.vamula.app.location;
 
+import android.util.Log;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -221,6 +222,7 @@ public final class DriverLocationUpload {
                 return;
             }
             inFlight = false;
+            noteStatus(status, fix.fixTimeMillis);
             if (!armed) {
                 queue.clear();
                 return;
@@ -246,6 +248,15 @@ public final class DriverLocationUpload {
 
     static String diagnostic(int status, long fixTimeMillis) {
         return "upload status=" + status + " time=" + fixTimeMillis;
+    }
+
+    /** Estado e instante do fix. Sem coordenadas, URL ou token. O stub JVM não regista. */
+    private static void noteStatus(int status, long fixTimeMillis) {
+        try {
+            Log.i(DriverLocationService.TAG, diagnostic(status, fixTimeMillis));
+        } catch (RuntimeException exception) {
+            // android.util.Log no teste JVM é um stub.
+        }
     }
 
     static String body(QueuedFix fix) {
