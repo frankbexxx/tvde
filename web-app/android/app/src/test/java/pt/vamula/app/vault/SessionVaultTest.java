@@ -261,6 +261,23 @@ public class SessionVaultTest {
         assertTrue(manifest.contains("@xml/data_extraction_rules"));
     }
 
+    @Test
+    public void refreshRotationDoesNotLetAnOldLeaseClearTheUpdatedSession() throws Exception {
+        SessionVault vault = vault();
+        vault.save(session("access-1", "refresh-1", "family-1", 1));
+        int sessionGeneration = vault.observe().sessionGeneration();
+        RefreshLease lease = vault.beginRefresh();
+        vault.completeRefresh(lease, session("access-2", "refresh-2", "family-1", 2));
+        assertFalse(vault.clearIfSameRefresh(lease));
+        SessionRecord read = vault.read().orElseThrow();
+        assertEquals("refresh-2", read.refreshToken());
+        assertEquals(2, read.generation());
+        assertEquals(sessionGeneration, vault.observe().sessionGeneration());
+        assertTrue(vault.clearIfSameSession(read.familyId(), sessionGeneration));
+        assertTrue(vault.read().isEmpty());
+        assertFalse(vault.clearIfSameSession(read.familyId(), sessionGeneration));
+    }
+
     private static int count(String text, String needle) {
         int found = 0;
         int from = 0;

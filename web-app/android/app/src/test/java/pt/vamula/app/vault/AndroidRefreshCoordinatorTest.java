@@ -234,6 +234,155 @@ public class AndroidRefreshCoordinatorTest {
     }
 
     @Test
+    public void logoutOfADoesNotClearTheFamilyCommittedWhileThatLogoutIsInFlight() throws Exception {
+        Harness harness = harness();
+        harness.coordinator.commit(API, "access-a", "refresh-a", "family-a", null);
+        harness.http.calls.clear();
+        harness.http.queue(204, "");
+        harness.http.queue(204, "");
+        CountDownLatch entered = new CountDownLatch(1);
+        harness.http.before = () -> {
+            harness.http.before = null;
+            entered.countDown();
+        };
+        harness.http.gate = new CountDownLatch(2);
+        var pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<AndroidRefreshCoordinator.Outcome> logout = pool.submit(() -> harness.coordinator.logout(API));
+            assertTrue(entered.await(5, TimeUnit.SECONDS));
+            assertEquals("committed", harness.coordinator.commit(API, "access-b", "refresh-b", "family-b", null).kind);
+            AndroidRefreshCoordinator.Outcome loggedOut = logout.get(5, TimeUnit.SECONDS);
+            assertEquals("logged_out", loggedOut.kind);
+            assertFalse(loggedOut.cleared);
+        } finally {
+            pool.shutdownNow();
+        }
+        SessionRecord read = harness.vault.read().orElseThrow();
+        assertEquals("family-b", read.familyId());
+        assertEquals("refresh-b", read.refreshToken());
+        String bodies = harness.http.calls.stream().map(call -> call.body).reduce("", String::concat);
+        assertTrue(bodies.contains("refresh-a"));
+        assertFalse(bodies.contains("refresh-b"));
+    }
+
+    @Test
+    public void refreshFailureDoesNotClearTheFamilyCommittedWhileThatRefreshIsInFlight() throws Exception {
+        Harness harness = harness();
+        harness.coordinator.commit(API, jwt(1L), "refresh-a", "family-a", null);
+        overlap(harness, 401, "{\"detail\":\"invalid_grant\"}");
+        var pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<AndroidRefreshCoordinator.Outcome> refresh = pool.submit(() -> harness.coordinator.refresh(API));
+            assertTrue(entered(harness).await(5, TimeUnit.SECONDS));
+            assertEquals("committed", harness.coordinator.commit(API, jwt(9_000_000_000L), "refresh-b", "family-b", null).kind);
+            assertEquals("stale", refresh.get(5, TimeUnit.SECONDS).kind);
+        } finally {
+            pool.shutdownNow();
+        }
+        SessionRecord read = harness.vault.read().orElseThrow();
+        assertEquals("family-b", read.familyId());
+        assertEquals("refresh-b", read.refreshToken());
+    }
+
+    @Test
+    public void restoreFailureDoesNotClearTheFamilyCommittedWhileThatRestoreIsInFlight() throws Exception {
+        Harness harness = harness();
+        harness.coordinator.commit(API, jwt(1L), "refresh-a", "family-a", null);
+        overlap(harness, 401, "{\"detail\":\"invalid_grant\"}");
+        var pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<AndroidRefreshCoordinator.Outcome> restore = pool.submit(() -> harness.coordinator.restore(API));
+            assertTrue(entered(harness).await(5, TimeUnit.SECONDS));
+            assertEquals("committed", harness.coordinator.commit(API, jwt(9_000_000_000L), "refresh-b", "family-b", null).kind);
+            assertEquals("offline", restore.get(5, TimeUnit.SECONDS).kind);
+        } finally {
+            pool.shutdownNow();
+        }
+        SessionRecord read = harness.vault.read().orElseThrow();
+        assertEquals("family-b", read.familyId());
+        assertEquals("refresh-b", read.refreshToken());
+    }
+
+    @Test
+    public void logoutRemovesOnlyTheSessionThatWasCurrent() throws Exception {
+        Harness harness = harness();
+        harness.coordinator.commit(API, "access-a", "refresh-a", "family-a", null);
+        harness.http.queue(204, "");
+        AndroidRefreshCoordinator.Outcome loggedOut = harness.coordinator.logout(API);
+        assertEquals("logged_out", loggedOut.kind);
+        assertTrue(loggedOut.cleared);
+        assertTrue(loggedOut.revoked);
+        assertTrue(harness.vault.read().isEmpty());
+        assertTrue(harness.http.calls.get(harness.http.calls.size() - 1).body.contains("refresh-a"));
+    }
+
+    @Test
+    public void explicitLogoutAfterTheSecondLoginRemovesThatLogin() throws Exception {
+        Harness harness = harness();
+        harness.coordinator.commit(API, "access-a", "refresh-a", "family-a", null);
+        harness.http.queue(204, "");
+        assertTrue(harness.coordinator.logout(API).cleared);
+        assertEquals("committed", harness.coordinator.commit(API, "access-b", "refresh-b", "family-b", null).kind);
+        harness.http.queue(204, "");
+        AndroidRefreshCoordinator.Outcome loggedOut = harness.coordinator.logout(API);
+        assertTrue(loggedOut.cleared);
+        assertTrue(harness.vault.read().isEmpty());
+        assertTrue(harness.http.calls.get(harness.http.calls.size() - 1).body.contains("refresh-b"));
+        assertFalse(harness.http.calls.get(harness.http.calls.size() - 1).body.contains("refresh-a"));
+    }
+
+    @Test
+    public void legitimateRefreshKeepsTheSessionGenerationAndRotatesTheToken() throws Exception {
+        Harness harness = harness();
+        harness.coordinator.commit(API, jwt(9_000_000_000L), "refresh-1", "family-1", null);
+        int sessionGeneration = harness.vault.observe().sessionGeneration();
+        harness.http.queue(200, rotated("family-1", "access-2", "refresh-2"));
+        assertEquals("refreshed", harness.coordinator.refresh(API).kind);
+        SessionRecord read = harness.vault.read().orElseThrow();
+        assertEquals("family-1", read.familyId());
+        assertEquals("refresh-2", read.refreshToken());
+        assertEquals(2, read.generation());
+        assertEquals(sessionGeneration, harness.vault.observe().sessionGeneration());
+        harness.http.queue(204, "");
+        assertTrue(harness.coordinator.logout(API).cleared);
+        assertTrue(harness.vault.read().isEmpty());
+    }
+
+    @Test
+    public void staleRefreshOfTheSameFamilyDoesNotClearTheReplacement() throws Exception {
+        Harness harness = harness();
+        harness.coordinator.commit(API, jwt(9_000_000_000L), "refresh-a", "family-a", null);
+        overlap(harness, 401, "{\"detail\":\"invalid_grant\"}");
+        var pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<AndroidRefreshCoordinator.Outcome> refresh = pool.submit(() -> harness.coordinator.refresh(API));
+            assertTrue(entered(harness).await(5, TimeUnit.SECONDS));
+            assertEquals("committed", harness.coordinator.commit(API, jwt(9_000_000_000L), "refresh-a2", "family-a", null).kind);
+            assertEquals("stale", refresh.get(5, TimeUnit.SECONDS).kind);
+        } finally {
+            pool.shutdownNow();
+        }
+        SessionRecord read = harness.vault.read().orElseThrow();
+        assertEquals("family-a", read.familyId());
+        assertEquals("refresh-a2", read.refreshToken());
+        assertEquals(1, read.generation());
+    }
+
+    @Test
+    public void emptyVaultLogoutIsIdempotent() throws Exception {
+        Harness harness = harness();
+        assertFalse(harness.vault.clearIfSameSession("family-a", 1));
+        assertFalse(harness.vault.clearIfSameRefresh(null));
+        AndroidRefreshCoordinator.Outcome outcome = harness.coordinator.logout(API);
+        assertEquals("logged_out", outcome.kind);
+        assertTrue(outcome.cleared);
+        assertFalse(outcome.revoked);
+        assertTrue(harness.vault.read().isEmpty());
+        assertTrue(harness.http.calls.isEmpty());
+        assertEquals("logged_out", harness.coordinator.logout(API).kind);
+    }
+
+    @Test
     public void allowlistAcceptsTheApisAndLoopbackOnly() {
         assertTrue(VaultApiBase.endpoint(API, "/auth/refresh").endsWith("/auth/refresh"));
         assertTrue(VaultApiBase.endpoint("https://tvde-api-fd2z.onrender.com/", "/auth/logout").startsWith("https://tvde-api-fd2z.onrender.com/auth/logout"));
@@ -279,6 +428,23 @@ public class AndroidRefreshCoordinatorTest {
 
     private static String rotated(String family, String access, String refresh) {
         return "{\"access_token\":\"" + access + "\",\"refresh_token\":\"" + refresh + "\",\"session_id\":\"" + family + "\",\"user_id\":\"user-1\",\"role\":\"driver\",\"phone\":\"+351900000000\",\"display_name\":\"Demo\"}";
+    }
+
+    private CountDownLatch overlapEntered;
+
+    private void overlap(Harness harness, int status, String body) {
+        harness.http.queue(status, body);
+        harness.http.queue(204, "");
+        overlapEntered = new CountDownLatch(1);
+        harness.http.before = () -> {
+            harness.http.before = null;
+            overlapEntered.countDown();
+        };
+        harness.http.gate = new CountDownLatch(2);
+    }
+
+    private CountDownLatch entered(Harness harness) {
+        return overlapEntered;
     }
 
     private static Harness harness() throws GeneralSecurityException {

@@ -91,7 +91,9 @@ public final class VaultChannel {
         }
         if ("logout".equals(op)) {
             AndroidRefreshCoordinator.Outcome outcome = coordinator.logout(text(request, "api_base"));
-            DriverLocationArmament.onSessionEnded();
+            if (outcome.cleared) {
+                DriverLocationArmament.onSessionEnded();
+            }
             return base(id, true).put("kind", outcome.kind).put("revoked", outcome.revoked).emit();
         }
         if ("restore".equals(op)) {
