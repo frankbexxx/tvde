@@ -126,6 +126,9 @@ tasks.register("syncStagingReleaseWeb", Sync) {
 tasks.configureEach { task ->
     if (task.name == "mergeStagingReleaseAssets") {
         task.dependsOn("syncStagingReleaseWeb")
+        // A cópia e a verificação correm neste doLast. Sem este input,
+        // o merge fica UP-TO-DATE e a APK conserva o bundle web anterior.
+        task.inputs.dir(stagingWebDist).withPropertyName("stagingWebDist")
         task.doLast {
             File merged = task.outputs.files.singleFile
             File webRoot = findAssetDir(merged, "public")

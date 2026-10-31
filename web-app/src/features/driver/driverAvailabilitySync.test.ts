@@ -12,8 +12,10 @@ import {
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
   remoteAvailabilityOfflineUpdate,
+  driverAvailabilitySessionKey,
   shouldAcceptRemoteAvailabilityResponse,
   shouldBootstrapDriverActiveTrip,
+  shouldHydrateAvailability,
   shouldSkipRemoteAvailabilityApply,
 } from './driverAvailabilitySync'
 
@@ -167,6 +169,8 @@ describe('shouldAcceptRemoteAvailabilityResponse', () => {
     latestSeq: 2,
     epochAtStart: 1,
     currentEpoch: 1,
+    sessionEpochAtStart: 4,
+    currentSessionEpoch: 4,
   }
 
   it('aceita resposta fresca alinhada', () => {
@@ -188,6 +192,39 @@ describe('shouldAcceptRemoteAvailabilityResponse', () => {
     expect(
       shouldAcceptRemoteAvailabilityResponse({ ...ok, epochAtStart: 1, currentEpoch: 2 })
     ).toBe(false)
+  })
+
+  it('rejeita resposta da família anterior', () => {
+    expect(
+      shouldAcceptRemoteAvailabilityResponse({ ...ok, sessionEpochAtStart: 4, currentSessionEpoch: 5 })
+    ).toBe(false)
+  })
+})
+
+describe('driverAvailabilitySessionKey', () => {
+  it('usa a família do motorista e ignora a geração do access token', () => {
+    expect(driverAvailabilitySessionKey('driver', 'family-a')).toBe('family-a')
+    expect(driverAvailabilitySessionKey('driver', 'family-a')).toBe(
+      driverAvailabilitySessionKey('driver', 'family-a')
+    )
+  })
+
+  it('logout, outro papel ou família vazia não têm chave', () => {
+    expect(driverAvailabilitySessionKey('driver', null)).toBeNull()
+    expect(driverAvailabilitySessionKey('driver', '  ')).toBeNull()
+    expect(driverAvailabilitySessionKey('passenger', 'family-a')).toBeNull()
+    expect(driverAvailabilitySessionKey(null, 'family-a')).toBeNull()
+  })
+})
+
+describe('shouldHydrateAvailability', () => {
+  it('só hidrata uma confirmação aceite desta sessão', () => {
+    expect(shouldHydrateAvailability({ accepted: true, statusOk: true })).toBe(true)
+  })
+
+  it('falha de rede ou resposta de outra família não autorizam GPS', () => {
+    expect(shouldHydrateAvailability({ accepted: true, statusOk: false })).toBe(false)
+    expect(shouldHydrateAvailability({ accepted: false, statusOk: true })).toBe(false)
   })
 })
 
