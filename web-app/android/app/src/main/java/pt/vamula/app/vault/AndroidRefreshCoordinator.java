@@ -13,7 +13,8 @@ import java.util.function.LongSupplier;
  * recuperação segura; a sessão local termina.
  *
  * Se o logout remoto falhar, a família continua no servidor até ao idle ou ao prazo
- * absoluto. O cofre local fica vazio, por isso este aparelho já não renova.
+ * absoluto. O cofre só é limpo se ainda tiver a sessão observada antes do pedido,
+ * por isso este aparelho deixa de a renovar sem apagar uma sessão mais recente.
  */
 public final class AndroidRefreshCoordinator {
 
@@ -80,8 +81,7 @@ public final class AndroidRefreshCoordinator {
             return Outcome.failure("transient");
         }
         if (result.status == 401 || result.status == 400) {
-            vault.clear();
-            return Outcome.failure("invalid");
+            return Outcome.failure(vault.clearIfSameRefresh(lease) ? "invalid" : "stale");
         }
         if (result.status != 200) {
             return Outcome.failure("transient");
@@ -97,8 +97,7 @@ public final class AndroidRefreshCoordinator {
         String family = body.text("session_id");
         if (blank(access) || blank(refresh) || !lease.familyId().equals(family)) {
             if (!lease.familyId().equals(family) && !blank(family)) {
-                vault.clear();
-                return Outcome.failure("invalid");
+                return Outcome.failure(vault.clearIfSameRefresh(lease) ? "invalid" : "stale");
             }
             return Outcome.failure("transient");
         }
@@ -117,19 +116,31 @@ public final class AndroidRefreshCoordinator {
     }
 
     public Outcome logout(String apiBase) {
-        boolean revoked = false;
+        SessionVault.ObservedSession observed;
         try {
-            Optional<SessionRecord> current = vault.read();
-            if (current.isPresent()) {
-                revoked = revoke(apiBase, current.get().refreshToken());
-            }
+            observed = vault.observe();
         } catch (VaultKeyException exception) {
-            revoked = false;
+            Outcome failed = Outcome.ok("logged_out");
+            failed.cleared = vaultIsEmpty();
+            return failed;
         }
-        vault.clear();
+        boolean revoked = false;
+        if (observed.present()) {
+            revoked = revoke(apiBase, observed.refreshToken());
+        }
+        boolean cleared = !observed.present() || vault.clearIfSameSession(observed.familyId(), observed.sessionGeneration());
         Outcome outcome = Outcome.ok("logged_out");
         outcome.revoked = revoked;
+        outcome.cleared = cleared;
         return outcome;
+    }
+
+    private boolean vaultIsEmpty() {
+        try {
+            return vault.read().isEmpty();
+        } catch (VaultKeyException exception) {
+            return false;
+        }
     }
 
     public Outcome restore(String apiBase) {
@@ -315,6 +326,8 @@ public final class AndroidRefreshCoordinator {
         public String phone;
         public String displayName;
         public boolean revoked;
+        /** Verdadeiro quando o logout retirou a sessão observada, ou quando o cofre já estava vazio. */
+        public boolean cleared;
 
         private Outcome(String kind) {
             this.kind = kind;

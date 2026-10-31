@@ -14,6 +14,8 @@ public final class SessionVault {
     private final VaultCipher cipher;
     private final VaultStore store;
     private final ReentrantLock lock = new ReentrantLock();
+    /** Geração da sessão instalada. Não entra no formato persistido e não acompanha a rotação do token. */
+    private int sessionGeneration;
 
     public SessionVault(VaultCipher cipher, VaultStore store) {
         this.cipher = cipher;
@@ -68,7 +70,64 @@ public final class SessionVault {
         );
         lock.lock();
         try {
+            int next = nextSessionGenerationLocked();
             persist(stored);
+            sessionGeneration = next;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Família e geração de sessão vistas debaixo do mesmo lock. O refresh token não entra em {@code toString}. */
+    public ObservedSession observe() throws VaultKeyException {
+        lock.lock();
+        try {
+            SessionRecord current = load();
+            if (current == null) {
+                return ObservedSession.empty();
+            }
+            return new ObservedSession(current.familyId(), adoptSessionGenerationLocked(), current.refreshToken());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Apaga só se o cofre ainda tiver a sessão observada. Cofre vazio ou sessão substituída ficam como estão.
+     */
+    public boolean clearIfSameSession(String familyId, int observedSessionGeneration) {
+        if (familyId == null || familyId.trim().isEmpty() || observedSessionGeneration <= 0) {
+            return false;
+        }
+        lock.lock();
+        try {
+            SessionRecord current = load();
+            if (current == null) {
+                return false;
+            }
+            if (!familyId.equals(current.familyId()) || observedSessionGeneration != adoptSessionGenerationLocked()) {
+                return false;
+            }
+            wipe();
+            return true;
+        } catch (VaultKeyException exception) {
+            return false;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Apaga só se a operação de refresh observada ainda for a que está pendente. */
+    public boolean clearIfSameRefresh(RefreshLease lease) {
+        lock.lock();
+        try {
+            if (!sameOperation(load(), lease)) {
+                return false;
+            }
+            wipe();
+            return true;
+        } catch (VaultKeyException exception) {
+            return false;
         } finally {
             lock.unlock();
         }
@@ -167,6 +226,19 @@ public final class SessionVault {
     private void wipe() {
         store.delete();
         cipher.destroy();
+        sessionGeneration = 0;
+    }
+
+    private int adoptSessionGenerationLocked() {
+        if (sessionGeneration <= 0) {
+            sessionGeneration = 1;
+        }
+        return sessionGeneration;
+    }
+
+    private int nextSessionGenerationLocked() {
+        int next = sessionGeneration + 1;
+        return next <= 0 ? 1 : next;
     }
 
     private static boolean sameOperation(SessionRecord current, RefreshLease lease) {
@@ -195,6 +267,44 @@ public final class SessionVault {
         throws VaultKeyException {
         if (access == null || access.trim().isEmpty() || refresh == null || refresh.trim().isEmpty() || familyId == null || familyId.trim().isEmpty() || generation < 1) {
             throw new VaultKeyException(VaultKeyException.Kind.TRANSIENT);
+        }
+    }
+
+    /** Observação atómica. Não inclui o refresh token em {@link #toString()}. */
+    public static final class ObservedSession {
+        private final String familyId;
+        private final int sessionGeneration;
+        private final String refreshToken;
+
+        private ObservedSession(String familyId, int sessionGeneration, String refreshToken) {
+            this.familyId = familyId;
+            this.sessionGeneration = sessionGeneration;
+            this.refreshToken = refreshToken;
+        }
+
+        static ObservedSession empty() {
+            return new ObservedSession(null, 0, null);
+        }
+
+        public boolean present() {
+            return familyId != null && !familyId.trim().isEmpty();
+        }
+
+        public String familyId() {
+            return familyId == null ? "" : familyId;
+        }
+
+        public int sessionGeneration() {
+            return sessionGeneration;
+        }
+
+        public String refreshToken() {
+            return refreshToken == null ? "" : refreshToken;
+        }
+
+        @Override
+        public String toString() {
+            return "ObservedSession{present=" + present() + ",sessionGeneration=" + sessionGeneration + "}";
         }
     }
 }
