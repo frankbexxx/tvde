@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import androidx.core.content.ContextCompat;
 
 /**
@@ -13,9 +15,29 @@ import androidx.core.content.ContextCompat;
 public final class DriverLocationHost {
 
     private static final Object LOCK = new Object();
+    /** Igual a DRIVER_TOKEN_GAP_MS. Um pedido maior não prolonga o prazo. */
+    private static final long MAX_AUTHORIZATION_GAP_MS = 15_000L;
     private static Context appContext;
     private static boolean visible;
     private static boolean needed;
+    private static int gapGeneration;
+    private static Runnable gapTask;
+    private static Handler gapHandler;
+    private static final GapScheduler PLATFORM_GAP = new GapScheduler() {
+        @Override
+        public void schedule(Runnable task, long delayMs) {
+            gapHandler().postDelayed(task, delayMs);
+        }
+
+        @Override
+        public void cancel(Runnable task) {
+            Handler current = gapHandler;
+            if (current != null) {
+                current.removeCallbacks(task);
+            }
+        }
+    };
+    private static GapScheduler gapScheduler = PLATFORM_GAP;
     private static PermissionCheck permissionCheck = DriverLocationHost::devicePermission;
     private static Starter starter = DriverLocationHost::platformStart;
 
@@ -71,11 +93,47 @@ public final class DriverLocationHost {
         }
     }
 
+    /**
+     * Para o serviço ao fim do prazo mesmo com a activity em pausa.
+     * O Handler do looper principal não fica congelado pelo WebView.onPause.
+     */
+    public static void armAuthorizationGap(long delayMs) {
+        synchronized (LOCK) {
+            cancelGapLocked();
+            final int generation = ++gapGeneration;
+            Runnable task = () -> {
+                synchronized (LOCK) {
+                    if (generation != gapGeneration) {
+                        return;
+                    }
+                    gapTask = null;
+                    needed = false;
+                    syncLocked();
+                }
+            };
+            gapTask = task;
+            if (delayMs <= 0) {
+                task.run();
+                return;
+            }
+            long delay = Math.min(delayMs, MAX_AUTHORIZATION_GAP_MS);
+            gapScheduler.schedule(task, delay);
+        }
+    }
+
+    public static void clearAuthorizationGap() {
+        synchronized (LOCK) {
+            cancelGapLocked();
+        }
+    }
+
     static void resetForTests() {
         synchronized (LOCK) {
+            cancelGapLocked();
             visible = false;
             needed = false;
             appContext = null;
+            gapScheduler = PLATFORM_GAP;
             permissionCheck = DriverLocationHost::devicePermission;
             starter = DriverLocationHost::platformStart;
         }
@@ -93,6 +151,12 @@ public final class DriverLocationHost {
     static void setStarterForTests(Starter next) {
         synchronized (LOCK) {
             starter = next == null ? DriverLocationHost::platformStart : next;
+        }
+    }
+
+    static void setGapSchedulerForTests(GapScheduler next) {
+        synchronized (LOCK) {
+            gapScheduler = next == null ? PLATFORM_GAP : next;
         }
     }
 
@@ -128,6 +192,21 @@ public final class DriverLocationHost {
         } catch (RuntimeException exception) {
             DriverLocationService.clearLaunchRequested();
         }
+    }
+
+    private static void cancelGapLocked() {
+        gapGeneration++;
+        if (gapTask != null) {
+            gapScheduler.cancel(gapTask);
+            gapTask = null;
+        }
+    }
+
+    private static Handler gapHandler() {
+        if (gapHandler == null) {
+            gapHandler = new Handler(Looper.getMainLooper());
+        }
+        return gapHandler;
     }
 
     private static void platformStart(Context context) {
@@ -169,5 +248,11 @@ public final class DriverLocationHost {
         default void stop(Context context) {
             platformStop(context);
         }
+    }
+
+    interface GapScheduler {
+        void schedule(Runnable task, long delayMs);
+
+        void cancel(Runnable task);
     }
 }

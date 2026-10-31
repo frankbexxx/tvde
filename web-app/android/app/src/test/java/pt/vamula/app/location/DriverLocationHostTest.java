@@ -7,6 +7,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,6 +92,67 @@ public class DriverLocationHostTest {
         first.join(2_000);
         second.join(2_000);
         assertEquals(1, starts.get());
+    }
+
+    @Test
+    public void authorizationGapStopsWhilePausedAndDoesNotExtendPastFifteenSeconds() {
+        DriverLocationHost.resumed();
+        DriverLocationHost.setNeeded(true);
+        DriverLocationHost.paused();
+        assertTrue(DriverLocationHost.needed());
+        assertEquals(0, stops.get());
+        AtomicReference<Runnable> posted = new AtomicReference<>();
+        AtomicLong delay = new AtomicLong();
+        DriverLocationHost.setGapSchedulerForTests(scheduler(posted, delay, new AtomicInteger()));
+        DriverLocationHost.armAuthorizationGap(20_000L);
+        assertEquals(15_000L, delay.get());
+        assertTrue(DriverLocationHost.needed());
+        posted.get().run();
+        assertFalse(DriverLocationHost.needed());
+        assertEquals(1, stops.get());
+    }
+
+    @Test
+    public void clearingOrRearmingTheGapIgnoresThePreviousDeadline() {
+        DriverLocationHost.resumed();
+        DriverLocationHost.setNeeded(true);
+        AtomicReference<Runnable> posted = new AtomicReference<>();
+        AtomicInteger cancels = new AtomicInteger();
+        DriverLocationHost.setGapSchedulerForTests(scheduler(posted, new AtomicLong(), cancels));
+        DriverLocationHost.armAuthorizationGap(15_000L);
+        Runnable first = posted.get();
+        DriverLocationHost.clearAuthorizationGap();
+        assertEquals(1, cancels.get());
+        first.run();
+        assertTrue(DriverLocationHost.needed());
+        assertEquals(0, stops.get());
+        DriverLocationHost.armAuthorizationGap(5_000L);
+        Runnable second = posted.get();
+        DriverLocationHost.armAuthorizationGap(1_000L);
+        second.run();
+        assertTrue(DriverLocationHost.needed());
+        posted.get().run();
+        assertFalse(DriverLocationHost.needed());
+        assertEquals(1, stops.get());
+    }
+
+    private static DriverLocationHost.GapScheduler scheduler(
+        AtomicReference<Runnable> posted,
+        AtomicLong delay,
+        AtomicInteger cancels
+    ) {
+        return new DriverLocationHost.GapScheduler() {
+            @Override
+            public void schedule(Runnable task, long delayMs) {
+                posted.set(task);
+                delay.set(delayMs);
+            }
+
+            @Override
+            public void cancel(Runnable task) {
+                cancels.incrementAndGet();
+            }
+        };
     }
 
     private static void enter(CountDownLatch ready, CountDownLatch go) {

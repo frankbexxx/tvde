@@ -2,73 +2,133 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getLegalAcceptance, postLegalAcceptance } from '../../api/auth'
 import { useAuth } from '../../context/AuthContext'
+import { currentSessionFamily, subscribeSessionFamily } from '../driver/driverSessionFamily'
 import { BTN_PRIMARY_RADIUS, SURFACE_RADIUS } from '../../components/layout/infoBoxTemplate'
 import { Spinner } from '../../components/ui/Spinner'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from './legalLinks'
 
+type LegalDecision = {
+  token: string
+  family: string | null
+  userId: string | null
+  required: boolean
+  termsVersion: string
+  privacyVersion: string
+  termsUrl: string
+  privacyUrl: string
+}
+
+/** Aceitação já confirmada desta família e deste utilizador. O access token não entra. */
+function confirmedForSession(
+  decision: LegalDecision | null,
+  family: string | null,
+  userId: string | null,
+): decision is LegalDecision {
+  return Boolean(
+    decision &&
+    !decision.required &&
+    family &&
+    userId &&
+    decision.family === family &&
+    decision.userId === userId,
+  )
+}
+
+function belongsToIdentity(
+  decision: LegalDecision | null,
+  family: string | null,
+  userId: string | null,
+): decision is LegalDecision {
+  if (!decision) return false
+  if (!family && !userId) return decision.family == null && decision.userId == null
+  return decision.family === family && decision.userId === userId
+}
+
 export function LegalAcceptanceBoundary({ children }: { children: ReactNode }) {
-  const { token, authBootstrapMode, isAuthenticated } = useAuth()
+  const { token, authBootstrapMode, isAuthenticated, userId } = useAuth()
+  const [family, setFamily] = useState(currentSessionFamily)
   const shouldCheck = authBootstrapMode === 'login_session' && isAuthenticated && !!token
-  const [snapshot, setSnapshot] = useState<{
-    token: string
-    required: boolean
-    termsUrl: string
-    privacyUrl: string
-  } | null>(null)
+  const [decision, setDecision] = useState<LegalDecision | null>(null)
+
+  useEffect(() => subscribeSessionFamily((next) => setFamily(next)), [])
 
   useEffect(() => {
     if (!shouldCheck || !token) return
     let alive = true
+    const requestFamily = family
+    const requestUser = userId
     void getLegalAcceptance(token)
       .then((status) => {
         if (!alive) return
-        setSnapshot({
+        setDecision({
           token,
+          family: requestFamily,
+          userId: requestUser,
           required: status.required,
+          termsVersion: status.terms_version,
+          privacyVersion: status.privacy_version,
           termsUrl: status.terms_url || LEGAL_TERMS_URL,
           privacyUrl: status.privacy_url || LEGAL_PRIVACY_URL,
         })
       })
       .catch(() => {
         if (!alive) return
-        setSnapshot({
-          token,
-          required: true,
-          termsUrl: LEGAL_TERMS_URL,
-          privacyUrl: LEGAL_PRIVACY_URL,
+        setDecision((current) => {
+          if (confirmedForSession(current, requestFamily, requestUser)) return current
+          return {
+            token,
+            family: requestFamily,
+            userId: requestUser,
+            required: true,
+            termsVersion: '',
+            privacyVersion: '',
+            termsUrl: LEGAL_TERMS_URL,
+            privacyUrl: LEGAL_PRIVACY_URL,
+          }
         })
       })
     return () => {
       alive = false
     }
-  }, [shouldCheck, token])
+  }, [shouldCheck, token, family, userId])
 
   if (!shouldCheck || !token) return <>{children}</>
-  const current = snapshot?.token === token ? snapshot : null
-  if (!current) {
+
+  const identity = userId
+  const current = belongsToIdentity(decision, family, identity) ? decision : null
+  const openForToken = current?.token === token && current.required === false
+  const blockedForToken = current?.token === token && current.required === true
+  const keepDuringRotation = current?.token !== token && confirmedForSession(current, family, identity)
+
+  if (openForToken || keepDuringRotation) return <>{children}</>
+  if (!current || current.token !== token) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-background">
         <Spinner size="lg" />
       </div>
     )
   }
-  if (!current.required) return <>{children}</>
-
+  if (blockedForToken) {
+    return (
+      <LegalAcceptanceGate
+        token={token}
+        termsUrl={current.termsUrl}
+        privacyUrl={current.privacyUrl}
+        onAccepted={() =>
+          setDecision({
+            ...current,
+            token,
+            required: false,
+          })
+        }
+      />
+    )
+  }
   return (
-    <LegalAcceptanceGate
-      token={token}
-      termsUrl={current.termsUrl}
-      privacyUrl={current.privacyUrl}
-      onAccepted={() =>
-        setSnapshot({
-          token,
-          required: false,
-          termsUrl: current.termsUrl,
-          privacyUrl: current.privacyUrl,
-        })
-      }
-    />
+    <div className="min-h-dvh flex items-center justify-center bg-background">
+      <Spinner size="lg" />
+    </div>
   )
 }
 

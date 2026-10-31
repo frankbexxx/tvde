@@ -7,6 +7,7 @@ import {
   isDriverLocationNeeded,
   isDriverLocationReportingOperational,
   isNativeDriverLocationServiceNeeded,
+  keepsNativeLocationServiceDuringTokenGap,
   recoveryAfterTripProbe,
   resolveDriverTripPollFailure,
   isDrivingHoursBlockedError,
@@ -436,10 +437,30 @@ describe('isNativeDriverLocationServiceNeeded', () => {
     ).toBe(false)
   })
 
-  it('logout não pede o serviço', () => {
+  it('logout, sem hidratação, não pede o serviço', () => {
     expect(
-      isNativeDriverLocationServiceNeeded({ ...base, token: null, tripStatus: 'ongoing' })
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        token: null,
+        hydrated: false,
+        tripStatus: 'ongoing',
+      })
     ).toBe(false)
+  })
+
+  it('ausência do token com online já confirmado mantém o serviço e não autoriza uploads', () => {
+    const gap = { ...base, token: null, tripStatus: 'ongoing' as const }
+    expect(keepsNativeLocationServiceDuringTokenGap(gap)).toBe(true)
+    expect(isNativeDriverLocationServiceNeeded(gap)).toBe(true)
+    expect(isDriverLocationReportingOperational(gap)).toBe(false)
+    expect(isDriverAvailabilityOperational(gap)).toBe(false)
+  })
+
+  it('ausência do token sem confirmação ou em Offline não mantém o serviço', () => {
+    expect(keepsNativeLocationServiceDuringTokenGap({ ...base, token: null, hydrated: false })).toBe(false)
+    expect(keepsNativeLocationServiceDuringTokenGap({ ...base, token: null, offline: true })).toBe(false)
+    expect(keepsNativeLocationServiceDuringTokenGap({ ...base, token: null, syncing: true })).toBe(false)
+    expect(isNativeDriverLocationServiceNeeded({ ...base, token: null, hydrated: false })).toBe(false)
   })
 
   it('reporter e serviço nativo coincidem', () => {

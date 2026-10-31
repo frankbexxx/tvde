@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   DRIVER_REMOTE_AVAILABILITY_POLL_MS,
+  DRIVER_TOKEN_GAP_MS,
   driverAvailabilitySessionKey,
   fetchRemoteAvailabilityOfflineUpdate,
   shouldAcceptRemoteAvailabilityResponse,
   shouldHydrateAvailability,
 } from './driverAvailabilitySync'
+import { traceAvailabilityPoll } from '../../services/gpsNeedTrace'
+import { armNativeAuthorizationGap, clearNativeAuthorizationGap } from '../../services/gpsOwnership'
 import { sessionEpoch } from './driverSessionFamily'
 
 /**
  * Poll de GET /driver/status.
  * A hidratação reinicia com a família ou com o fim da sessão, não com o access token.
+ * O prazo da lacuna é absoluto: um render não o renova e o looper nativo corre com a WebView em pausa.
  */
 export function useDriverAvailabilitySession<T extends { is_available: boolean }>(opts: {
   token: string | null
@@ -29,30 +33,95 @@ export function useDriverAvailabilitySession<T extends { is_available: boolean }
   const optsRef = useRef(opts)
   optsRef.current = opts
   const [hydrated, setHydrated] = useState(false)
+  const authorizedKeyRef = useRef<string | null>(null)
+  const gapDeadlineRef = useRef<number | null>(null)
   const signedIn = Boolean(opts.token)
   const sessionKey = driverAvailabilitySessionKey(opts.sessionRole, opts.family)
 
   useEffect(() => {
     const current = optsRef.current
-    if (!signedIn || !sessionKey) {
+    if (!sessionKey) {
+      authorizedKeyRef.current = null
+      gapDeadlineRef.current = null
+      clearNativeAuthorizationGap()
       setHydrated(false)
       current.onSessionCleared()
       return
     }
+    if (!signedIn) {
+      if (authorizedKeyRef.current !== sessionKey) {
+        authorizedKeyRef.current = null
+        gapDeadlineRef.current = null
+        clearNativeAuthorizationGap()
+        setHydrated(false)
+        current.onSessionCleared()
+        return
+      }
+      if (gapDeadlineRef.current == null) {
+        gapDeadlineRef.current = Date.now() + DRIVER_TOKEN_GAP_MS
+      }
+      const expire = () => {
+        const live = optsRef.current
+        if (live.token) return
+        if (driverAvailabilitySessionKey(live.sessionRole, live.family) !== sessionKey) return
+        if (authorizedKeyRef.current !== sessionKey) return
+        authorizedKeyRef.current = null
+        gapDeadlineRef.current = null
+        clearNativeAuthorizationGap()
+        setHydrated(false)
+        live.onSessionCleared()
+      }
+      const remaining = gapDeadlineRef.current - Date.now()
+      if (remaining <= 0) {
+        expire()
+        return
+      }
+      const timeoutId = window.setTimeout(expire, remaining)
+      armNativeAuthorizationGap(remaining)
+      const onWake = () => {
+        const deadline = gapDeadlineRef.current
+        if (deadline != null && Date.now() >= deadline) expire()
+      }
+      document.addEventListener('visibilitychange', onWake)
+      document.addEventListener('resume', onWake)
+      window.addEventListener('focus', onWake)
+      window.addEventListener('pageshow', onWake)
+      return () => {
+        window.clearTimeout(timeoutId)
+        clearNativeAuthorizationGap()
+        document.removeEventListener('visibilitychange', onWake)
+        document.removeEventListener('resume', onWake)
+        window.removeEventListener('focus', onWake)
+        window.removeEventListener('pageshow', onWake)
+      }
+    }
+
+    const deadlinePassed = gapDeadlineRef.current != null && Date.now() >= gapDeadlineRef.current
+    gapDeadlineRef.current = null
+    clearNativeAuthorizationGap()
+    const continuing = !deadlinePassed && authorizedKeyRef.current === sessionKey
+    if (!continuing) {
+      authorizedKeyRef.current = null
+      setHydrated(false)
+      current.onSessionCleared()
+    }
 
     let cancelled = false
-    let hydratedOnce = false
+    let hydratedOnce = continuing
     let fetchSeq = 0
     const samples = new Map<number, { ok: true; status: T } | { ok: false }>()
-    setHydrated(false)
-    current.onSessionCleared()
 
     const tick = () => {
       const live = optsRef.current
-      if (live.getSyncing()) return
+      if (live.getSyncing()) {
+        traceAvailabilityPoll({ phase: 'start' })
+        traceAvailabilityPoll({ phase: 'end', accepted: false, statusOk: false })
+        return
+      }
       const responseSeq = ++fetchSeq
       const toggleEpoch = live.getToggleEpoch()
       const familyEpoch = sessionEpoch()
+      traceAvailabilityPoll({ phase: 'start' })
       void fetchRemoteAvailabilityOfflineUpdate({
         getStatus: async () => {
           const token = optsRef.current.token
@@ -86,12 +155,15 @@ export function useDriverAvailabilitySession<T extends { is_available: boolean }
         })
         if (!accepted) {
           samples.delete(responseSeq)
+          traceAvailabilityPoll({ phase: 'end', accepted: false, statusOk: false })
           return
         }
         const sample = samples.get(responseSeq)
         samples.delete(responseSeq)
+        traceAvailabilityPoll({ phase: 'end', accepted: true, statusOk: sample?.ok === true })
         if (shouldHydrateAvailability({ accepted: true, statusOk: sample?.ok === true })) {
           if (sample?.ok) now.onApplied(sample.status)
+          authorizedKeyRef.current = sessionKey
           if (!hydratedOnce) {
             hydratedOnce = true
             setHydrated(true)
