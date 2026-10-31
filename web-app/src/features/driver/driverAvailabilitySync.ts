@@ -30,12 +30,33 @@ export function shouldAcceptRemoteAvailabilityResponse(opts: {
   latestSeq: number
   epochAtStart: number
   currentEpoch: number
+  sessionEpochAtStart: number
+  currentSessionEpoch: number
 }): boolean {
   if (opts.cancelled) return false
   if (shouldSkipRemoteAvailabilityApply(opts.syncing)) return false
   if (opts.responseSeq !== opts.latestSeq) return false
   if (opts.epochAtStart !== opts.currentEpoch) return false
+  if (opts.sessionEpochAtStart !== opts.currentSessionEpoch) return false
   return true
+}
+
+/**
+ * A hidratação segue a família do motorista, não a geração do access token.
+ * Sem família, ou fora do papel de motorista, não há sessão para manter.
+ */
+export function driverAvailabilitySessionKey(
+  role: string | null | undefined,
+  family: string | null,
+): string | null {
+  if (role !== 'driver') return null
+  const id = family?.trim() ?? ''
+  return id.length > 0 ? id : null
+}
+
+/** Só um estado confirmado desta sessão autoriza o GPS. Falha e resposta antiga não contam. */
+export function shouldHydrateAvailability(opts: { accepted: boolean; statusOk: boolean }): boolean {
+  return opts.accepted && opts.statusOk
 }
 
 /**

@@ -225,8 +225,6 @@ import {
   driverAvailabilityBlockMessage,
 } from './driverAvailabilityBlock'
 import {
-  DRIVER_REMOTE_AVAILABILITY_POLL_MS,
-  fetchRemoteAvailabilityOfflineUpdate,
   formatDriverAvailabilityError,
   isConfirmedActiveDriverTrip,
   isDriverAvailabilityOperational,
@@ -235,10 +233,10 @@ import {
   isEndedDriverTrip,
   offlineFromBackendAvailability,
   recoveryAfterTripProbe,
-  shouldAcceptRemoteAvailabilityResponse,
   shouldBootstrapDriverActiveTrip,
 } from './driverAvailabilitySync'
-import { sessionEpoch, subscribeSessionFamily } from './driverSessionFamily'
+import { currentSessionFamily, sessionEpoch, subscribeSessionFamily } from './driverSessionFamily'
+import { useDriverAvailabilitySession } from './useDriverAvailabilitySession'
 import { driverAcceptComplianceI18nKey } from '../shared/vehicleComplianceGateMessages'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
@@ -391,13 +389,32 @@ export function DriverDashboard() {
   const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
   const driverBottomNav = isDriverBottomNavEnabled()
   const [offline, setOffline] = useState(true)
-  const [availabilityHydrated, setAvailabilityHydrated] = useState(false)
   const [availabilitySyncing, setAvailabilitySyncing] = useState(false)
   const [gpsOfferNotice, setGpsOfferNotice] = useState<GpsOfferNoticeState>(INITIAL_GPS_OFFER_NOTICE)
+  const [sessionFamily, setSessionFamily] = useState(currentSessionFamily)
   const offlineRef = useRef(offline)
   const availabilitySyncingRef = useRef(availabilitySyncing)
   /** Bumped on local POST availability changes so in-flight remote GETs cannot undo them. */
   const availabilityEpochRef = useRef(0)
+  const canGoOnlineRef = useRef(true)
+  const availabilityHydrated = useDriverAvailabilitySession({
+    token,
+    sessionRole,
+    family: sessionFamily,
+    getSyncing: () => availabilitySyncingRef.current,
+    getCanGoOnline: () => canGoOnlineRef.current,
+    getToggleEpoch: () => availabilityEpochRef.current,
+    getLocalOffline: () => offlineRef.current,
+    getStatus: (current) => getDriverStatus(current),
+    onApplied: (status) => {
+      setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'status', status }))
+    },
+    onFailed: () => {
+      setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'fetch_failed' }))
+    },
+    onOffline: setOffline,
+    onSessionCleared: () => setGpsOfferNotice(INITIAL_GPS_OFFER_NOTICE),
+  })
   useEffect(() => {
     offlineRef.current = offline
     if (offline) setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'went_offline' }))
@@ -479,6 +496,7 @@ export function DriverDashboard() {
     import.meta.env.DEV ? isDriverDocumentsGateEnabled() : true
   )
   const effectiveDocsGate = import.meta.env.DEV ? driverDocsGateEnabled : true
+  canGoOnlineRef.current = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
   const docsReady = isDriverDocumentsReady(driverDocuments)
   const docsBlockedOffline = effectiveDocsGate && !docsReady && offline
   const documentStatuses = blockingDocumentStatuses(driverDocuments)
@@ -573,7 +591,8 @@ export function DriverDashboard() {
   }, [token, setDriverActiveTripId, setStatus])
 
   useEffect(() => {
-    return subscribeSessionFamily(() => {
+    return subscribeSessionFamily((next) => {
+      setSessionFamily(next)
       setDriverStatusOverride(null)
       setAcceptedDetailFallback(null)
       setTripRecoveryUnresolved(false)
@@ -1220,93 +1239,6 @@ export function DriverDashboard() {
       setActiveTripBootstrapPending(false)
     }
   }, [token, sessionRole, activeTripId, restoreDriverActiveTrip, addLog])
-
-  // Alinhar disponibilidade local com GET /driver/status (hydrate + poll + focus).
-  // Partner/Admin force-online grava is_available no backend; sem refetch a UI fica stale.
-  // Seq + epoch drop stale overlapping GETs and GETs that raced a local POST toggle.
-  useEffect(() => {
-    if (!token || sessionRole !== 'driver') {
-      setAvailabilityHydrated(false)
-      setGpsOfferNotice(INITIAL_GPS_OFFER_NOTICE)
-      return
-    }
-    let cancelled = false
-    let hydratedOnce = false
-    let fetchSeq = 0
-    const eligibilityBySeq = new Map<number, { ok: true; status: Awaited<ReturnType<typeof getDriverStatus>> } | { ok: false }>()
-    setAvailabilityHydrated(false)
-    setGpsOfferNotice(INITIAL_GPS_OFFER_NOTICE)
-
-    const tick = () => {
-      if (availabilitySyncingRef.current) return
-      const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
-      const responseSeq = ++fetchSeq
-      const epochAtStart = availabilityEpochRef.current
-      void fetchRemoteAvailabilityOfflineUpdate({
-        getStatus: async () => {
-          try {
-            const status = await getDriverStatus(token)
-            eligibilityBySeq.set(responseSeq, { ok: true, status })
-            return status
-          } catch (err) {
-            eligibilityBySeq.set(responseSeq, { ok: false })
-            throw err
-          }
-        },
-        canGoOnline,
-        getLocalOffline: () => offlineRef.current,
-        getSyncing: () => availabilitySyncingRef.current,
-      })
-        .then((nextOffline) => {
-          if (
-            !shouldAcceptRemoteAvailabilityResponse({
-              cancelled,
-              syncing: availabilitySyncingRef.current,
-              responseSeq,
-              latestSeq: fetchSeq,
-              epochAtStart,
-              currentEpoch: availabilityEpochRef.current,
-            })
-          ) {
-            eligibilityBySeq.delete(responseSeq)
-            return
-          }
-          const sample = eligibilityBySeq.get(responseSeq)
-          eligibilityBySeq.delete(responseSeq)
-          if (sample?.ok) {
-            setGpsOfferNotice((prev) =>
-              reduceGpsOfferNotice(prev, { type: 'status', status: sample.status }),
-            )
-          } else if (sample && !sample.ok) {
-            setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'fetch_failed' }))
-          }
-          if (nextOffline !== null) {
-            setOffline(nextOffline)
-          }
-        })
-        .finally(() => {
-          if (!cancelled && !hydratedOnce) {
-            hydratedOnce = true
-            setAvailabilityHydrated(true)
-          }
-        })
-    }
-
-    tick()
-    const intervalId = window.setInterval(tick, DRIVER_REMOTE_AVAILABILITY_POLL_MS)
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') tick()
-    }
-    const onFocus = () => tick()
-    document.addEventListener('visibilitychange', onVisibility)
-    window.addEventListener('focus', onFocus)
-    return () => {
-      cancelled = true
-      window.clearInterval(intervalId)
-      document.removeEventListener('visibilitychange', onVisibility)
-      window.removeEventListener('focus', onFocus)
-    }
-  }, [token, sessionRole, driverDocuments, effectiveDocsGate])
 
   useEffect(() => {
     if (toast) {
