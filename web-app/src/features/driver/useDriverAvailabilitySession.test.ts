@@ -83,6 +83,18 @@ describe('useDriverAvailabilitySession', () => {
     return { ...hook, seenTokens, offlineUpdates, status }
   }
 
+  it('sessão sem família não autoriza GPS mesmo com access token', async () => {
+    resetSessionFamilyForTests()
+    const hook = mount({ token: 'access-1', family: null, offline: false })
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(hook.result.current.hydrated).toBe(false)
+    expect(hook.result.current.needed).toBe(false)
+    expect(hook.status).not.toHaveBeenCalled()
+    expect(serviceCalls).toEqual([false])
+  })
+
   it('refresh da mesma família com motorista Online mantém o GPS necessário', async () => {
     const hook = mount({ token: 'access-1', family: 'family-a', offline: false })
     await waitFor(() => expect(hook.result.current.hydrated).toBe(true))

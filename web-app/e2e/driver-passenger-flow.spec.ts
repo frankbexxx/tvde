@@ -244,9 +244,46 @@ async function createTripWithRateLimitRetry(
  * Motorista primeiro no browser: evita expirar ofertas (~OFFER_TIMEOUT_SECONDS no backend) enquanto o Vite
  * compila outra rota. O workflow CI define OFFER_TIMEOUT_SECONDS (não confundir com timeouts do Playwright).
  */
+const SEEDED_DRIVER_PHONE = '+351911111111'
+
+/** Login refresh-v1 do motorista do seed. A família é o session_id desta resposta. */
+async function loginSeededDriver(request: APIRequestContext): Promise<{
+  accessToken: string
+  sessionId: string
+}> {
+  const password = process.env.TEST_ACCOUNT_PASSWORD
+  if (!password) {
+    throw new Error('TEST_ACCOUNT_PASSWORD em falta; o bootstrap E2E não obtém a família')
+  }
+  const res = await request.post(`${API}/auth/login`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Auth-Contract': 'refresh-v1',
+      'X-Auth-Client': 'web',
+    },
+    data: {
+      phone: SEEDED_DRIVER_PHONE,
+      password,
+      requested_role: 'driver',
+    },
+  })
+  let sessionId = ''
+  let accessToken = ''
+  if (res.ok()) {
+    const body = (await res.json()) as { access_token?: unknown; session_id?: unknown }
+    if (typeof body.access_token === 'string') accessToken = body.access_token
+    if (typeof body.session_id === 'string') sessionId = body.session_id.trim()
+  }
+  if (!accessToken || !sessionId) {
+    throw new Error(`login do motorista sem família (${res.status()})`)
+  }
+  return { accessToken, sessionId }
+}
+
 async function seedAndCreateTrip(request: APIRequestContext): Promise<{
   tripId: string
   tokens: { passenger: string; driver: string; admin: string }
+  driverSessionId: string
 }> {
   const reset = await request.post(`${API}/dev/reset`)
   expect(reset.ok(), `reset: ${reset.status()} ${await reset.text()}`).toBeTruthy()
@@ -256,7 +293,9 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{
 
   const tokRes = await request.post(`${API}/dev/tokens`)
   expect(tokRes.ok(), `tokens: ${tokRes.status()}`).toBeTruthy()
-  const tokens = (await tokRes.json()) as { passenger: string; driver: string; admin: string }
+  const minted = (await tokRes.json()) as { passenger: string; driver: string; admin: string }
+  const driverSession = await loginSeededDriver(request)
+  const tokens = { ...minted, driver: driverSession.accessToken }
 
   const locRes = await request.post(`${API}/drivers/location`, {
     headers: {
@@ -289,16 +328,21 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{
     )
     .toBe(true)
 
-  return { tripId: trip.trip_id, tokens }
+  return { tripId: trip.trip_id, tokens, driverSessionId: driverSession.sessionId }
 }
 
 async function createAuthenticatedContext(
   browser: Browser,
   tokens: { passenger: string; driver: string; admin: string },
   role: 'driver' | 'passenger',
-  tripIdForPassenger?: string
+  tripIdForPassenger?: string,
+  driverSessionId?: string
 ) {
   const ctx = await browser.newContext()
+  const injected =
+    role === 'driver' && driverSessionId
+      ? { ...tokens, session_id: driverSessionId }
+      : tokens
   await ctx.addInitScript(
     ({ json, appRole, tripId }: { json: string; appRole: 'driver' | 'passenger'; tripId?: string }) => {
       try {
@@ -313,7 +357,7 @@ async function createAuthenticatedContext(
         /* ignore */
       }
     },
-    { json: JSON.stringify(tokens), appRole: role, tripId: tripIdForPassenger }
+    { json: JSON.stringify(injected), appRole: role, tripId: tripIdForPassenger }
   )
   await ctx.grantPermissions(['geolocation'], { origin: BASE_URL })
   await ctx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
@@ -333,11 +377,11 @@ test.describe('Driver + passenger (proximity gate)', () => {
     browser,
     request,
   }) => {
-    const { tripId, tokens } = await seedAndCreateTrip(request)
+    const { tripId, tokens, driverSessionId } = await seedAndCreateTrip(request)
     setFailureArtifactMeta('trip_id', tripId)
     setFailureArtifactMeta('driver_jwt_chars', String(tokens.driver?.length ?? 0))
 
-    const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver')
+    const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver', undefined, driverSessionId)
     const driverPage = await driverCtx.newPage()
     trackDriverPageForArtifacts(driverPage)
 
@@ -451,8 +495,8 @@ test.describe('Driver + passenger (proximity gate)', () => {
   })
 
   test('driver fecha painel e oferta permanece no mapa', async ({ browser, request }) => {
-    const { tripId, tokens } = await seedAndCreateTrip(request)
-    const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver')
+    const { tripId, tokens, driverSessionId } = await seedAndCreateTrip(request)
+    const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver', undefined, driverSessionId)
     const driverPage = await driverCtx.newPage()
     trackDriverPageForArtifacts(driverPage)
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
@@ -496,9 +540,9 @@ test.describe('Driver + passenger (proximity gate)', () => {
   })
 
   test('passenger avalia motorista após conclusão', async ({ browser, request }) => {
-    const { tripId, tokens } = await seedAndCreateTrip(request)
+    const { tripId, tokens, driverSessionId } = await seedAndCreateTrip(request)
 
-    const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver')
+    const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver', undefined, driverSessionId)
     const driverPage = await driverCtx.newPage()
     trackDriverPageForArtifacts(driverPage)
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
@@ -600,9 +644,9 @@ test.describe('Driver + passenger (proximity gate)', () => {
     browser,
     request,
   }) => {
-    const { tripId, tokens } = await seedAndCreateTrip(request)
+    const { tripId, tokens, driverSessionId } = await seedAndCreateTrip(request)
 
-    const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver')
+    const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver', undefined, driverSessionId)
     const driverPage = await driverCtx.newPage()
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
     await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({ timeout: sec(120) })

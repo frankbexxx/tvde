@@ -51,6 +51,7 @@ import {
 } from '../utils/authStorage'
 import { logoutBrowserSession, refreshSession, subscribeAccessToken } from '../api/sessionRefresh'
 import { noteLoginSession } from '../features/driver/driverSessionFamily'
+import { noteE2eInjectedSession } from '../features/auth/e2eSessionFamily'
 import { androidRefreshEnabled, restoreAndroidSession } from '../features/auth/androidSession'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { AUTH_LOGOUT_EVENT } from '../constants/events'
@@ -132,7 +133,7 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function readE2eInjectTokens(): AuthTokens | null {
+function readE2eInjectTokens(): { tokens: AuthTokens; raw: unknown } | null {
   if (import.meta.env.VITE_E2E !== 'true') return null
   try {
     const raw = localStorage.getItem(LS_E2E_DEV_TOKENS_JSON)
@@ -143,7 +144,7 @@ function readE2eInjectTokens(): AuthTokens | null {
       typeof parsed?.driver === 'string' &&
       typeof parsed?.admin === 'string'
     ) {
-      return parsed
+      return { tokens: parsed, raw: parsed }
     }
   } catch {
     /* ignorar JSON inválido */
@@ -331,7 +332,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus(i18n.t('auth:splashStarting'))
     try {
       const config = await withColdStartRetries((timeoutMs) => getConfig(timeoutMs))
-      const e2eInject = readE2eInjectTokens()
+      const e2eInjected = readE2eInjectTokens()
+      const e2eInject = e2eInjected?.tokens ?? null
       const e2eInjectValid = e2eInject != null
 
       const mode = resolveAuthBootstrapMode({
@@ -450,6 +452,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           t = await withColdStartRetries((timeoutMs) => getDevTokens(timeoutMs))
           addLog('Tokens carregados', 'success')
         } else {
+          noteE2eInjectedSession(e2eInjected?.raw)
           addLog('Tokens E2E (seed inject)', 'success')
         }
         setTokens({
