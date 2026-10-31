@@ -1,3 +1,5 @@
+import { traceAndroidNeed } from './gpsNeedTrace'
+
 /** Ponte Android. No browser e nos testes sem ponte, a WebView mantém o envio. */
 
 interface GpsOwnershipBridge {
@@ -6,6 +8,9 @@ interface GpsOwnershipBridge {
   endWebViewSend: () => void
   sessionChanged: () => void
   setServiceNeeded?: (needed: boolean) => void
+  /** Prazo absoluto no looper nativo. A WebView em pausa não o congela. */
+  armAuthorizationGap?: (delayMs: number) => void
+  clearAuthorizationGap?: () => void
   serviceNeeded?: () => boolean
   serviceOperational?: () => boolean
   serviceCollecting?: () => boolean
@@ -71,9 +76,34 @@ export function syncNativeLocationServiceNeed(needed: boolean): void {
   const current = bridge()
   if (!current?.setServiceNeeded) return
   try {
+    traceAndroidNeed(needed)
     current.setServiceNeeded(needed)
   } catch {
     // A WebView continua com o reporter actual.
+  }
+}
+
+/** Agenda a paragem no processo nativo. Sem ponte, só o temporizador da página conta. */
+export function armNativeAuthorizationGap(delayMs: number): void {
+  const current = bridge()
+  if (!current?.armAuthorizationGap) return
+  const delay = Math.floor(delayMs)
+  if (!Number.isFinite(delay)) return
+  try {
+    current.armAuthorizationGap(Math.max(0, delay))
+  } catch {
+    // Sem o prazo nativo, o temporizador da página continua a contar em primeiro plano.
+  }
+}
+
+/** Cancela o prazo nativo. Não altera a necessidade por si. */
+export function clearNativeAuthorizationGap(): void {
+  const current = bridge()
+  if (!current?.clearAuthorizationGap) return
+  try {
+    current.clearAuthorizationGap()
+  } catch {
+    // O fim da lacuna no React segue mesmo que a ponte falhe.
   }
 }
 

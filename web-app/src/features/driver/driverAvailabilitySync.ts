@@ -5,6 +5,12 @@ import { driverAvailabilityComplianceI18nKey } from '../shared/vehicleCompliance
 /** Poll leve para reflectir Partner/Admin force-online sem refresh manual. */
 export const DRIVER_REMOTE_AVAILABILITY_POLL_MS = 12_000
 
+/**
+ * Prazo máximo sem access token depois de um Online já confirmado nesta família.
+ * Cobre um refresh HTTP e, passado o prazo, a autorização deixa de valer.
+ */
+export const DRIVER_TOKEN_GAP_MS = 15_000
+
 /** Offline local quando o backend não confirma disponibilidade operacional. */
 export function offlineFromBackendAvailability(
   isAvailable: boolean,
@@ -174,11 +180,25 @@ export function isDriverLocationReportingOperational(opts: DriverLocationNeed & 
   return isDriverLocationNeeded(opts)
 }
 
+/**
+ * Serviço já autorizado nesta família. A falta do token não abre autorização nova
+ * e não liga o reporter: sem token não há upload web.
+ */
+export function keepsNativeLocationServiceDuringTokenGap(opts: {
+  token: string | null
+  offline: boolean
+  hydrated: boolean
+  syncing: boolean
+}): boolean {
+  return Boolean(!opts.token && opts.hydrated && !opts.offline && !opts.syncing)
+}
+
 /** Viagem confirmada. Um id local sem estado não chega. */
 export function isNativeDriverLocationServiceNeeded(opts: DriverLocationNeed & {
   activeTripBootstrapPending?: boolean
 }): boolean {
-  return isDriverLocationNeeded(opts)
+  if (isDriverLocationNeeded(opts)) return true
+  return keepsNativeLocationServiceDuringTokenGap(opts)
 }
 
 export function shouldBootstrapDriverActiveTrip(opts: {

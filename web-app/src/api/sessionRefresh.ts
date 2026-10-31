@@ -9,6 +9,7 @@ import {
 import { LS_AUTH_CONTRACT, setStoredAccessToken } from '../utils/authStorage'
 import { releaseDriverLocationOwnership } from '../services/gpsOwnership'
 import { noteSessionFamily } from '../features/driver/driverSessionFamily'
+import { traceRefresh } from '../services/gpsNeedTrace'
 
 export const AUTH_CONTRACT = 'refresh-v1'
 
@@ -135,24 +136,24 @@ async function performRefresh(started: number): Promise<RefreshOutcome> {
       signal: controller.signal,
     })
   } catch {
-    return started === epoch ? 'transient' : 'stale'
+    return traceRefresh(started === epoch ? 'transient' : 'stale')
   } finally {
     if (inflightAbort === controller) inflightAbort = null
   }
-  if (started !== epoch) return 'stale'
-  if (response.status === 401 || response.status === 400) return 'invalid'
-  if (response.status >= 500) return 'transient'
-  if (!response.ok) return 'invalid'
+  if (started !== epoch) return traceRefresh('stale')
+  if (response.status === 401 || response.status === 400) return traceRefresh('invalid')
+  if (response.status >= 500) return traceRefresh('transient')
+  if (!response.ok) return traceRefresh('invalid')
   const body = (await response.json().catch(() => null)) as { access_token?: unknown } | null
   const token = body?.access_token
   if (typeof token !== 'string' || token.length === 0) {
-    return started === epoch ? 'invalid' : 'stale'
+    return traceRefresh(started === epoch ? 'invalid' : 'stale')
   }
-  if (started !== epoch) return 'stale'
+  if (started !== epoch) return traceRefresh('stale')
   setStoredAccessToken(token)
-  if (started !== epoch) return 'stale'
+  if (started !== epoch) return traceRefresh('stale')
   listeners.forEach((listener) => listener(token))
-  return 'refreshed'
+  return traceRefresh('refreshed')
 }
 
 export async function refreshSession(): Promise<RefreshOutcome> {
@@ -166,7 +167,7 @@ export async function refreshSession(): Promise<RefreshOutcome> {
     }
     return inflight
   }
-  if (!browserUsesRefresh()) return 'invalid'
+  if (!browserUsesRefresh()) return traceRefresh('invalid')
   if (!inflight) {
     const started = epoch
     inflight = performRefresh(started).finally(() => {
@@ -181,18 +182,18 @@ async function performAndroidRefresh(started: number): Promise<RefreshOutcome> {
   try {
     outcome = await refreshAndroidSession()
   } catch {
-    return started === epoch ? 'transient' : 'stale'
+    return traceRefresh(started === epoch ? 'transient' : 'stale')
   }
-  if (started !== epoch) return 'stale'
+  if (started !== epoch) return traceRefresh('stale')
   if (outcome.kind === 'refreshed' && outcome.accessToken) {
     setStoredAccessToken(outcome.accessToken)
-    if (started !== epoch) return 'stale'
+    if (started !== epoch) return traceRefresh('stale')
     const token = outcome.accessToken
     listeners.forEach((listener) => listener(token))
-    return 'refreshed'
+    return traceRefresh('refreshed')
   }
-  if (outcome.kind === 'transient' || outcome.kind === 'stale') return outcome.kind
-  return 'invalid'
+  if (outcome.kind === 'transient' || outcome.kind === 'stale') return traceRefresh(outcome.kind)
+  return traceRefresh('invalid')
 }
 
 export function logoutBrowserSession(): void {

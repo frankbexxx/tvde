@@ -71,6 +71,17 @@ public final class GpsOwnershipJs {
         DriverLocationCommands.setNeeded(needed);
     }
 
+    /** O looper principal não pausa com a WebView. O atraso já vem limitado pela página. */
+    @JavascriptInterface
+    public void armAuthorizationGap(int delayMs) {
+        DriverLocationHost.armAuthorizationGap(delayMs);
+    }
+
+    @JavascriptInterface
+    public void clearAuthorizationGap() {
+        DriverLocationHost.clearAuthorizationGap();
+    }
+
     @JavascriptInterface
     public boolean serviceNeeded() {
         return DriverLocationHost.needed();
