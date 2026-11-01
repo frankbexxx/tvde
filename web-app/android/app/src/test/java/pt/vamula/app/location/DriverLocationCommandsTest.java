@@ -22,6 +22,7 @@ public class DriverLocationCommandsTest {
         DriverLocationHost.resetForTests();
         DriverLocationService.clearTrail();
         DriverLocationHost.setPermissionCheckForTests(context -> true);
+        DriverLocationHost.setFamilyCheckForTests(() -> true);
         DriverLocationHost.setStarterForTests(new DriverLocationHost.Starter() {
             @Override
             public void start(android.content.Context context) {
@@ -73,5 +74,15 @@ public class DriverLocationCommandsTest {
         queued.get(0).run();
         assertFalse(DriverLocationHost.needed());
         assertEquals(1, starts.get());
+    }
+
+    @Test
+    public void aFreshTrueWithoutAFamilyDoesNotStart() {
+        DriverLocationHost.setFamilyCheckForTests(() -> false);
+        DriverLocationCommands.setNeeded(true);
+        queued.get(0).run();
+        assertTrue(DriverLocationHost.needed());
+        assertEquals(0, starts.get());
+        assertFalse(DriverLocationService.launchRequested());
     }
 }

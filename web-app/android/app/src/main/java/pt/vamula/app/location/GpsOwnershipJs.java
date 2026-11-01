@@ -82,6 +82,34 @@ public final class GpsOwnershipJs {
         DriverLocationHost.clearAuthorizationGap();
     }
 
+    /**
+     * Uma só assinatura. O WebView escolhe o método pelo número de argumentos
+     * e duas sobrecargas com o mesmo nome não são uma função JavaScript fiável.
+     * Sem reportFlags, os booleanos seguintes são ignorados.
+     */
+    @JavascriptInterface
+    public void logGpsNeed(
+        String code,
+        boolean reportFlags,
+        boolean needed,
+        boolean tokenPresent,
+        boolean hydrated,
+        boolean offline,
+        boolean syncing
+    ) {
+        if (!reportFlags) {
+            DriverLocationNeedTrace.record(code);
+            return;
+        }
+        DriverLocationNeedTrace.record(code, needed, tokenPresent, hydrated, offline, syncing);
+    }
+
+    /** Falha de entrega. Não recebe texto da página. Só a variante de diagnóstico regista. */
+    @JavascriptInterface
+    public void logGpsNeedBridgeFault() {
+        DriverLocationNeedTrace.record("bridge-failed");
+    }
+
     @JavascriptInterface
     public boolean serviceNeeded() {
         return DriverLocationHost.needed();

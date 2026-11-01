@@ -19,6 +19,7 @@ public final class DriverLocationCommands {
         synchronized (LOCK) {
             generation++;
         }
+        DriverLocationNeedTrace.record("session-changed", false, null, null, null, null);
         DriverLocationService.releaseForNewSession();
         DriverLocationHost.setNeeded(false);
     }

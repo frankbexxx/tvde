@@ -1,6 +1,13 @@
 import { isTimeoutLikeError } from '../../api/client'
 import i18n from '../../i18n'
+import {
+  REQUIRED_DRIVER_DOCUMENTS,
+  type DriverDocumentsState,
+} from '../../services/driverDocuments'
 import { driverAvailabilityComplianceI18nKey } from '../shared/vehicleComplianceGateMessages'
+
+/** Ainda não há leitura desta família, ou a leitura não confirma nem revoga. */
+export type DriverDocumentEligibility = 'checking' | 'clear' | 'blocked'
 
 /** Poll leve para reflectir Partner/Admin force-online sem refresh manual. */
 export const DRIVER_REMOTE_AVAILABILITY_POLL_MS = 12_000
@@ -11,13 +18,35 @@ export const DRIVER_REMOTE_AVAILABILITY_POLL_MS = 12_000
  */
 export const DRIVER_TOKEN_GAP_MS = 15_000
 
-/** Offline local quando o backend não confirma disponibilidade operacional. */
-export function offlineFromBackendAvailability(
-  isAvailable: boolean,
-  canGoOnline: boolean,
-): boolean {
-  if (!canGoOnline) return true
+/** Offline local só quando o GET /driver/status não confirma disponibilidade. */
+export function offlineFromBackendAvailability(isAvailable: boolean): boolean {
   return !isAvailable
+}
+
+/**
+ * `checking` é só a verificação ainda em aberto. Não é um estado do documento.
+ * Depois de uma leitura, qualquer obrigatório que não seja `approved` bloqueia.
+ */
+export function driverDocumentEligibility(opts: {
+  gateEnabled: boolean
+  loaded: boolean
+  state: DriverDocumentsState
+}): DriverDocumentEligibility {
+  if (!opts.gateEnabled) return 'clear'
+  if (!opts.loaded) return 'checking'
+  const statuses = REQUIRED_DRIVER_DOCUMENTS.map((key) => opts.state.docs[key])
+  if (statuses.every((status) => status === 'approved')) return 'clear'
+  return 'blocked'
+}
+
+/** Checking só mantém recolha já autorizada nesta família. Bloqueio confirmado pára. */
+export function documentEligibilityAllowsCollection(opts: {
+  eligibility: DriverDocumentEligibility
+  previouslyAuthorized: boolean
+}): boolean {
+  if (opts.eligibility === 'blocked') return false
+  if (opts.eligibility === 'clear') return true
+  return opts.previouslyAuthorized
 }
 
 /** Skip remote GET apply while the user is mid POST online/offline. */
@@ -71,15 +100,11 @@ export function shouldHydrateAvailability(opts: { accepted: boolean; statusOk: b
  */
 export function remoteAvailabilityOfflineUpdate(opts: {
   remoteIsAvailable: boolean
-  canGoOnline: boolean
   localOffline: boolean
   syncing: boolean
 }): boolean | null {
   if (shouldSkipRemoteAvailabilityApply(opts.syncing)) return null
-  const nextOffline = offlineFromBackendAvailability(
-    opts.remoteIsAvailable,
-    opts.canGoOnline,
-  )
+  const nextOffline = offlineFromBackendAvailability(opts.remoteIsAvailable)
   if (nextOffline === opts.localOffline) return null
   return nextOffline
 }
@@ -87,7 +112,6 @@ export function remoteAvailabilityOfflineUpdate(opts: {
 /** Read-only tick used by poll / focus / visibility. GET failure → no local change. */
 export async function fetchRemoteAvailabilityOfflineUpdate(opts: {
   getStatus: () => Promise<{ is_available: boolean }>
-  canGoOnline: boolean
   /** Re-read after await so a completed POST toggle is not undone by a stale GET. */
   getLocalOffline: () => boolean
   getSyncing: () => boolean
@@ -97,7 +121,6 @@ export async function fetchRemoteAvailabilityOfflineUpdate(opts: {
     const { is_available } = await opts.getStatus()
     return remoteAvailabilityOfflineUpdate({
       remoteIsAvailable: is_available,
-      canGoOnline: opts.canGoOnline,
       localOffline: opts.getLocalOffline(),
       syncing: opts.getSyncing(),
     })
@@ -181,16 +204,22 @@ export function isDriverLocationReportingOperational(opts: DriverLocationNeed & 
 }
 
 /**
- * Serviço já autorizado nesta família. A falta do token não abre autorização nova
- * e não liga o reporter: sem token não há upload web.
+ * Serviço já autorizado nesta família, durante a lacuna aberta pela sessão.
+ * Online confirmado ou viagem activa já confirmada. Sem token não há upload.
+ * Não abre autorização nova: sem hidratação prévia, ou só com um id, fica parado.
  */
 export function keepsNativeLocationServiceDuringTokenGap(opts: {
   token: string | null
   offline: boolean
   hydrated: boolean
   syncing: boolean
+  confirmedActiveTrip?: boolean
+  tripStatus?: string | null
 }): boolean {
-  return Boolean(!opts.token && opts.hydrated && !opts.offline && !opts.syncing)
+  if (opts.token || !opts.hydrated) return false
+  if (isEndedDriverTrip(opts.tripStatus)) return false
+  if (opts.confirmedActiveTrip) return true
+  return !opts.offline && !opts.syncing
 }
 
 /** Viagem confirmada. Um id local sem estado não chega. */

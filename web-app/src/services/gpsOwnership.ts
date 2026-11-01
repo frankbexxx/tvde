@@ -11,6 +11,21 @@ interface GpsOwnershipBridge {
   /** Prazo absoluto no looper nativo. A WebView em pausa não o congela. */
   armAuthorizationGap?: (delayMs: number) => void
   clearAuthorizationGap?: () => void
+  /**
+   * Diagnóstico. Uma só assinatura, a mesma da ponte que comanda o serviço.
+   * reportFlags falso ignora os booleanos no nativo.
+   */
+  logGpsNeed?: (
+    code: string,
+    reportFlags: boolean,
+    needed: boolean,
+    tokenPresent: boolean,
+    hydrated: boolean,
+    offline: boolean,
+    syncing: boolean,
+  ) => void
+  /** Sem argumentos. O nativo só escreve isto na variante de diagnóstico. */
+  logGpsNeedBridgeFault?: () => void
   serviceNeeded?: () => boolean
   serviceOperational?: () => boolean
   serviceCollecting?: () => boolean

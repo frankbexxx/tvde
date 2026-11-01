@@ -1,3 +1,4 @@
+import { logGpsNeed } from '../../services/gpsNeedLog'
 import { traceFamilyChange } from '../../services/gpsNeedTrace'
 
 /** Família de sessão em memória. A renovação do access token não passa por aqui. */
@@ -26,6 +27,7 @@ export function noteSessionFamily(next: string | null): boolean {
   epoch += 1
   listeners.forEach((listener) => listener(next, previous))
   traceFamilyChange(true)
+  logGpsNeed('family-changed')
   return true
 }
 

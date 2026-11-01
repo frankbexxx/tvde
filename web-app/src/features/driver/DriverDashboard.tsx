@@ -18,7 +18,6 @@ import {
   patchDriverVehicleCategories as patchDriverVehicleCategoriesApi,
   setDriverOnline,
   setDriverOffline,
-  getDriverStatus,
   getDriverDrivingHoursCompliance,
 } from '../../api/trips'
 import type {
@@ -68,7 +67,6 @@ import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { startTripSimulation } from '../../dev/tripSimulation'
 import { isDemoLocationEnabled, useGeolocation } from '../../hooks/useGeolocation'
 import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
-import { useNativeLocationServiceLifecycle } from '../../hooks/useNativeLocationServiceLifecycle'
 import { resolveDriverLocationUploadOrigin } from '../../services/driverLocationUpload'
 import {
   fetchDriverLastServerLocation,
@@ -231,12 +229,14 @@ import {
   isDriverLocationReportingOperational,
   isDrivingHoursBlockedError,
   isEndedDriverTrip,
+  driverDocumentEligibility,
   offlineFromBackendAvailability,
   recoveryAfterTripProbe,
   shouldBootstrapDriverActiveTrip,
 } from './driverAvailabilitySync'
+import { logGpsNeed } from '../../services/gpsNeedLog'
 import { currentSessionFamily, sessionEpoch, subscribeSessionFamily } from './driverSessionFamily'
-import { useDriverAvailabilitySession } from './useDriverAvailabilitySession'
+import { useDriverLocation } from './DriverLocationProvider'
 import { driverAcceptComplianceI18nKey } from '../shared/vehicleComplianceGateMessages'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
@@ -388,40 +388,36 @@ export function DriverDashboard() {
 
   const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
   const driverBottomNav = isDriverBottomNavEnabled()
-  const [offline, setOffline] = useState(true)
-  const [availabilitySyncing, setAvailabilitySyncing] = useState(false)
+  const {
+    offline,
+    setOffline,
+    syncing: availabilitySyncing,
+    setSyncing: setAvailabilitySyncing,
+    hydrated: availabilityHydrated,
+    bumpToggleEpoch,
+    publishDocumentEligibility,
+    subscribeAvailability,
+    activeTripPoll: driverActiveTripPoll,
+    noteTripStatus,
+    locationNeeded,
+  } = useDriverLocation()
   const [gpsOfferNotice, setGpsOfferNotice] = useState<GpsOfferNoticeState>(INITIAL_GPS_OFFER_NOTICE)
-  const [sessionFamily, setSessionFamily] = useState(currentSessionFamily)
-  const offlineRef = useRef(offline)
-  const availabilitySyncingRef = useRef(availabilitySyncing)
-  /** Bumped on local POST availability changes so in-flight remote GETs cannot undo them. */
-  const availabilityEpochRef = useRef(0)
-  const canGoOnlineRef = useRef(true)
-  const availabilityHydrated = useDriverAvailabilitySession({
-    token,
-    sessionRole,
-    family: sessionFamily,
-    getSyncing: () => availabilitySyncingRef.current,
-    getCanGoOnline: () => canGoOnlineRef.current,
-    getToggleEpoch: () => availabilityEpochRef.current,
-    getLocalOffline: () => offlineRef.current,
-    getStatus: (current) => getDriverStatus(current),
-    onApplied: (status) => {
-      setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'status', status }))
-    },
-    onFailed: () => {
-      setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'fetch_failed' }))
-    },
-    onOffline: setOffline,
-    onSessionCleared: () => setGpsOfferNotice(INITIAL_GPS_OFFER_NOTICE),
-  })
   useEffect(() => {
-    offlineRef.current = offline
+    return subscribeAvailability((event) => {
+      if (event.type === 'applied') {
+        setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'status', status: event.status }))
+        return
+      }
+      if (event.type === 'failed') {
+        setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'fetch_failed' }))
+        return
+      }
+      setGpsOfferNotice(INITIAL_GPS_OFFER_NOTICE)
+    })
+  }, [subscribeAvailability])
+  useEffect(() => {
     if (offline) setGpsOfferNotice((prev) => reduceGpsOfferNotice(prev, { type: 'went_offline' }))
   }, [offline])
-  useEffect(() => {
-    availabilitySyncingRef.current = availabilitySyncing
-  }, [availabilitySyncing])
   useScreenWakeLock(
     sessionRole === 'driver' &&
     Boolean(token) &&
@@ -492,16 +488,34 @@ export function DriverDashboard() {
   const [driverDocuments, setDriverDocuments] = useState<DriverDocumentsState>(() =>
     defaultDriverDocumentsState()
   )
+  const documentFamily = currentSessionFamily()
+  const [documentLoad, setDocumentLoad] = useState<{ family: string | null; loaded: boolean }>({
+    family: documentFamily,
+    loaded: false,
+  })
+  if (documentLoad.family !== documentFamily) {
+    setDocumentLoad({ family: documentFamily, loaded: false })
+  }
+  const documentsLoaded = documentLoad.family === documentFamily && documentLoad.loaded
   const [driverDocsGateEnabled, setDriverDocsGateEnabled] = useState<boolean>(() =>
     import.meta.env.DEV ? isDriverDocumentsGateEnabled() : true
   )
   const effectiveDocsGate = import.meta.env.DEV ? driverDocsGateEnabled : true
-  canGoOnlineRef.current = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
+  const documentEligibility = driverDocumentEligibility({
+    gateEnabled: effectiveDocsGate,
+    loaded: documentsLoaded,
+    state: driverDocuments,
+  })
+  useEffect(() => {
+    publishDocumentEligibility(documentEligibility)
+  }, [documentEligibility, publishDocumentEligibility])
   const docsReady = isDriverDocumentsReady(driverDocuments)
+  const docsConfirmedBlock = documentEligibility === 'blocked'
   const docsBlockedOffline = effectiveDocsGate && !docsReady && offline
+  const showDocumentBlock = docsBlockedOffline || docsConfirmedBlock
   const documentStatuses = blockingDocumentStatuses(driverDocuments)
   const documentBlock = driverAvailabilityBlockMessage({
-    docsBlocked: docsBlockedOffline,
+    docsBlocked: showDocumentBlock,
     statuses: documentStatuses,
     hoursBlocked: false,
     restUntilLabel: null,
@@ -586,13 +600,13 @@ export function DriverDashboard() {
     setDriverActiveTripId(trip.trip_id)
     setAcceptedDetailFallback(trip)
     setDriverStatusOverride(trip.status)
+    noteTripStatus(trip.status)
     setStatus(driverActiveTripUi(trip.status).label)
     return trip
-  }, [token, setDriverActiveTripId, setStatus])
+  }, [token, setDriverActiveTripId, setStatus, noteTripStatus])
 
   useEffect(() => {
-    return subscribeSessionFamily((next) => {
-      setSessionFamily(next)
+    return subscribeSessionFamily(() => {
       setDriverStatusOverride(null)
       setAcceptedDetailFallback(null)
       setTripRecoveryUnresolved(false)
@@ -604,7 +618,7 @@ export function DriverDashboard() {
   const handleDriverAvailabilityChange = useCallback(
     async (checked: boolean) => {
       if (!token || availabilitySyncing) return
-      if (checked && effectiveDocsGate && !isDriverDocumentsReady(driverDocuments)) {
+      if (checked && documentEligibility !== 'clear') {
         addLog('Bloqueado: documentos obrigatórios em falta', 'error')
         return
       }
@@ -616,8 +630,7 @@ export function DriverDashboard() {
         if (checked) {
           void requestTripNotificationPermission()
           const serverAvailability = await setDriverOnline(token)
-          const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
-          const nextOffline = offlineFromBackendAvailability(serverAvailability.is_available, canGoOnline)
+          const nextOffline = offlineFromBackendAvailability(serverAvailability.is_available)
           setOffline(nextOffline)
           if (nextOffline) {
             addLog('Servidor manteve indisponível; a procurar viagem activa', 'info')
@@ -652,29 +665,25 @@ export function DriverDashboard() {
         }
       } finally {
         setActiveTripBootstrapPending(false)
-        availabilityEpochRef.current += 1
+        bumpToggleEpoch()
         setAvailabilitySyncing(false)
       }
     },
     [
       token,
       availabilitySyncing,
-      effectiveDocsGate,
-      driverDocuments,
+      documentEligibility,
       activeTripId,
       addLog,
       setStatus,
       restoreDriverActiveTrip,
+      bumpToggleEpoch,
+      setOffline,
+      setAvailabilitySyncing,
     ]
   )
 
   const pollEnabled = availabilityOperational
-
-  const driverActiveTripPoll = useDriverActiveTripPoll(
-    activeTripId,
-    token,
-    Boolean(activeTripId && token)
-  )
 
   const driverEmergencyStatus =
     driverStatusOverride ??
@@ -712,16 +721,45 @@ export function DriverDashboard() {
     )
   }, [confirmedActiveTrip, driverActiveTripPoll.pollFault, driverEmergencyStatus])
 
-  useNativeLocationServiceLifecycle({
-    token,
-    offline,
+  const loggedOfflineRef = useRef(offline)
+  const detachRef = useRef({
+    needed: locationNeeded,
+    tokenPresent: Boolean(token),
     hydrated: availabilityHydrated,
+    offline,
     syncing: availabilitySyncing,
-    activeTripBootstrapPending,
-    tripRecoveryUnresolved,
-    confirmedActiveTrip,
-    tripStatus: driverEmergencyStatus ?? null,
   })
+  useEffect(() => {
+    detachRef.current = {
+      needed: locationNeeded,
+      tokenPresent: Boolean(token),
+      hydrated: availabilityHydrated,
+      offline,
+      syncing: availabilitySyncing,
+    }
+  }, [locationNeeded, token, availabilityHydrated, offline, availabilitySyncing])
+  useEffect(() => {
+    return () => {
+      logGpsNeed('ui-detached', detachRef.current)
+    }
+  }, [])
+  useEffect(() => {
+    if (loggedOfflineRef.current === offline) return
+    loggedOfflineRef.current = offline
+    logGpsNeed(offline ? 'availability-offline' : 'availability-online', {
+      needed: locationNeeded,
+      tokenPresent: Boolean(token),
+      hydrated: availabilityHydrated,
+      offline,
+      syncing: availabilitySyncing,
+    })
+  }, [
+    offline,
+    token,
+    availabilityHydrated,
+    availabilitySyncing,
+    locationNeeded,
+  ])
 
   const showDriverEmergencySos =
     Boolean(activeTripId && token && isDriverEmergencyStatus(driverEmergencyStatus))
@@ -1137,8 +1175,13 @@ export function DriverDashboard() {
 
   const refreshDriverDocumentsFromServer = useCallback(() => {
     if (!token) return Promise.resolve()
+    const familyAtStart = currentSessionFamily()
     return fetchDriverDocuments(token)
-      .then((server) => setDriverDocuments(driverDocumentsFromServer(server)))
+      .then((server) => {
+        if (currentSessionFamily() !== familyAtStart) return
+        setDriverDocuments(driverDocumentsFromServer(server))
+        setDocumentLoad({ family: familyAtStart, loaded: true })
+      })
       .catch(() => {
         /* API antiga ou offline */
       })
@@ -1182,7 +1225,11 @@ export function DriverDashboard() {
     (doc: DriverRequiredDocument, status: DriverDocumentStatus) => {
       if (!token) return
       void patchDriverDocuments(token, { [doc]: { status } })
-        .then((server) => setDriverDocuments(driverDocumentsFromServer(server)))
+        .then((server) => {
+          const family = currentSessionFamily()
+          setDriverDocuments(driverDocumentsFromServer(server))
+          setDocumentLoad({ family, loaded: true })
+        })
         .catch(() => { })
     },
     [token]
@@ -1191,10 +1238,12 @@ export function DriverDashboard() {
   useEffect(() => {
     if (!token || sessionRole !== 'driver') return
     let cancelled = false
+    const familyAtStart = currentSessionFamily()
     void fetchDriverDocuments(token)
       .then((server) => {
-        if (cancelled) return
+        if (cancelled || currentSessionFamily() !== familyAtStart) return
         setDriverDocuments(driverDocumentsFromServer(server))
+        setDocumentLoad({ family: familyAtStart, loaded: true })
       })
       .catch(() => {
         /* API antiga ou offline */
@@ -1255,6 +1304,10 @@ export function DriverDashboard() {
     availableForFallback?: TripAvailableItem
   ) => {
     if (actionLoading != null || rejectLoadingOfferId != null) return
+    if (actionName === 'ACEITAR' && documentEligibility !== 'clear') {
+      addLog('Bloqueado: documentos obrigatórios em falta', 'error')
+      return
+    }
     // Não definir activeTripId antes do POST: o poll GET pode 404 até o accept persistir driver_id.
     setError(null)
     setActionLoading(tripId)
@@ -1269,6 +1322,7 @@ export function DriverDashboard() {
         )
       }
       setDriverStatusOverride(res.status)
+      noteTripStatus(res.status)
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (actionName === 'ACEITAR') {
@@ -1327,7 +1381,7 @@ export function DriverDashboard() {
       const e = err as { status?: number; detail?: string }
       if (e?.status === 409) {
         if (e?.detail === 'driving_hours_blocked') {
-          availabilityEpochRef.current += 1
+          bumpToggleEpoch()
           setOffline(true)
           setError(
             'Não podes aceitar novas viagens: limite de tempo de condução neste dia civil ou período de repouso obrigatório (informação genérica — validar quadro legal com apoio jurídico).'
@@ -1470,6 +1524,7 @@ export function DriverDashboard() {
           onClearStatusOverride={() => setDriverStatusOverride(null)}
           onTripActionSuccess={(s) => {
             setDriverStatusOverride(s)
+            noteTripStatus(s)
             if (s === 'ongoing' && isMockLocationModeEnabled()) {
               const beginPickupToDest = (
                 pickup: { lat: number; lng: number },
@@ -1654,9 +1709,11 @@ export function DriverDashboard() {
                 onToggleVehicleCategory={handleToggleVehicleCategory}
                 onPatchDriverDocument={handlePatchDriverDocument}
                 onRefreshDriverDocuments={refreshDriverDocumentsFromServer}
-                onMergeDriverDocuments={(server) =>
+                onMergeDriverDocuments={(server) => {
+                  const family = currentSessionFamily()
                   setDriverDocuments(driverDocumentsFromServer(server))
-                }
+                  setDocumentLoad({ family, loaded: true })
+                }}
                 onToggleDriverDocsGate={(enabled) => {
                   setDriverDocsGateEnabled(enabled)
                   setDriverDocumentsGateEnabled(enabled)
@@ -1874,13 +1931,13 @@ export function DriverDashboard() {
                       ) : null}
                     </div>
                   </div>
-                  {docsBlockedOffline ? (
+                  {showDocumentBlock ? (
                     <div className="pointer-events-auto absolute inset-x-0 bottom-2 z-[6] flex justify-center px-2">
                       {driverDocsBlockedHintBox}
                     </div>
                   ) : null}
                 </div>
-                {!offline && !activeTripId ? (
+                {!offline && !activeTripId && !docsConfirmedBlock ? (
                   pollEnabled && availableLoading && available == null ? (
                     <div className={MAP_IDLE_PLACEHOLDER}>
                       <Spinner size="md" />
@@ -2055,6 +2112,7 @@ export function DriverDashboard() {
               >
                 <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-2 pb-20 pointer-events-none">
                   <div className={`${MAP_BANNER_STACK} pointer-events-auto`}>
+                    {docsConfirmedBlock && activeTripId ? driverDocsBlockedHintBox : null}
                     <DriverGpsOfferBanner offline={offline} notice={gpsOfferNotice} />
                     {geolocationUsedFallback && (
                       <div
@@ -2228,7 +2286,7 @@ export function DriverDashboard() {
                     <MapBottomSheet className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_TRIP}`}>
                       {driverActiveTripPanel}
                     </MapBottomSheet>
-                  ) : docsBlockedOffline ? (
+                  ) : showDocumentBlock ? (
                     <MapBottomSheet
                       className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_WAIT}`}
                     >

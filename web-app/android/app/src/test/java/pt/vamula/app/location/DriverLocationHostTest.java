@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,6 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import pt.vamula.app.vault.VaultHttp;
 
 /** Arranque único e gates. O serviço Android não é criado. */
 public class DriverLocationHostTest {
@@ -24,6 +26,7 @@ public class DriverLocationHostTest {
         DriverLocationHost.resetForTests();
         DriverLocationService.clearTrail();
         DriverLocationHost.setPermissionCheckForTests(context -> true);
+        DriverLocationHost.setFamilyCheckForTests(() -> true);
         DriverLocationHost.setStarterForTests(new DriverLocationHost.Starter() {
             @Override
             public void start(android.content.Context context) {
@@ -40,6 +43,7 @@ public class DriverLocationHostTest {
 
     @After
     public void cleanup() {
+        DriverLocationService.releaseForNewSession();
         DriverLocationHost.resetForTests();
     }
 
@@ -65,6 +69,67 @@ public class DriverLocationHostTest {
         assertFalse(DriverLocationService.launchRequested());
         assertFalse(DriverLocationService.shouldStayUp());
         assertEquals(1, stops.get());
+    }
+
+    @Test
+    public void emptyVaultDoesNotStart() {
+        DriverLocationHost.setFamilyCheckForTests(() -> false);
+        DriverLocationHost.resumed();
+        DriverLocationHost.setNeeded(true);
+        assertEquals(0, starts.get());
+        assertFalse(DriverLocationService.launchRequested());
+        assertTrue(DriverLocationHost.needed());
+    }
+
+    @Test
+    public void unreadableVaultDoesNotStart() {
+        DriverLocationHost.setFamilyCheckForTests(() -> {
+            throw new IllegalStateException("vault");
+        });
+        DriverLocationHost.resumed();
+        DriverLocationHost.setNeeded(true);
+        assertEquals(0, starts.get());
+        assertFalse(DriverLocationService.launchRequested());
+    }
+
+    @Test
+    public void aValidFamilyKeepsTheExistingStart() {
+        DriverLocationHost.resumed();
+        DriverLocationHost.setNeeded(true);
+        assertEquals(1, starts.get());
+        assertTrue(DriverLocationService.launchRequested());
+    }
+
+    @Test
+    public void stoppingDoesNotReadTheVault() {
+        DriverLocationHost.resumed();
+        DriverLocationHost.setNeeded(true);
+        DriverLocationHost.setFamilyCheckForTests(() -> {
+            throw new IllegalStateException("vault");
+        });
+        DriverLocationHost.setNeeded(false);
+        assertFalse(DriverLocationHost.needed());
+        assertEquals(1, stops.get());
+        assertFalse(DriverLocationService.launchRequested());
+    }
+
+    @Test
+    public void invalidVaultStopsCollectionAndDropsTheUpload() {
+        DriverLocationHost.resumed();
+        DriverLocationHost.setNeeded(true);
+        assertTrue(DriverLocationService.grantProduction(
+            DriverLocationEndpoint.configured(),
+            "family-a",
+            new SilentHttp(),
+            new FamilyAuth("family-a")
+        ));
+        assertTrue(DriverLocationService.uploadArmed());
+        DriverLocationHost.setFamilyCheckForTests(() -> false);
+        DriverLocationHost.resumed();
+        assertEquals(1, starts.get());
+        assertEquals(1, stops.get());
+        assertFalse(DriverLocationService.launchRequested());
+        assertFalse(DriverLocationService.uploadArmed());
     }
 
     @Test
@@ -153,6 +218,36 @@ public class DriverLocationHostTest {
                 cancels.incrementAndGet();
             }
         };
+    }
+
+    private static final class SilentHttp implements VaultHttp {
+        @Override
+        public VaultHttp.Result post(String url, String json, Map<String, String> headers) {
+            return new VaultHttp.Result(204, "");
+        }
+    }
+
+    private static final class FamilyAuth implements DriverLocationAuth {
+        private final String family;
+
+        private FamilyAuth(String family) {
+            this.family = family;
+        }
+
+        @Override
+        public String accessToken() {
+            return "access";
+        }
+
+        @Override
+        public String sessionFamily() {
+            return family;
+        }
+
+        @Override
+        public DriverLocationAuth.Refresh refresh(String apiBase) {
+            return DriverLocationAuth.Refresh.transientFailure();
+        }
     }
 
     private static void enter(CountDownLatch ready, CountDownLatch go) {

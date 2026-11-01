@@ -1,10 +1,13 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useNativeLocationServiceLifecycle } from '../../hooks/useNativeLocationServiceLifecycle'
+import { resetGpsNeedLogForTests } from '../../services/gpsNeedLog'
+import { DRIVER_TOKEN_GAP_MS } from './driverAvailabilitySync'
 import { noteSessionFamily, resetSessionFamilyForTests } from './driverSessionFamily'
 import { useDriverAvailabilitySession } from './useDriverAvailabilitySession'
 
 const serviceCalls: boolean[] = []
+const needLogs: string[] = []
 
 function installBridge() {
   window.vamulaGps = {
@@ -19,6 +22,9 @@ function installBridge() {
     serviceCollecting: () => false,
     serviceSending: () => false,
     serviceStopReason: () => '',
+    logGpsNeed: (code: string) => {
+      needLogs.push(code)
+    },
   }
 }
 
@@ -36,7 +42,9 @@ describe('useDriverAvailabilitySession', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     resetSessionFamilyForTests()
+    resetGpsNeedLogForTests()
     serviceCalls.length = 0
+    needLogs.length = 0
     installBridge()
     noteSessionFamily('family-a')
   })
@@ -61,7 +69,6 @@ describe('useDriverAvailabilitySession', () => {
           sessionRole: 'driver',
           family: props.family,
           getSyncing: () => false,
-          getCanGoOnline: () => true,
           getToggleEpoch: () => 1,
           getLocalOffline: () => props.offline,
           getStatus: status,
@@ -139,7 +146,6 @@ describe('useDriverAvailabilitySession', () => {
           sessionRole: 'driver',
           family: props.family,
           getSyncing: () => false,
-          getCanGoOnline: () => true,
           getToggleEpoch: () => 1,
           getLocalOffline: () => false,
           getStatus: status,
@@ -200,7 +206,6 @@ describe('useDriverAvailabilitySession', () => {
           sessionRole: 'driver',
           family: props.family,
           getSyncing: () => false,
-          getCanGoOnline: () => true,
           getToggleEpoch: () => 1,
           getLocalOffline: () => true,
           getStatus: status,
@@ -231,7 +236,6 @@ describe('useDriverAvailabilitySession', () => {
         sessionRole: 'driver',
         family: 'family-a',
         getSyncing: () => false,
-        getCanGoOnline: () => true,
         getToggleEpoch: () => 1,
         getLocalOffline: () => false,
         getStatus: status,
@@ -269,5 +273,22 @@ describe('useDriverAvailabilitySession', () => {
 
     await waitFor(() => expect(hook.seenTokens.at(-1)).toBe('access-2'))
     expect(hook.seenTokens).not.toContain(undefined)
+  })
+
+  it('regista uma vez a ausência do token e a expiração do prazo', async () => {
+    const hook = mount({ token: 'access-1', family: 'family-a', offline: false })
+    await waitFor(() => expect(hook.result.current.hydrated).toBe(true))
+    needLogs.length = 0
+    resetGpsNeedLogForTests()
+    hook.rerender({ token: null, family: 'family-a', offline: false })
+    hook.rerender({ token: null, family: 'family-a', offline: false })
+    expect(needLogs).toEqual(['token-absent'])
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(DRIVER_TOKEN_GAP_MS)
+    })
+    expect(needLogs).toEqual(['token-absent', 'gap-expired', 'hydration-cleared'])
+    expect(serviceCalls.at(-1)).toBe(false)
+    expect(needLogs.join(' ')).not.toContain('access-1')
+    expect(needLogs.join(' ')).not.toContain('family-a')
   })
 })

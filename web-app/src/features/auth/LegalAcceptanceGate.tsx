@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { getLegalAcceptance, postLegalAcceptance } from '../../api/auth'
 import { useAuth } from '../../context/AuthContext'
 import { currentSessionFamily, subscribeSessionFamily } from '../driver/driverSessionFamily'
+import { noteLegalAcceptancePhase, type LegalAcceptancePhase } from './legalAcceptancePhase'
 import { BTN_PRIMARY_RADIUS, SURFACE_RADIUS } from '../../components/layout/infoBoxTemplate'
 import { Spinner } from '../../components/ui/Spinner'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
@@ -93,13 +94,25 @@ export function LegalAcceptanceBoundary({ children }: { children: ReactNode }) {
     }
   }, [shouldCheck, token, family, userId])
 
-  if (!shouldCheck || !token) return <>{children}</>
-
   const identity = userId
   const current = belongsToIdentity(decision, family, identity) ? decision : null
   const openForToken = current?.token === token && current.required === false
   const blockedForToken = current?.token === token && current.required === true
   const keepDuringRotation = current?.token !== token && confirmedForSession(current, family, identity)
+  const phase: LegalAcceptancePhase = !shouldCheck || !token
+    ? 'open'
+    : openForToken || keepDuringRotation
+      ? 'open'
+      : blockedForToken
+        ? 'blocked'
+        : 'checking'
+
+  useEffect(() => {
+    noteLegalAcceptancePhase(phase, family)
+  }, [phase, family])
+  useEffect(() => () => noteLegalAcceptancePhase('checking', null), [])
+
+  if (!shouldCheck || !token) return <>{children}</>
 
   if (openForToken || keepDuringRotation) return <>{children}</>
   if (!current || current.token !== token) {

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
+import { defaultDriverDocumentsState } from '../../services/driverDocuments'
 import {
   DRIVER_REMOTE_AVAILABILITY_POLL_MS,
+  documentEligibilityAllowsCollection,
+  driverDocumentEligibility,
   fetchRemoteAvailabilityOfflineUpdate,
   formatDriverAvailabilityError,
   isDriverAvailabilityOperational,
@@ -22,15 +25,54 @@ import {
 
 describe('offlineFromBackendAvailability', () => {
   it('backend is_available=false → UI offline mesmo com localStorage online', () => {
-    expect(offlineFromBackendAvailability(false, true)).toBe(true)
+    expect(offlineFromBackendAvailability(false)).toBe(true)
   })
 
-  it('backend is_available=true → UI online quando documentos permitem', () => {
-    expect(offlineFromBackendAvailability(true, true)).toBe(false)
+  it('backend is_available=true permanece online; documentos não entram neste GET', () => {
+    expect(offlineFromBackendAvailability(true)).toBe(false)
+  })
+})
+
+describe('driverDocumentEligibility', () => {
+  const state = defaultDriverDocumentsState()
+
+  it('sem leitura fica em verificação e não autoriza', () => {
+    expect(driverDocumentEligibility({ gateEnabled: true, loaded: false, state })).toBe('checking')
+    expect(documentEligibilityAllowsCollection({ eligibility: 'checking', previouslyAuthorized: false })).toBe(false)
   })
 
-  it('documentos bloqueiam → UI offline', () => {
-    expect(offlineFromBackendAvailability(true, false)).toBe(true)
+  it('missing ou pending_review confirmados bloqueiam', () => {
+    const missing = defaultDriverDocumentsState()
+    expect(driverDocumentEligibility({ gateEnabled: true, loaded: true, state: missing })).toBe('blocked')
+    const pending = defaultDriverDocumentsState()
+    for (const key of Object.keys(pending.docs) as (keyof typeof pending.docs)[]) pending.docs[key] = 'approved'
+    pending.docs.carta_tvde = 'pending_review'
+    expect(driverDocumentEligibility({ gateEnabled: true, loaded: true, state: pending })).toBe('blocked')
+  })
+
+  it('rejected ou expired depois da leitura param', () => {
+    const rejected = defaultDriverDocumentsState()
+    for (const key of Object.keys(rejected.docs) as (keyof typeof rejected.docs)[]) rejected.docs[key] = 'approved'
+    rejected.docs.carta_tvde = 'rejected'
+    expect(driverDocumentEligibility({ gateEnabled: true, loaded: true, state: rejected })).toBe('blocked')
+    const expired = defaultDriverDocumentsState()
+    for (const key of Object.keys(expired.docs) as (keyof typeof expired.docs)[]) expired.docs[key] = 'approved'
+    expired.docs.seguro_responsabilidade_civil = 'expired'
+    expect(driverDocumentEligibility({ gateEnabled: true, loaded: true, state: expired })).toBe('blocked')
+  })
+
+  it('todos approved libertam; gate desligado também', () => {
+    const ready = defaultDriverDocumentsState()
+    for (const key of Object.keys(ready.docs) as (keyof typeof ready.docs)[]) ready.docs[key] = 'approved'
+    expect(driverDocumentEligibility({ gateEnabled: true, loaded: true, state: ready })).toBe('clear')
+    expect(driverDocumentEligibility({ gateEnabled: false, loaded: false, state })).toBe('clear')
+  })
+
+  it('checking só continua uma autorização anterior e blocked nunca', () => {
+    expect(documentEligibilityAllowsCollection({ eligibility: 'checking', previouslyAuthorized: false })).toBe(false)
+    expect(documentEligibilityAllowsCollection({ eligibility: 'checking', previouslyAuthorized: true })).toBe(true)
+    expect(documentEligibilityAllowsCollection({ eligibility: 'blocked', previouslyAuthorized: true })).toBe(false)
+    expect(documentEligibilityAllowsCollection({ eligibility: 'clear', previouslyAuthorized: false })).toBe(true)
   })
 })
 
@@ -45,7 +87,6 @@ describe('remote availability sync (Partner force-online)', () => {
     expect(
       remoteAvailabilityOfflineUpdate({
         remoteIsAvailable: true,
-        canGoOnline: true,
         localOffline: true,
         syncing: true,
       })
@@ -56,7 +97,6 @@ describe('remote availability sync (Partner force-online)', () => {
     expect(
       remoteAvailabilityOfflineUpdate({
         remoteIsAvailable: true,
-        canGoOnline: true,
         localOffline: true,
         syncing: false,
       })
@@ -67,7 +107,6 @@ describe('remote availability sync (Partner force-online)', () => {
     expect(
       remoteAvailabilityOfflineUpdate({
         remoteIsAvailable: false,
-        canGoOnline: true,
         localOffline: false,
         syncing: false,
       })
@@ -78,7 +117,6 @@ describe('remote availability sync (Partner force-online)', () => {
     expect(
       remoteAvailabilityOfflineUpdate({
         remoteIsAvailable: false,
-        canGoOnline: true,
         localOffline: true,
         syncing: false,
       })
@@ -89,7 +127,6 @@ describe('remote availability sync (Partner force-online)', () => {
     const getStatus = vi.fn().mockResolvedValue({ is_available: true })
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
-      canGoOnline: true,
       getLocalOffline: () => true,
       getSyncing: () => false,
     })
@@ -101,7 +138,6 @@ describe('remote availability sync (Partner force-online)', () => {
     const getStatus = vi.fn().mockResolvedValue({ is_available: false })
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
-      canGoOnline: true,
       getLocalOffline: () => false,
       getSyncing: () => false,
     })
@@ -112,7 +148,6 @@ describe('remote availability sync (Partner force-online)', () => {
     const getStatus = vi.fn().mockRejectedValue(new Error('network'))
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
-      canGoOnline: true,
       getLocalOffline: () => true,
       getSyncing: () => false,
     })
@@ -123,7 +158,6 @@ describe('remote availability sync (Partner force-online)', () => {
     const getStatus = vi.fn().mockResolvedValue({ is_available: true })
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
-      canGoOnline: true,
       getLocalOffline: () => true,
       getSyncing: () => true,
     })
@@ -139,7 +173,6 @@ describe('remote availability sync (Partner force-online)', () => {
     })
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
-      canGoOnline: true,
       getLocalOffline: () => true,
       getSyncing: () => syncing,
     })
@@ -154,7 +187,6 @@ describe('remote availability sync (Partner force-online)', () => {
     })
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
-      canGoOnline: true,
       getLocalOffline: () => localOffline,
       getSyncing: () => false,
     })
@@ -461,6 +493,49 @@ describe('isNativeDriverLocationServiceNeeded', () => {
     expect(keepsNativeLocationServiceDuringTokenGap({ ...base, token: null, offline: true })).toBe(false)
     expect(keepsNativeLocationServiceDuringTokenGap({ ...base, token: null, syncing: true })).toBe(false)
     expect(isNativeDriverLocationServiceNeeded({ ...base, token: null, hydrated: false })).toBe(false)
+  })
+
+  it('ausência do token com viagem já confirmada mantém o serviço e não autoriza uploads', () => {
+    const gap = {
+      ...base,
+      token: null,
+      offline: true,
+      confirmedActiveTrip: true,
+      tripStatus: 'accepted' as const,
+    }
+    expect(keepsNativeLocationServiceDuringTokenGap(gap)).toBe(true)
+    expect(isNativeDriverLocationServiceNeeded(gap)).toBe(true)
+    expect(isDriverLocationReportingOperational(gap)).toBe(false)
+  })
+
+  it('ausência do token com id ou viagem terminada não arranca o serviço', () => {
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        token: null,
+        offline: true,
+        tripStatus: null,
+      })
+    ).toBe(false)
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        token: null,
+        offline: true,
+        hydrated: false,
+        confirmedActiveTrip: true,
+        tripStatus: 'ongoing',
+      })
+    ).toBe(false)
+    expect(
+      isNativeDriverLocationServiceNeeded({
+        ...base,
+        token: null,
+        offline: true,
+        confirmedActiveTrip: true,
+        tripStatus: 'cancelled',
+      })
+    ).toBe(false)
   })
 
   it('reporter e serviço nativo coincidem', () => {
