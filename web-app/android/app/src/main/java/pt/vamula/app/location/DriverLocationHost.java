@@ -7,10 +7,11 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.core.content.ContextCompat;
+import pt.vamula.app.vault.SessionVaults;
 
 /**
- * Arranca o serviço só com a activity visível e uma única vez por necessidade.
- * Não arma o upload e não lê viagens guardadas.
+ * Arranca o serviço só com a activity visível, uma família no cofre e uma única
+ * vez por necessidade. Não arma o upload e não lê viagens guardadas.
  */
 public final class DriverLocationHost {
 
@@ -39,6 +40,7 @@ public final class DriverLocationHost {
     };
     private static GapScheduler gapScheduler = PLATFORM_GAP;
     private static PermissionCheck permissionCheck = DriverLocationHost::devicePermission;
+    private static FamilyCheck familyCheck = DriverLocationHost::vaultFamilyPresent;
     private static Starter starter = DriverLocationHost::platformStart;
 
     private DriverLocationHost() {}
@@ -107,6 +109,7 @@ public final class DriverLocationHost {
                         return;
                     }
                     gapTask = null;
+                    DriverLocationNeedTrace.record("gap-expired-native", false, null, null, null, null);
                     needed = false;
                     syncLocked();
                 }
@@ -128,6 +131,7 @@ public final class DriverLocationHost {
     }
 
     static void resetForTests() {
+        DriverLocationNeedTrace.resetForTests();
         synchronized (LOCK) {
             cancelGapLocked();
             visible = false;
@@ -135,6 +139,7 @@ public final class DriverLocationHost {
             appContext = null;
             gapScheduler = PLATFORM_GAP;
             permissionCheck = DriverLocationHost::devicePermission;
+            familyCheck = DriverLocationHost::vaultFamilyPresent;
             starter = DriverLocationHost::platformStart;
         }
         DriverLocationService.clearLaunchRequested();
@@ -145,6 +150,12 @@ public final class DriverLocationHost {
     static void setPermissionCheckForTests(PermissionCheck check) {
         synchronized (LOCK) {
             permissionCheck = check == null ? DriverLocationHost::devicePermission : check;
+        }
+    }
+
+    static void setFamilyCheckForTests(FamilyCheck check) {
+        synchronized (LOCK) {
+            familyCheck = check == null ? DriverLocationHost::vaultFamilyPresent : check;
         }
     }
 
@@ -167,12 +178,16 @@ public final class DriverLocationHost {
             if (!permitted && needed) {
                 DriverLocationService.failPermission();
             } else {
-                DriverLocationService.clearPermissionBlock();
-                DriverLocationService.noteHostStop();
-                if (context != null && (DriverLocationService.phase() != DriverLocationPhase.STOPPED || DriverLocationService.launchRequested())) {
-                    starter.stop(context);
-                }
-                DriverLocationService.clearLaunchRequested();
+                stopCollectionLocked(context);
+            }
+            return;
+        }
+        if (!familyPresentLocked()) {
+            stopCollectionLocked(context);
+            try {
+                DriverLocationService.releaseForNewSession();
+            } catch (RuntimeException exception) {
+                // A recolha já foi recusada. O upload não pode seguir com o cofre inválido.
             }
             return;
         }
@@ -222,6 +237,36 @@ public final class DriverLocationHost {
         context.stopService(new Intent(context, DriverLocationService.class));
     }
 
+    private static void stopCollectionLocked(Context context) {
+        DriverLocationService.clearPermissionBlock();
+        DriverLocationService.noteHostStop();
+        if (context != null && (DriverLocationService.phase() != DriverLocationPhase.STOPPED || DriverLocationService.launchRequested())) {
+            DriverLocationNeedTrace.record("host-stop", false, null, null, null, null);
+            starter.stop(context);
+        }
+        DriverLocationService.clearLaunchRequested();
+    }
+
+    private static boolean familyPresentLocked() {
+        try {
+            return familyCheck.present();
+        } catch (RuntimeException exception) {
+            return false;
+        }
+    }
+
+    private static boolean vaultFamilyPresent() {
+        Context context = appContext;
+        if (context == null) {
+            return false;
+        }
+        try {
+            return DriverLocationArmament.hasSessionFamily(SessionVaults.get(context));
+        } catch (RuntimeException exception) {
+            return false;
+        }
+    }
+
     private static boolean permittedLocked() {
         try {
             return permissionCheck.granted(appContext);
@@ -240,6 +285,10 @@ public final class DriverLocationHost {
 
     interface PermissionCheck {
         boolean granted(Context context);
+    }
+
+    interface FamilyCheck {
+        boolean present();
     }
 
     interface Starter {

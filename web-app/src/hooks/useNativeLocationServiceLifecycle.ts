@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { isNativeDriverLocationServiceNeeded } from '../features/driver/driverAvailabilitySync'
+import { logGpsNeed } from '../services/gpsNeedLog'
 import { syncNativeLocationServiceNeed } from '../services/gpsOwnership'
 import { traceLifecycle, traceReactDecision } from '../services/gpsNeedTrace'
 
@@ -13,8 +14,14 @@ export function useNativeLocationServiceLifecycle(opts: {
   tripRecoveryUnresolved?: boolean
   confirmedActiveTrip?: boolean
   tripStatus?: string | null
+  /** Quando presente, a decisão já foi tomada. O hook só a entrega. */
+  needed?: boolean
 }): boolean {
-  const needed = isNativeDriverLocationServiceNeeded(opts)
+  const needed = opts.needed ?? isNativeDriverLocationServiceNeeded(opts)
+  const optsRef = useRef(opts)
+  useEffect(() => {
+    optsRef.current = opts
+  })
   traceReactDecision({
     needed,
     tokenPresent: Boolean(opts.token),
@@ -25,7 +32,15 @@ export function useNativeLocationServiceLifecycle(opts: {
   useEffect(() => {
     traceLifecycle('mount')
     return () => {
+      const current = optsRef.current
       traceLifecycle('unmount')
+      logGpsNeed('dashboard-unmount', {
+        needed: false,
+        tokenPresent: Boolean(current.token),
+        hydrated: current.hydrated,
+        offline: current.offline,
+        syncing: current.syncing,
+      })
       syncNativeLocationServiceNeed(false)
     }
   }, [])

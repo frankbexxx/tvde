@@ -4,9 +4,11 @@ import {
   DRIVER_TOKEN_GAP_MS,
   driverAvailabilitySessionKey,
   fetchRemoteAvailabilityOfflineUpdate,
+  isNativeDriverLocationServiceNeeded,
   shouldAcceptRemoteAvailabilityResponse,
   shouldHydrateAvailability,
 } from './driverAvailabilitySync'
+import { logGpsNeed, type GpsNeedLogFlags } from '../../services/gpsNeedLog'
 import { traceAvailabilityPoll } from '../../services/gpsNeedTrace'
 import { armNativeAuthorizationGap, clearNativeAuthorizationGap } from '../../services/gpsOwnership'
 import { sessionEpoch } from './driverSessionFamily'
@@ -21,7 +23,6 @@ export function useDriverAvailabilitySession<T extends { is_available: boolean }
   sessionRole: string | null | undefined
   family: string | null
   getSyncing: () => boolean
-  getCanGoOnline: () => boolean
   getToggleEpoch: () => number
   getLocalOffline: () => boolean
   getStatus: (token: string) => Promise<T>
@@ -33,18 +34,43 @@ export function useDriverAvailabilitySession<T extends { is_available: boolean }
   const optsRef = useRef(opts)
   optsRef.current = opts
   const [hydrated, setHydrated] = useState(false)
+  const hydratedRef = useRef(false)
   const authorizedKeyRef = useRef<string | null>(null)
   const gapDeadlineRef = useRef<number | null>(null)
   const signedIn = Boolean(opts.token)
   const sessionKey = driverAvailabilitySessionKey(opts.sessionRole, opts.family)
 
   useEffect(() => {
+    const snapshot = (live: typeof opts, nextHydrated: boolean): GpsNeedLogFlags => {
+      const view = {
+        token: live.token,
+        offline: live.getLocalOffline(),
+        hydrated: nextHydrated,
+        syncing: live.getSyncing(),
+      }
+      return {
+        needed: isNativeDriverLocationServiceNeeded(view),
+        tokenPresent: Boolean(view.token),
+        hydrated: nextHydrated,
+        offline: view.offline,
+        syncing: view.syncing,
+      }
+    }
+
+    const clearHydrated = (live: typeof opts) => {
+      if (hydratedRef.current) {
+        logGpsNeed('hydration-cleared', snapshot(live, false))
+      }
+      hydratedRef.current = false
+      setHydrated(false)
+    }
+
     const current = optsRef.current
     if (!sessionKey) {
       authorizedKeyRef.current = null
       gapDeadlineRef.current = null
       clearNativeAuthorizationGap()
-      setHydrated(false)
+      clearHydrated(current)
       current.onSessionCleared()
       return
     }
@@ -53,22 +79,24 @@ export function useDriverAvailabilitySession<T extends { is_available: boolean }
         authorizedKeyRef.current = null
         gapDeadlineRef.current = null
         clearNativeAuthorizationGap()
-        setHydrated(false)
+        clearHydrated(current)
         current.onSessionCleared()
         return
       }
       if (gapDeadlineRef.current == null) {
         gapDeadlineRef.current = Date.now() + DRIVER_TOKEN_GAP_MS
+        logGpsNeed('token-absent', snapshot(current, true))
       }
       const expire = () => {
         const live = optsRef.current
         if (live.token) return
         if (driverAvailabilitySessionKey(live.sessionRole, live.family) !== sessionKey) return
         if (authorizedKeyRef.current !== sessionKey) return
+        logGpsNeed('gap-expired', snapshot(live, false))
         authorizedKeyRef.current = null
         gapDeadlineRef.current = null
         clearNativeAuthorizationGap()
-        setHydrated(false)
+        clearHydrated(live)
         live.onSessionCleared()
       }
       const remaining = gapDeadlineRef.current - Date.now()
@@ -102,7 +130,7 @@ export function useDriverAvailabilitySession<T extends { is_available: boolean }
     const continuing = !deadlinePassed && authorizedKeyRef.current === sessionKey
     if (!continuing) {
       authorizedKeyRef.current = null
-      setHydrated(false)
+      clearHydrated(current)
       current.onSessionCleared()
     }
 
@@ -138,7 +166,6 @@ export function useDriverAvailabilitySession<T extends { is_available: boolean }
             throw error
           }
         },
-        canGoOnline: live.getCanGoOnline(),
         getLocalOffline: () => optsRef.current.getLocalOffline(),
         getSyncing: () => optsRef.current.getSyncing(),
       }).then((nextOffline) => {
@@ -166,6 +193,7 @@ export function useDriverAvailabilitySession<T extends { is_available: boolean }
           authorizedKeyRef.current = sessionKey
           if (!hydratedOnce) {
             hydratedOnce = true
+            hydratedRef.current = true
             setHydrated(true)
           }
         } else if (sample && !sample.ok) {

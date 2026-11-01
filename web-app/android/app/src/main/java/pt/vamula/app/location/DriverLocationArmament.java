@@ -84,6 +84,11 @@ public final class DriverLocationArmament {
         }
     }
 
+    /** Família não vazia no registo actual. Cofre vazio ou ilegível não autoriza recolha. */
+    public static boolean hasSessionFamily(SessionVault vault) {
+        return !familyOf(vault).trim().isEmpty();
+    }
+
     private static String familyOf(SessionVault vault) {
         try {
             return vault.read().map(SessionRecord::familyId).orElse("");

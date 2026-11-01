@@ -92,7 +92,6 @@ function SessionHarness(props: {
     sessionRole: 'driver',
     family: props.family,
     getSyncing: () => false,
-    getCanGoOnline: () => true,
     getToggleEpoch: () => 1,
     getLocalOffline: () => offlineRef.current,
     getStatus: props.getStatus,
