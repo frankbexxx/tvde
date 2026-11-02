@@ -15,9 +15,11 @@ public final class DriverLocationNeedTrace {
     public static final String TAG = "VAMULA_GPS_NEED";
 
     private static final Set<String> CODES = codes();
+    private static final Set<String> REFRESH_CODES = refreshCodes();
     private static final Object LOCK = new Object();
     private static Boolean enabledOverride;
     private static String lastKey;
+    private static String lastRefreshKey;
     private static Clock clock = System::currentTimeMillis;
     private static Sink sink = DriverLocationNeedTrace::platformLog;
 
@@ -60,6 +62,27 @@ public final class DriverLocationNeedTrace {
         }
     }
 
+    /**
+     * Renovação observada. A origem só pode ser web ou native. Texto livre
+     * não é escrito. Não mexe na deduplicação das transições GPS.
+     */
+    public static void recordRefresh(String code, String origin) {
+        synchronized (LOCK) {
+            if (!activeLocked()) {
+                return;
+            }
+            if (code == null || !REFRESH_CODES.contains(code) || !allowedOrigin(origin)) {
+                return;
+            }
+            String key = code + '|' + origin;
+            if (key.equals(lastRefreshKey)) {
+                return;
+            }
+            lastRefreshKey = key;
+            sink.log(TAG, "time=" + clock.now() + " code=" + code + " origin=" + origin);
+        }
+    }
+
     static void setEnabledForTests(boolean enabled) {
         synchronized (LOCK) {
             enabledOverride = enabled;
@@ -82,6 +105,7 @@ public final class DriverLocationNeedTrace {
         synchronized (LOCK) {
             enabledOverride = null;
             lastKey = null;
+            lastRefreshKey = null;
             clock = System::currentTimeMillis;
             sink = DriverLocationNeedTrace::platformLog;
         }
@@ -129,6 +153,16 @@ public final class DriverLocationNeedTrace {
 
     private static void platformLog(String tag, String line) {
         Log.i(tag, line);
+    }
+
+    private static boolean allowedOrigin(String origin) {
+        return "web".equals(origin) || "native".equals(origin);
+    }
+
+    private static Set<String> refreshCodes() {
+        HashSet<String> allowed = new HashSet<>();
+        Collections.addAll(allowed, "refresh-start", "refresh-success", "refresh-failed");
+        return Collections.unmodifiableSet(allowed);
     }
 
     private static Set<String> codes() {

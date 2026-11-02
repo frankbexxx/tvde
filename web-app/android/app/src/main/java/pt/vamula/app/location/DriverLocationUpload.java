@@ -188,8 +188,16 @@ public final class DriverLocationUpload {
                     }
                 }
                 if (refreshNow) {
-                    DriverLocationAuth.Refresh refresh = currentAuth.refresh(apiBase);
+                    DriverLocationNeedTrace.recordRefresh("refresh-start", "native");
+                    DriverLocationAuth.Refresh refresh;
+                    try {
+                        refresh = currentAuth.refresh(apiBase);
+                    } catch (RuntimeException exception) {
+                        DriverLocationNeedTrace.recordRefresh("refresh-failed", "native");
+                        throw exception;
+                    }
                     if (refresh.kind == DriverLocationAuth.Refresh.Kind.SUCCESS && refresh.accessToken != null) {
+                        DriverLocationNeedTrace.recordRefresh("refresh-success", "native");
                         String liveNow;
                         boolean sameFamily;
                         synchronized (this) {
@@ -201,8 +209,11 @@ public final class DriverLocationUpload {
                         } else {
                             familyBroke = true;
                         }
-                    } else if (refresh.kind != DriverLocationAuth.Refresh.Kind.INVALID) {
-                        status = 0;
+                    } else {
+                        DriverLocationNeedTrace.recordRefresh("refresh-failed", "native");
+                        if (refresh.kind != DriverLocationAuth.Refresh.Kind.INVALID) {
+                            status = 0;
+                        }
                     }
                 }
             }

@@ -110,6 +110,12 @@ public final class GpsOwnershipJs {
         DriverLocationNeedTrace.record("bridge-failed");
     }
 
+    /** Código e origem fechados. Não lê o cofre nem altera a necessidade. */
+    @JavascriptInterface
+    public void logGpsRefresh(String code, String origin) {
+        DriverLocationNeedTrace.recordRefresh(code, origin);
+    }
+
     @JavascriptInterface
     public boolean serviceNeeded() {
         return DriverLocationHost.needed();
