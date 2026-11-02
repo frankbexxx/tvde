@@ -26,12 +26,22 @@ export type GpsNeedLogFlags = {
   syncing: boolean
 }
 
+const REFRESH_LOG_CODES = ['refresh-start', 'refresh-success', 'refresh-failed'] as const
+const REFRESH_ORIGINS = ['web', 'native'] as const
+
+export type GpsRefreshLogCode = (typeof REFRESH_LOG_CODES)[number]
+export type GpsRefreshOrigin = (typeof REFRESH_ORIGINS)[number]
+
 const ALLOWED = new Set<string>(GPS_NEED_LOG_CODES)
+const REFRESH_ALLOWED = new Set<string>(REFRESH_LOG_CODES)
+const ORIGIN_ALLOWED = new Set<string>(REFRESH_ORIGINS)
 let lastDelivered = ''
+let lastRefreshDelivered = ''
 let bridgeFaultNoted = false
 
 export function resetGpsNeedLogForTests(): void {
   lastDelivered = ''
+  lastRefreshDelivered = ''
   bridgeFaultNoted = false
 }
 
@@ -78,6 +88,21 @@ function noteBridgeFault(): void {
   } catch {
     // A falha de diagnóstico não pode interromper o GPS.
   }
+}
+
+/** Origem fechada. Não leva token, família, coordenadas nem corpo HTTP. */
+export function logGpsRefresh(code: string, origin: string): void {
+  if (!REFRESH_ALLOWED.has(code) || !ORIGIN_ALLOWED.has(origin)) return
+  const key = `${code}|${origin}`
+  if (key === lastRefreshDelivered) return
+  const bridge = window.vamulaGps
+  if (!bridge || typeof bridge.logGpsRefresh !== 'function') return
+  try {
+    bridge.logGpsRefresh(code, origin)
+  } catch {
+    return
+  }
+  lastRefreshDelivered = key
 }
 
 function flagsAreBooleans(flags: GpsNeedLogFlags): boolean {

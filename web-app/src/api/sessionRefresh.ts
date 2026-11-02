@@ -8,7 +8,7 @@ import {
 } from '../features/auth/androidSession'
 import { LS_AUTH_CONTRACT, setStoredAccessToken } from '../utils/authStorage'
 import { releaseDriverLocationOwnership } from '../services/gpsOwnership'
-import { logGpsNeed } from '../services/gpsNeedLog'
+import { logGpsNeed, logGpsRefresh } from '../services/gpsNeedLog'
 import { noteSessionFamily } from '../features/driver/driverSessionFamily'
 import { traceRefresh } from '../services/gpsNeedTrace'
 
@@ -124,7 +124,13 @@ export async function prepareNewCredentials(): Promise<void> {
   }
 }
 
+function observedRefresh(outcome: RefreshOutcome): RefreshOutcome {
+  logGpsRefresh(outcome === 'refreshed' ? 'refresh-success' : 'refresh-failed', 'web')
+  return outcome
+}
+
 async function performRefresh(started: number): Promise<RefreshOutcome> {
+  logGpsRefresh('refresh-start', 'web')
   const controller = new AbortController()
   inflightAbort = controller
   let response: Response
@@ -137,24 +143,24 @@ async function performRefresh(started: number): Promise<RefreshOutcome> {
       signal: controller.signal,
     })
   } catch {
-    return traceRefresh(started === epoch ? 'transient' : 'stale')
+    return observedRefresh(traceRefresh(started === epoch ? 'transient' : 'stale'))
   } finally {
     if (inflightAbort === controller) inflightAbort = null
   }
-  if (started !== epoch) return traceRefresh('stale')
-  if (response.status === 401 || response.status === 400) return traceRefresh('invalid')
-  if (response.status >= 500) return traceRefresh('transient')
-  if (!response.ok) return traceRefresh('invalid')
+  if (started !== epoch) return observedRefresh(traceRefresh('stale'))
+  if (response.status === 401 || response.status === 400) return observedRefresh(traceRefresh('invalid'))
+  if (response.status >= 500) return observedRefresh(traceRefresh('transient'))
+  if (!response.ok) return observedRefresh(traceRefresh('invalid'))
   const body = (await response.json().catch(() => null)) as { access_token?: unknown } | null
   const token = body?.access_token
   if (typeof token !== 'string' || token.length === 0) {
-    return traceRefresh(started === epoch ? 'invalid' : 'stale')
+    return observedRefresh(traceRefresh(started === epoch ? 'invalid' : 'stale'))
   }
-  if (started !== epoch) return traceRefresh('stale')
+  if (started !== epoch) return observedRefresh(traceRefresh('stale'))
   setStoredAccessToken(token)
-  if (started !== epoch) return traceRefresh('stale')
+  if (started !== epoch) return observedRefresh(traceRefresh('stale'))
   listeners.forEach((listener) => listener(token))
-  return traceRefresh('refreshed')
+  return observedRefresh(traceRefresh('refreshed'))
 }
 
 export async function refreshSession(): Promise<RefreshOutcome> {
@@ -179,22 +185,23 @@ export async function refreshSession(): Promise<RefreshOutcome> {
 }
 
 async function performAndroidRefresh(started: number): Promise<RefreshOutcome> {
+  logGpsRefresh('refresh-start', 'web')
   let outcome: Awaited<ReturnType<typeof refreshAndroidSession>>
   try {
     outcome = await refreshAndroidSession()
   } catch {
-    return traceRefresh(started === epoch ? 'transient' : 'stale')
+    return observedRefresh(traceRefresh(started === epoch ? 'transient' : 'stale'))
   }
-  if (started !== epoch) return traceRefresh('stale')
+  if (started !== epoch) return observedRefresh(traceRefresh('stale'))
   if (outcome.kind === 'refreshed' && outcome.accessToken) {
     setStoredAccessToken(outcome.accessToken)
-    if (started !== epoch) return traceRefresh('stale')
+    if (started !== epoch) return observedRefresh(traceRefresh('stale'))
     const token = outcome.accessToken
     listeners.forEach((listener) => listener(token))
-    return traceRefresh('refreshed')
+    return observedRefresh(traceRefresh('refreshed'))
   }
-  if (outcome.kind === 'transient' || outcome.kind === 'stale') return traceRefresh(outcome.kind)
-  return traceRefresh('invalid')
+  if (outcome.kind === 'transient' || outcome.kind === 'stale') return observedRefresh(traceRefresh(outcome.kind))
+  return observedRefresh(traceRefresh('invalid'))
 }
 
 export function logoutBrowserSession(): void {

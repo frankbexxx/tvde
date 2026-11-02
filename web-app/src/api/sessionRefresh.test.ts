@@ -12,6 +12,8 @@ vi.mock('../sentry', () => ({
 
 import { apiFetch } from './client'
 import { LS_AUTH_CONTRACT, LS_ACCESS_TOKEN } from '../utils/authStorage'
+import { currentSessionFamily, noteSessionFamily, resetSessionFamilyForTests } from '../features/driver/driverSessionFamily'
+import { resetGpsNeedLogForTests } from '../services/gpsNeedLog'
 import {
   prepareNewCredentials,
   refreshSession,
@@ -147,7 +149,7 @@ describe('renovação web', () => {
     localStorage.setItem(LS_AUTH_CONTRACT, 'web')
     localStorage.setItem(LS_ACCESS_TOKEN, 'old')
     let refreshParked = false
-    let release = (): void => {}
+    let release = (): void => { }
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string) => {
@@ -187,5 +189,75 @@ describe('renovação web', () => {
     expect(on401).toHaveBeenCalledTimes(1)
     expect(await refreshSession()).toBe('invalid')
     window.removeEventListener('api:401', on401)
+  })
+
+  it('uma renovação web bem-sucedida observa início e sucesso sem mexer na família nem no GPS', async () => {
+    localStorage.setItem(LS_AUTH_CONTRACT, 'web')
+    localStorage.setItem(LS_ACCESS_TOKEN, 'old')
+    noteSessionFamily('family-a')
+    const refresh = vi.fn()
+    const setServiceNeeded = vi.fn()
+    window.vamulaGps = {
+      nativeOwnsUpload: () => false,
+      beginWebViewSend: () => true,
+      endWebViewSend: () => undefined,
+      sessionChanged: () => undefined,
+      logGpsRefresh: refresh,
+      setServiceNeeded,
+    }
+    let statusCalls = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (String(url).includes('/auth/refresh')) return jsonResponse(200, { access_token: 'access-new' })
+        statusCalls += 1
+        if (statusCalls === 1) return jsonResponse(401, { detail: 'invalid_token' })
+        return jsonResponse(200, { ok: true })
+      }),
+    )
+    await expect(apiFetch('/driver/status')).resolves.toEqual({ ok: true })
+    expect(refresh.mock.calls).toEqual([
+      ['refresh-start', 'web'],
+      ['refresh-success', 'web'],
+    ])
+    expect(currentSessionFamily()).toBe('family-a')
+    expect(setServiceNeeded).not.toHaveBeenCalled()
+    expect(JSON.stringify(refresh.mock.calls)).not.toContain('access-')
+    delete window.vamulaGps
+    resetGpsNeedLogForTests()
+    resetSessionFamilyForTests()
+  })
+
+  it('uma renovação web falhada observa a falha e não chama o serviço', async () => {
+    localStorage.setItem(LS_AUTH_CONTRACT, 'web')
+    localStorage.setItem(LS_ACCESS_TOKEN, 'old')
+    noteSessionFamily('family-a')
+    const refresh = vi.fn()
+    const setServiceNeeded = vi.fn()
+    window.vamulaGps = {
+      nativeOwnsUpload: () => false,
+      beginWebViewSend: () => true,
+      endWebViewSend: () => undefined,
+      sessionChanged: () => undefined,
+      logGpsRefresh: refresh,
+      setServiceNeeded,
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (String(url).includes('/auth/refresh')) return jsonResponse(401, { detail: 'invalid_grant' })
+        return jsonResponse(401, { detail: 'invalid_token' })
+      }),
+    )
+    await expect(apiFetch('/driver/status')).rejects.toMatchObject({ status: 401 })
+    expect(refresh.mock.calls).toEqual([
+      ['refresh-start', 'web'],
+      ['refresh-failed', 'web'],
+    ])
+    expect(currentSessionFamily()).toBe('family-a')
+    expect(setServiceNeeded).not.toHaveBeenCalled()
+    delete window.vamulaGps
+    resetGpsNeedLogForTests()
+    resetSessionFamilyForTests()
   })
 })

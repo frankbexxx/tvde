@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { logGpsNeed, resetGpsNeedLogForTests, type GpsNeedLogFlags } from './gpsNeedLog'
+import { logGpsNeed, logGpsRefresh, resetGpsNeedLogForTests, type GpsNeedLogFlags } from './gpsNeedLog'
 
 const flags: GpsNeedLogFlags = {
   needed: true,
@@ -99,6 +99,36 @@ describe('logGpsNeed', () => {
     logGpsNeed('gap-expired', { ...flags, needed: false, hydrated: false })
     expect(sink.mock.calls.map((call) => call[0])).toEqual(['token-absent', 'gap-expired'])
     expect(sink.mock.calls[1][1]).toBe(true)
+  })
+})
+
+describe('logGpsRefresh', () => {
+  it('entrega início, sucesso e falha com origem fechada e não comanda o serviço', () => {
+    const refresh = vi.fn()
+    const setServiceNeeded = vi.fn()
+    const sessionChanged = vi.fn()
+    window.vamulaGps = {
+      ...bridge(vi.fn()),
+      logGpsRefresh: refresh,
+      setServiceNeeded,
+      sessionChanged,
+    }
+    logGpsRefresh('refresh-start', 'web')
+    logGpsRefresh('refresh-success', 'native')
+    logGpsRefresh('refresh-failed', 'web')
+    logGpsRefresh('refresh-start', 'family-c3d425bb')
+    logGpsRefresh('eyJhbGciOiJIUzI1NiJ9.segredo', 'web')
+    logGpsRefresh('refresh-start', '+351911111111')
+    expect(refresh.mock.calls).toEqual([
+      ['refresh-start', 'web'],
+      ['refresh-success', 'native'],
+      ['refresh-failed', 'web'],
+    ])
+    expect(JSON.stringify(refresh.mock.calls)).not.toContain('family-')
+    expect(JSON.stringify(refresh.mock.calls)).not.toContain('eyJ')
+    expect(JSON.stringify(refresh.mock.calls)).not.toContain('+351')
+    expect(setServiceNeeded).not.toHaveBeenCalled()
+    expect(sessionChanged).not.toHaveBeenCalled()
   })
 })
 

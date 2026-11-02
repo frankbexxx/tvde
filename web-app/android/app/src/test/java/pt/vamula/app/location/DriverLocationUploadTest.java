@@ -238,6 +238,57 @@ public class DriverLocationUploadTest {
     }
 
     @Test
+    public void refreshDiagnosticDoesNotRepeatFixesOrLeaveTheClosedSet() {
+        List<String> lines = new ArrayList<>();
+        DriverLocationNeedTrace.setClockForTests(() -> 1000L);
+        DriverLocationNeedTrace.setSinkForTests((tag, line) -> lines.add(line));
+        try {
+            ScriptedHttp quiet = new ScriptedHttp(204);
+            DriverLocationUpload plain = armed(quiet, new ScriptAuth());
+            assertTrue(plain.offer(sample(NOW - 1_000L, "fused"), NOW));
+            plain.drain(NOW);
+            assertTrue(lines.isEmpty());
+
+            DriverLocationNeedTrace.setEnabledForTests(true);
+            ScriptedHttp http = new ScriptedHttp(401, 204);
+            ScriptAuth auth = new ScriptAuth();
+            DriverLocationUpload upload = armed(http, auth);
+            assertTrue(upload.offer(sample(NOW - 1_000L, "fused"), NOW));
+            upload.drain(NOW);
+            assertEquals(
+                java.util.Arrays.asList(
+                    "time=1000 code=refresh-start origin=native",
+                    "time=1000 code=refresh-success origin=native"
+                ),
+                lines
+            );
+            assertEquals("family-test", auth.sessionFamily());
+            assertEquals(1, upload.sent());
+            String joined = String.join("\n", lines);
+            assertFalse(joined.contains("access-"));
+            assertFalse(joined.contains("family-"));
+            assertFalse(joined.contains(String.valueOf(LATITUDE)));
+
+            lines.clear();
+            ScriptAuth invalid = new ScriptAuth();
+            invalid.refreshKind = DriverLocationAuth.Refresh.Kind.INVALID;
+            DriverLocationUpload rejected = armed(new ScriptedHttp(401), invalid);
+            assertTrue(rejected.offer(sample(NOW - 1_000L, "fused"), NOW));
+            rejected.drain(NOW);
+            assertEquals(
+                java.util.Arrays.asList(
+                    "time=1000 code=refresh-start origin=native",
+                    "time=1000 code=refresh-failed origin=native"
+                ),
+                lines
+            );
+            assertEquals("family-test", invalid.sessionFamily());
+        } finally {
+            DriverLocationNeedTrace.resetForTests();
+        }
+    }
+
+    @Test
     public void invalidRefreshDoesNotPostAgainAndStopDropsTheQueue() throws Exception {
         ScriptedHttp http = new ScriptedHttp(401);
         ScriptAuth auth = new ScriptAuth();

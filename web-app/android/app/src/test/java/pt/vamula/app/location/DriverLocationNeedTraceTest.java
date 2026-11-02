@@ -50,12 +50,15 @@ public class DriverLocationNeedTraceTest {
     @After
     public void cleanup() {
         DriverLocationHost.resetForTests();
+        DriverLocationNeedTrace.resetForTests();
     }
 
     @Test
     public void debugAndReleaseStaySilent() {
         assertFalse(BuildConfig.GPS_NEED_TRACE);
         DriverLocationNeedTrace.record("token-absent", true, false, true, false, false);
+        DriverLocationNeedTrace.recordRefresh("refresh-start", "web");
+        DriverLocationNeedTrace.recordRefresh("refresh-success", "native");
         DriverLocationHost.resumed();
         DriverLocationHost.setNeeded(true);
         DriverLocationCommands.sessionChanged();
@@ -149,6 +152,40 @@ public class DriverLocationNeedTraceTest {
         assertEquals(1, lines.size());
         assertEquals("time=1000 code=bridge-failed", lines.get(0));
         assertTrue(LINE.matcher(lines.get(0)).matches());
+        assertTrue(DriverLocationHost.needed());
+        assertEquals(0, stops.get());
+    }
+
+    @Test
+    public void refreshEventsStayClosedAndDoNotCommandTheService() {
+        DriverLocationNeedTrace.recordRefresh("refresh-start", "web");
+        assertTrue(lines.isEmpty());
+        DriverLocationNeedTrace.setEnabledForTests(true);
+        DriverLocationHost.resumed();
+        DriverLocationHost.setNeeded(true);
+        DriverLocationNeedTrace.recordRefresh("refresh-start", "web");
+        DriverLocationNeedTrace.recordRefresh("refresh-success", "native");
+        DriverLocationNeedTrace.recordRefresh("refresh-failed", "web");
+        DriverLocationNeedTrace.recordRefresh("refresh-start", "family-c3d425bb");
+        DriverLocationNeedTrace.recordRefresh("eyJhbGciOiJIUzI1NiJ9.payload", "web");
+        DriverLocationNeedTrace.recordRefresh("refresh-start", "+351911111111");
+        new GpsOwnershipJs().logGpsRefresh("refresh-success", "web");
+        new GpsOwnershipJs().logGpsRefresh("logout", "native");
+        assertEquals(
+            java.util.Arrays.asList(
+                "time=1000 code=refresh-start origin=web",
+                "time=1000 code=refresh-success origin=native",
+                "time=1000 code=refresh-failed origin=web",
+                "time=1000 code=refresh-success origin=web"
+            ),
+            lines
+        );
+        for (String line : lines) {
+            assertFalse(line.contains("family-"));
+            assertFalse(line.contains("eyJ"));
+            assertFalse(line.contains("+351"));
+            assertFalse(line.contains("lat"));
+        }
         assertTrue(DriverLocationHost.needed());
         assertEquals(0, stops.get());
     }

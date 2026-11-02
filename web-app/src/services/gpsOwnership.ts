@@ -26,6 +26,8 @@ interface GpsOwnershipBridge {
   ) => void
   /** Sem argumentos. O nativo só escreve isto na variante de diagnóstico. */
   logGpsNeedBridgeFault?: () => void
+  /** Diagnóstico de renovação. Código e origem fechados. Não comanda o serviço. */
+  logGpsRefresh?: (code: string, origin: string) => void
   serviceNeeded?: () => boolean
   serviceOperational?: () => boolean
   serviceCollecting?: () => boolean
