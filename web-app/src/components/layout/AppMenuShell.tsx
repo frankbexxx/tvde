@@ -35,7 +35,13 @@ export function AppSideMenuSheet({
       >
         <SheetTitle className="sr-only">{srTitle}</SheetTitle>
         <SheetDescription className="sr-only">{srDescription}</SheetDescription>
-        <div className="h-dvh flex flex-col">{children}</div>
+        {/* Uma margem só: max() usa o inset do browser ou o do Capacitor, sem os somar. */}
+        <div
+          data-testid="app-menu-safe-frame"
+          className="box-border flex h-dvh min-h-0 flex-col pt-[max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,0px))] pb-[max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px))]"
+        >
+          {children}
+        </div>
       </SheetContent>
     </Sheet>
   )
@@ -54,7 +60,7 @@ export function AppMenuHeader({
 }) {
   const { t } = useTranslation('common')
   return (
-    <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
+    <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
       <div className="flex min-w-0 items-center gap-2">
         {onBack ? (
           <button type="button" onClick={onBack} className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}>
@@ -185,5 +191,5 @@ export function AppMenuLogoutRow({ onClick, testId }: { onClick: () => void; tes
 }
 
 export function AppMenuBody({ children }: { children: ReactNode }) {
-  return <div className="flex-1 overflow-y-auto overscroll-contain space-y-4 p-4">{children}</div>
+  return <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-4 p-4">{children}</div>
 }
