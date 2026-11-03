@@ -54,5 +54,9 @@ export default defineConfig({
       testMatch: /(api-flows|pet-feature)\.spec\.ts$/,
       dependencies: ['e2e-ui'],
     },
+    {
+      name: 'sos-visual',
+      testMatch: /sos-panel-safe-area\.spec\.ts$/,
+    },
   ],
 })
