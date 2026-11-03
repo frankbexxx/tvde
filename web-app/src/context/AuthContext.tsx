@@ -52,7 +52,12 @@ import {
 import { logoutBrowserSession, refreshSession, subscribeAccessToken } from '../api/sessionRefresh'
 import { noteLoginSession } from '../features/driver/driverSessionFamily'
 import { noteE2eInjectedSession } from '../features/auth/e2eSessionFamily'
-import { androidRefreshEnabled, restoreAndroidSession } from '../features/auth/androidSession'
+import {
+  androidRefreshEnabled,
+  publishRestoredSessionFamily,
+  restoreAndroidSession,
+  restoredSessionFamilyId,
+} from '../features/auth/androidSession'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { AUTH_LOGOUT_EVENT } from '../constants/events'
 import { writePassengerActiveTripIdToStorage } from '../features/passenger/passengerActiveTripRecovery'
@@ -372,6 +377,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const nextPayload = next ? parseJwtPayload(next) : null
                 if (again === 'refreshed' && next && nextPayload?.sub && !isJwtExpired(next)) {
                   applyLoginSessionFromJwt(next, (nextPayload.role as Role) ?? 'passenger', nextPayload.sub)
+                  const restoredFamily = restoredSessionFamilyId(restored)
+                  if (restoredFamily) publishRestoredSessionFamily(restoredFamily)
                   rememberAccount(restored.phone, restored.displayName)
                   addLog('Sessão restaurada', 'success')
                 } else if (again === 'transient' || again === 'stale') {
@@ -387,6 +394,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   addLog('Sessão revogada', 'info')
                 }
               } else {
+                const restoredFamily = restoredSessionFamilyId(restored)
+                if (restoredFamily) publishRestoredSessionFamily(restoredFamily)
                 rememberAccount(restored.phone, restored.displayName)
                 addLog('Sessão restaurada', 'success')
               }

@@ -230,6 +230,68 @@ export function isNativeDriverLocationServiceNeeded(opts: DriverLocationNeed & {
   return keepsNativeLocationServiceDuringTokenGap(opts)
 }
 
+/**
+ * Ordem para a ponte. `unknown` ainda não sabe: não arranca nem pára.
+ * `needed` e `not-needed` são decisões confirmadas.
+ * A família no SessionVault continua a ser a barreira nativa.
+ */
+export type NativeLocationOrder = 'unknown' | 'needed' | 'not-needed'
+
+/** `unknown` é o valor inicial. Offline e Online só depois de POST 2xx ou GET aceite. */
+export type DriverAvailabilityConfirmation = 'unknown' | 'offline' | 'online'
+
+export function nativeLocationServiceOrder(opts: {
+  sessionKey: string | null
+  /** null só na primeira observação desta montagem. */
+  observedSessionKey: string | null
+  tokenPresent: boolean
+  hydrated: boolean
+  offline: boolean
+  syncing: boolean
+  confirmedActiveTrip?: boolean
+  tripStatus?: string | null
+  tripRecoveryUnresolved?: boolean
+  /** Auth ainda a restaurar. Não é logout. */
+  sessionPending: boolean
+  legalBlocked: boolean
+  legalAllows: boolean
+  documentsBlocked: boolean
+  documentsAllow: boolean
+  /**
+   * Offline confirmado pelo backend. O `offline` inicial da montagem fica `unknown`
+   * e não chega a esta revogação.
+   */
+  availabilityConfirmation: DriverAvailabilityConfirmation
+}): NativeLocationOrder {
+  if (opts.observedSessionKey !== null && opts.observedSessionKey !== opts.sessionKey) {
+    return 'not-needed'
+  }
+  if (opts.legalBlocked || opts.documentsBlocked) return 'not-needed'
+  if (!opts.sessionPending && !opts.tokenPresent && !opts.hydrated && opts.sessionKey != null) {
+    return 'not-needed'
+  }
+  if (!opts.sessionPending && opts.sessionKey == null && !opts.tokenPresent) {
+    return 'not-needed'
+  }
+  const tripHoldsCollection = opts.confirmedActiveTrip === true || opts.tripRecoveryUnresolved === true
+  if (opts.availabilityConfirmation === 'offline' && !tripHoldsCollection) {
+    return 'not-needed'
+  }
+  if (!opts.hydrated) return 'unknown'
+  const availability = isNativeDriverLocationServiceNeeded({
+    token: opts.tokenPresent ? 'present' : null,
+    offline: opts.offline,
+    hydrated: opts.hydrated,
+    syncing: opts.syncing,
+    confirmedActiveTrip: opts.confirmedActiveTrip,
+    tripStatus: opts.tripStatus,
+    tripRecoveryUnresolved: opts.tripRecoveryUnresolved,
+  })
+  if (!availability) return 'not-needed'
+  if (!opts.legalAllows || !opts.documentsAllow) return 'unknown'
+  return 'needed'
+}
+
 export function shouldBootstrapDriverActiveTrip(opts: {
   token: string | null
   sessionRole: string | null | undefined

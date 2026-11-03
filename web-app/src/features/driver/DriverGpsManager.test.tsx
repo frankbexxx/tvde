@@ -9,7 +9,8 @@ import { resetGpsNeedLogForTests } from '../../services/gpsNeedLog'
 import { logGpsNeed } from '../../services/gpsNeedLog'
 import { DriverGpsManager } from './DriverGpsManager'
 import { DriverLocationProvider, useDriverLocation } from './DriverLocationProvider'
-import { noteSessionFamily, resetSessionFamilyForTests } from './driverSessionFamily'
+import { publishRestoredSessionFamily } from '../auth/androidSession'
+import { currentSessionFamily, noteSessionFamily, resetSessionFamilyForTests } from './driverSessionFamily'
 
 const auth = vi.hoisted(() => ({
   token: 'access-1' as string | null,
@@ -91,20 +92,41 @@ function Shell() {
   return <p>shell</p>
 }
 
-function AllowDocuments() {
+function ApplyAvailability({
+  mode,
+}: {
+  mode: 'local-offline' | 'confirmed-offline'
+}) {
   const location = useDriverLocation()
   useEffect(() => {
-    location.publishDocumentEligibility('clear')
-  }, [location])
+    if (mode === 'confirmed-offline') location.confirmAvailability(false)
+    else location.setOffline(true)
+  }, [location, mode])
   return null
 }
 
-function Harness({ shell, tripId = null as string | null }: { shell: boolean; tripId?: string | null }) {
+function DocumentGate({ mode }: { mode: 'clear' | 'blocked' }) {
+  const location = useDriverLocation()
+  useEffect(() => {
+    location.publishDocumentEligibility(mode)
+  }, [location, mode])
+  return null
+}
+
+function Harness({
+  shell,
+  tripId = null as string | null,
+  documents = 'clear' as 'clear' | 'blocked',
+}: {
+  shell: boolean
+  tripId?: string | null
+  documents?: 'clear' | 'blocked'
+}) {
   return (
     <ActiveTripProvider>
       <SetTrip id={tripId} />
       <DriverLocationProvider>
-        <AllowDocuments />
+        <DocumentGate mode={documents} />
         <DriverGpsManager />
         {shell ? <Shell /> : null}
       </DriverLocationProvider>
@@ -145,7 +167,7 @@ describe('DriverGpsManager', () => {
     await act(async () => {
       await Promise.resolve()
     })
-    expect(serviceCalls).toEqual([false])
+    expect(serviceCalls).toEqual([])
   })
 
   it('Online confirmado arranca uma vez e o remount do ecrã não envia false', async () => {
@@ -158,7 +180,7 @@ describe('DriverGpsManager', () => {
     view.rerender(<Harness shell={false} />)
     expect(needLogs).toContain('ui-detached')
     expect(serviceCalls.at(-1)).toBe(true)
-    expect(serviceCalls.filter((call) => call === false).length).toBe(1)
+    expect(serviceCalls.filter((call) => call === false).length).toBe(0)
 
     view.rerender(<Harness shell />)
     expect(serviceCalls.at(-1)).toBe(true)
@@ -261,6 +283,95 @@ describe('DriverGpsManager', () => {
     view.rerender(<Harness shell={false} />)
     expect(serviceCalls.at(-1)).toBe(false)
     expect(needLogs).toContain('legal-blocked')
+  })
+
+  it('hidratação Offline pára e não chega a arrancar', async () => {
+    status.mockResolvedValue({ is_available: false })
+    openLegal()
+    render(<Harness shell={false} />)
+    await waitFor(() => expect(serviceCalls).toEqual([false]))
+    expect(serviceCalls).not.toContain(true)
+  })
+
+  it('bloqueio documental confirmado pára', async () => {
+    status.mockResolvedValue({ is_available: true })
+    openLegal()
+    const view = render(<Harness shell={false} />)
+    await waitFor(() => expect(serviceCalls.at(-1)).toBe(true))
+    view.rerender(<Harness shell={false} documents="blocked" />)
+    await waitFor(() => expect(serviceCalls.at(-1)).toBe(false))
+  })
+
+  it('Offline local sem confirmação não envia ordem e o POST confirmado pára uma vez', async () => {
+    status.mockImplementation(() => new Promise(() => { }))
+    openLegal()
+    const sessionChanges: string[] = []
+    window.vamulaGps = {
+      ...window.vamulaGps!,
+      sessionChanged: () => {
+        sessionChanges.push('session-changed')
+      },
+    }
+    const view = render(
+      <ActiveTripProvider>
+        <DriverLocationProvider>
+          <ApplyAvailability mode="local-offline" />
+          <DriverGpsManager />
+        </DriverLocationProvider>
+      </ActiveTripProvider>,
+    )
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(serviceCalls).toEqual([])
+
+    view.rerender(
+      <ActiveTripProvider>
+        <DriverLocationProvider>
+          <ApplyAvailability mode="confirmed-offline" />
+          <DriverGpsManager />
+        </DriverLocationProvider>
+      </ActiveTripProvider>,
+    )
+    await waitFor(() => expect(serviceCalls).toEqual([false]))
+    expect(sessionChanges).toEqual([])
+  })
+
+  it('restaurar a família permite hidratar e não chama sessionChanged', async () => {
+    resetSessionFamilyForTests()
+    status.mockResolvedValue({ is_available: true })
+    const sessionChanges: string[] = []
+    window.vamulaGps = {
+      ...window.vamulaGps!,
+      sessionChanged: () => {
+        sessionChanges.push('session-changed')
+      },
+    }
+    const view = render(<Harness shell={false} />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(serviceCalls).toEqual([])
+    expect(currentSessionFamily()).toBeNull()
+
+    act(() => {
+      expect(publishRestoredSessionFamily('family-vault')).toBe(true)
+      noteLegalAcceptancePhase('open', 'family-vault')
+    })
+    view.rerender(<Harness shell={false} />)
+    await waitFor(() => expect(serviceCalls).toEqual([true]))
+    expect(currentSessionFamily()).toBe('family-vault')
+    expect(sessionChanges).toEqual([])
+  })
+
+  it('falha de rede durante a hidratação não autoriza arranque', async () => {
+    status.mockRejectedValue(new Error('network'))
+    openLegal()
+    render(<Harness shell={false} />)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000)
+    })
+    expect(serviceCalls).toEqual([])
   })
 
   it('o dashboard não é um segundo caller', () => {

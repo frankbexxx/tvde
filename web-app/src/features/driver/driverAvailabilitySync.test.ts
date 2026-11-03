@@ -10,6 +10,7 @@ import {
   isDriverLocationNeeded,
   isDriverLocationReportingOperational,
   isNativeDriverLocationServiceNeeded,
+  nativeLocationServiceOrder,
   keepsNativeLocationServiceDuringTokenGap,
   recoveryAfterTripProbe,
   resolveDriverTripPollFailure,
@@ -22,6 +23,139 @@ import {
   shouldHydrateAvailability,
   shouldSkipRemoteAvailabilityApply,
 } from './driverAvailabilitySync'
+
+describe('nativeLocationServiceOrder', () => {
+  const present = {
+    sessionKey: 'family-a',
+    observedSessionKey: 'family-a',
+    tokenPresent: true,
+    hydrated: false,
+    offline: true,
+    syncing: false,
+    sessionPending: false,
+    legalBlocked: false,
+    legalAllows: true,
+    documentsBlocked: false,
+    documentsAllow: true,
+    availabilityConfirmation: 'unknown' as const,
+  }
+
+  it('hidratação desconhecida não pára nem arranca', () => {
+    expect(nativeLocationServiceOrder(present)).toBe('unknown')
+    expect(nativeLocationServiceOrder({ ...present, observedSessionKey: null })).toBe('unknown')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      offline: true,
+      availabilityConfirmation: 'unknown',
+    })).toBe('unknown')
+  })
+
+  it('Offline confirmado sem viagem pára mesmo sem hidratação', () => {
+    expect(nativeLocationServiceOrder({
+      ...present,
+      hydrated: false,
+      offline: true,
+      availabilityConfirmation: 'offline',
+    })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      hydrated: false,
+      offline: true,
+      availabilityConfirmation: 'offline',
+      confirmedActiveTrip: true,
+      tripStatus: 'accepted',
+    })).toBe('unknown')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      hydrated: false,
+      offline: true,
+      availabilityConfirmation: 'offline',
+      tripRecoveryUnresolved: true,
+    })).toBe('unknown')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      hydrated: true,
+      offline: true,
+      availabilityConfirmation: 'offline',
+      confirmedActiveTrip: true,
+      tripStatus: 'ongoing',
+    })).toBe('needed')
+  })
+
+  it('Online confirmado mantém a necessidade', () => {
+    expect(nativeLocationServiceOrder({
+      ...present,
+      hydrated: true,
+      offline: false,
+    })).toBe('needed')
+  })
+
+  it('Offline confirmado, outra família, logout, bloqueio e lacuna fechada param', () => {
+    expect(nativeLocationServiceOrder({ ...present, hydrated: true, offline: true })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      observedSessionKey: 'family-a',
+      sessionKey: 'family-b',
+      hydrated: true,
+      offline: false,
+    })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      sessionKey: null,
+      tokenPresent: false,
+      hydrated: true,
+      offline: false,
+    })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({ ...present, hydrated: true, offline: false, legalBlocked: true })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({ ...present, hydrated: false, offline: false, legalBlocked: true })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({ ...present, hydrated: true, offline: false, documentsBlocked: true })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({ ...present, hydrated: false, offline: false, documentsBlocked: true })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      observedSessionKey: 'family-a',
+      sessionKey: 'family-b',
+      hydrated: false,
+      offline: false,
+    })).toBe('not-needed')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      tokenPresent: false,
+      hydrated: false,
+    })).toBe('not-needed')
+  })
+
+  it('falha de rede e arranque a frio não autorizam', () => {
+    expect(nativeLocationServiceOrder({
+      ...present,
+      sessionPending: true,
+      tokenPresent: false,
+      sessionKey: null,
+      observedSessionKey: null,
+    })).toBe('unknown')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      legalAllows: false,
+      hydrated: true,
+      offline: false,
+    })).toBe('unknown')
+  })
+
+  it('viagem activa com Offline continua e a lacuna curta também', () => {
+    expect(nativeLocationServiceOrder({
+      ...present,
+      hydrated: true,
+      offline: true,
+      confirmedActiveTrip: true,
+      tripStatus: 'accepted',
+    })).toBe('needed')
+    expect(nativeLocationServiceOrder({
+      ...present,
+      hydrated: true,
+      offline: false,
+      tokenPresent: false,
+    })).toBe('needed')
+  })
+})
 
 describe('offlineFromBackendAvailability', () => {
   it('backend is_available=false → UI offline mesmo com localStorage online', () => {

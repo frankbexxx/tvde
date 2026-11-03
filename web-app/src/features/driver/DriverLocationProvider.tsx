@@ -19,6 +19,7 @@ import {
   isEndedDriverTrip,
   isNativeDriverLocationServiceNeeded,
   recoveryAfterTripProbe,
+  type DriverAvailabilityConfirmation,
   type DriverDocumentEligibility,
 } from './driverAvailabilitySync'
 import { currentSessionFamily, subscribeSessionFamily } from './driverSessionFamily'
@@ -49,8 +50,13 @@ type DriverLocationContextValue = {
   tripRecoveryUnresolved: boolean
   /** Decisão já calculada. Nesta etapa ninguém a envia para a ponte. */
   locationNeeded: boolean
+  documentEligibility: DriverDocumentEligibility
+  documentsPreviouslyAuthorized: boolean
   /** Estado devolvido por POST/GET. Um valor local anterior à resposta não entra. */
   noteTripStatus: (status: string | null) => void
+  /** `unknown` até um POST 2xx ou um GET aceite. O offline inicial não conta. */
+  availabilityConfirmation: DriverAvailabilityConfirmation
+  confirmAvailability: (isAvailable: boolean) => void
 }
 
 const DriverLocationContext = createContext<DriverLocationContextValue | null>(null)
@@ -65,6 +71,7 @@ export function DriverLocationProvider({ children }: { children: ReactNode }) {
   const { driverActiveTripId } = useActiveTrip()
   const [family, setFamily] = useState(currentSessionFamily)
   const [offline, setOffline] = useState(true)
+  const [availabilityConfirmation, setAvailabilityConfirmation] = useState<DriverAvailabilityConfirmation>('unknown')
   const [syncing, setSyncing] = useState(false)
   const offlineRef = useRef(offline)
   const syncingRef = useRef(syncing)
@@ -97,6 +104,7 @@ export function DriverLocationProvider({ children }: { children: ReactNode }) {
   if (sessionChanged) {
     setAppliedKey(sessionKey)
     setOffline(true)
+    setAvailabilityConfirmation('unknown')
     setSyncing(false)
     setConfirmedActiveTrip(false)
     setReported(null)
@@ -138,14 +146,26 @@ export function DriverLocationProvider({ children }: { children: ReactNode }) {
     getToggleEpoch: () => epochRef.current,
     getLocalOffline: () => offlineRef.current,
     getStatus: (current) => getDriverStatus(current),
-    onApplied: (status) => emit({ type: 'applied', status }),
+    onApplied: (status) => {
+      emit({ type: 'applied', status })
+      if (typeof status?.is_available === 'boolean') {
+        setAvailabilityConfirmation(status.is_available ? 'online' : 'offline')
+      }
+    },
     onFailed: () => emit({ type: 'failed' }),
     onOffline: setOffline,
-    onSessionCleared: () => emit({ type: 'cleared' }),
+    onSessionCleared: () => {
+      emit({ type: 'cleared' })
+      setAvailabilityConfirmation('unknown')
+    },
   })
 
   const bumpToggleEpoch = useCallback(() => {
     epochRef.current += 1
+  }, [])
+  const confirmAvailability = useCallback((isAvailable: boolean) => {
+    setAvailabilityConfirmation(isAvailable ? 'online' : 'offline')
+    setOffline(!isAvailable)
   }, [])
   const publishDocumentEligibility = useCallback((next: DriverDocumentEligibility) => {
     setDocumentEligibility((current) => (current === next ? current : next))
@@ -208,7 +228,11 @@ export function DriverLocationProvider({ children }: { children: ReactNode }) {
       confirmedActiveTrip,
       tripRecoveryUnresolved,
       locationNeeded,
+      documentEligibility,
+      documentsPreviouslyAuthorized: previouslyAuthorized,
       noteTripStatus,
+      availabilityConfirmation,
+      confirmAvailability,
     }),
     [
       offline,
@@ -222,7 +246,11 @@ export function DriverLocationProvider({ children }: { children: ReactNode }) {
       confirmedActiveTrip,
       tripRecoveryUnresolved,
       locationNeeded,
+      documentEligibility,
+      previouslyAuthorized,
       noteTripStatus,
+      availabilityConfirmation,
+      confirmAvailability,
     ],
   )
 

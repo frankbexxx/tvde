@@ -116,6 +116,7 @@ public final class VaultChannel {
             putText(response, "role", outcome.role);
             putText(response, "phone", outcome.phone);
             putText(response, "display_name", outcome.displayName);
+            putText(response, "session_id", outcome.familyId);
         }
         return response.emit();
     }

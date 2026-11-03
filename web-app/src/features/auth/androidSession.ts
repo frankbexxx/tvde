@@ -20,6 +20,8 @@ interface VaultReply {
   role?: string
   phone?: string
   display_name?: string
+  /** Família devolvida pelo cofre em ready ou refreshed. Ausente nos outros resultados. */
+  session_id?: string
   revoked?: boolean
 }
 
@@ -41,6 +43,8 @@ export interface AndroidRestoreResult {
   role: string | null
   phone: string | null
   displayName: string | null
+  /** Família do registo restaurado. Não é uma família antiga da página. */
+  familyId: string | null
 }
 
 let probed = false
@@ -176,6 +180,7 @@ export async function restoreAndroidSession(): Promise<AndroidRestoreResult> {
     role: null,
     phone: null,
     displayName: null,
+    familyId: null,
   }
   try {
     const reply = await call('restore', { api_base: apiBase() })
@@ -190,10 +195,32 @@ export async function restoreAndroidSession(): Promise<AndroidRestoreResult> {
       role: typeof reply.role === 'string' ? reply.role : null,
       phone: typeof reply.phone === 'string' ? reply.phone : null,
       displayName: typeof reply.display_name === 'string' ? reply.display_name : null,
+      familyId: typeof reply.session_id === 'string' ? reply.session_id : null,
     }
   } catch {
     return empty
   }
+}
+
+/** Só ready ou refreshed, e só com o id não vazio que o cofre devolveu. */
+export function restoredSessionFamilyId(restored: {
+  kind: AndroidRestoreResult['kind']
+  familyId: string | null
+}): string | null {
+  if (restored.kind !== 'ready' && restored.kind !== 'refreshed') return null
+  if (typeof restored.familyId !== 'string') return null
+  const id = restored.familyId.trim()
+  return id.length > 0 ? id : null
+}
+
+/**
+ * Publica a família já restaurada. Não faz commit nem sessionChanged:
+ * a primeira publicação, com a chave observada ainda nula, não é troca de família.
+ */
+export function publishRestoredSessionFamily(familyId: string): boolean {
+  const id = familyId.trim()
+  if (!id) return false
+  return noteSessionFamily(id)
 }
 
 function apiBase(): string {

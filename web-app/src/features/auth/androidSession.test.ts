@@ -15,6 +15,11 @@ import { logoutBrowserSession, prepareNewCredentials, resetSessionRefreshState }
 import { LS_ACCESS_TOKEN, LS_AUTH_CONTRACT, LS_REFRESH_TOKEN } from '../../utils/authStorage'
 import { AUTH_LOGOUT_EVENT } from '../../constants/events'
 import {
+  publishRestoredSessionFamily,
+  restoreAndroidSession,
+  restoredSessionFamilyId,
+} from './androidSession'
+import {
   currentSessionFamily,
   noteSessionFamily,
   resetSessionFamilyForTests,
@@ -183,7 +188,7 @@ describe('circuito Android', () => {
 
   it('uma resposta atrasada não substitui a sessão mais recente', async () => {
     localStorage.setItem(LS_ACCESS_TOKEN, 'old')
-    let release: (reply: Record<string, unknown>) => void = () => {}
+    let release: (reply: Record<string, unknown>) => void = () => { }
     let parked = false
     installBridge((message) => {
       if (message.op === 'contract') return { ok: true, contract: 'android-refresh-v1' }
@@ -221,5 +226,41 @@ describe('circuito Android', () => {
     await apiFetch('/config')
     logoutBrowserSession()
     await vi.waitFor(() => expect(revoked).toBe(false))
+  })
+
+  it('a restauração devolve a família do cofre e publicá-la não muda a sessão nativa', async () => {
+    installBridge((message) => {
+      if (message.op === 'contract') return { ok: true, contract: 'android-refresh-v1' }
+      if (message.op === 'restore') {
+        return {
+          ok: true,
+          kind: 'ready',
+          access_token: 'access-restored',
+          role: 'driver',
+          session_id: 'family-vault',
+        }
+      }
+      return { ok: false }
+    })
+    const sessionChanges: string[] = []
+    window.vamulaGps = {
+      nativeOwnsUpload: () => false,
+      beginWebViewSend: () => true,
+      endWebViewSend: () => undefined,
+      sessionChanged: () => {
+        sessionChanges.push('session-changed')
+      },
+      setServiceNeeded: () => undefined,
+    }
+    const restored = await restoreAndroidSession()
+    expect(restored.kind).toBe('ready')
+    expect(restored.familyId).toBe('family-vault')
+    expect(restoredSessionFamilyId(restored)).toBe('family-vault')
+    expect(restoredSessionFamilyId({ kind: 'revoked', familyId: 'family-vault' })).toBeNull()
+    expect(restoredSessionFamilyId({ kind: 'ready', familyId: '   ' })).toBeNull()
+    expect(publishRestoredSessionFamily(restored.familyId ?? '')).toBe(true)
+    expect(currentSessionFamily()).toBe('family-vault')
+    expect(sessionChanges).toEqual([])
+    delete window.vamulaGps
   })
 })
