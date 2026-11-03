@@ -395,6 +395,7 @@ export function DriverDashboard() {
     setSyncing: setAvailabilitySyncing,
     hydrated: availabilityHydrated,
     bumpToggleEpoch,
+    confirmAvailability,
     publishDocumentEligibility,
     subscribeAvailability,
     activeTripPoll: driverActiveTripPoll,
@@ -631,7 +632,7 @@ export function DriverDashboard() {
           void requestTripNotificationPermission()
           const serverAvailability = await setDriverOnline(token)
           const nextOffline = offlineFromBackendAvailability(serverAvailability.is_available)
-          setOffline(nextOffline)
+          confirmAvailability(serverAvailability.is_available)
           if (nextOffline) {
             addLog('Servidor manteve indisponível; a procurar viagem activa', 'info')
             setStatus('A sincronizar viagem…')
@@ -646,7 +647,7 @@ export function DriverDashboard() {
           }
         } else {
           await setDriverOffline(token)
-          setOffline(true)
+          confirmAvailability(false)
           addLog('Toggle: Offline', 'info')
           setStatus('Offline')
         }
@@ -678,6 +679,7 @@ export function DriverDashboard() {
       setStatus,
       restoreDriverActiveTrip,
       bumpToggleEpoch,
+      confirmAvailability,
       setOffline,
       setAvailabilitySyncing,
     ]

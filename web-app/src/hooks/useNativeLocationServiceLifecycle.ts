@@ -1,10 +1,16 @@
 import { useEffect, useRef } from 'react'
-import { isNativeDriverLocationServiceNeeded } from '../features/driver/driverAvailabilitySync'
+import {
+  isNativeDriverLocationServiceNeeded,
+  type NativeLocationOrder,
+} from '../features/driver/driverAvailabilitySync'
 import { logGpsNeed } from '../services/gpsNeedLog'
 import { syncNativeLocationServiceNeed } from '../services/gpsOwnership'
 import { traceLifecycle, traceReactDecision } from '../services/gpsNeedTrace'
 
-/** Liga a necessidade já calculada ao serviço. Não arma o upload. */
+/**
+ * Entrega a ordem já calculada. `unknown` não chama a ponte.
+ * Desmontar a interface não é Offline nem logout: o cleanup não pára o serviço.
+ */
 export function useNativeLocationServiceLifecycle(opts: {
   token: string | null
   offline: boolean
@@ -14,13 +20,19 @@ export function useNativeLocationServiceLifecycle(opts: {
   tripRecoveryUnresolved?: boolean
   confirmedActiveTrip?: boolean
   tripStatus?: string | null
-  /** Quando presente, a decisão já foi tomada. O hook só a entrega. */
+  /** Quando presente, substitui o booleano legado. */
+  order?: NativeLocationOrder
+  /** Legado dos testes que ainda passam a decisão booleana. */
   needed?: boolean
 }): boolean {
-  const needed = opts.needed ?? isNativeDriverLocationServiceNeeded(opts)
+  const derived = opts.needed ?? isNativeDriverLocationServiceNeeded(opts)
+  const order: NativeLocationOrder = opts.order ?? (derived ? 'needed' : 'not-needed')
+  const needed = order === 'needed'
   const optsRef = useRef(opts)
+  const neededRef = useRef(needed)
   useEffect(() => {
     optsRef.current = opts
+    neededRef.current = needed
   })
   traceReactDecision({
     needed,
@@ -35,17 +47,17 @@ export function useNativeLocationServiceLifecycle(opts: {
       const current = optsRef.current
       traceLifecycle('unmount')
       logGpsNeed('dashboard-unmount', {
-        needed: false,
+        needed: neededRef.current,
         tokenPresent: Boolean(current.token),
         hydrated: current.hydrated,
         offline: current.offline,
         syncing: current.syncing,
       })
-      syncNativeLocationServiceNeed(false)
     }
   }, [])
   useEffect(() => {
-    syncNativeLocationServiceNeed(needed)
-  }, [needed])
+    if (order === 'unknown') return
+    syncNativeLocationServiceNeed(order === 'needed')
+  }, [order])
   return needed
 }

@@ -389,13 +389,13 @@ describe('reprodução da paragem L4', () => {
     expect(androidCalls()).toEqual(bridgeCalls)
   })
 
-  it('desmontar e remontar a mesma família pára e volta a pedir o serviço', async () => {
+  it('desmontar e remontar a mesma família não usa o cleanup como paragem', async () => {
     const first = await onlineWith({})
     first.unmount()
-    expect(bridgeCalls.at(-1)).toBe(false)
+    expect(bridgeCalls.at(-1)).toBe(true)
     render(<SessionHarness token="access-1" family="family-a" getStatus={() => Promise.resolve({ is_available: true })} />)
     await waitFor(() => expect(bridgeCalls.at(-1)).toBe(true))
-    expect(bridgeCalls).toEqual([false, true, false, false, true])
+    expect(bridgeCalls).toEqual([false, true, false, true])
     expect(androidCalls()).toEqual(bridgeCalls)
     expect(events.filter((event) => event.kind === 'lifecycle').map((event) => event.phase)).toEqual([
       'mount',

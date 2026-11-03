@@ -64,6 +64,7 @@ public class DriverLocationReactivationTest {
         int grants = harness.http.urls.size();
         String reply = VaultChannel.reply(harness.vault, harness.coordinator, true, VaultOrigin.APP_ORIGIN, refresh("family-a"));
         assertTrue(reply.contains("\"kind\":\"refreshed\""));
+        assertTrue(reply.contains("\"session_id\":\"family-a\""));
         assertTrue(DriverLocationService.uploadArmed());
         assertEquals("family-a", DriverLocationService.grantedFamily());
         assertEquals(1, DriverLocationService.queuedFixes());
@@ -99,6 +100,7 @@ public class DriverLocationReactivationTest {
 
         String empty = VaultChannel.reply(harness.vault, harness.coordinator, true, VaultOrigin.APP_ORIGIN, op("restore"));
         assertTrue(empty.contains("\"kind\":\"empty\""));
+        assertFalse(empty.contains("session_id"));
         assertFalse(DriverLocationService.uploadArmed());
     }
 
@@ -131,6 +133,7 @@ public class DriverLocationReactivationTest {
             restore(DriverLocationEndpoint.configured())
         );
         assertTrue(restored.contains("\"kind\":\"ready\""));
+        assertTrue(restored.contains("\"session_id\":\"family-a\""));
         assertTrue(DriverLocationService.uploadArmed());
         assertEquals("family-a", DriverLocationService.grantedFamily());
         assertEquals(0, DriverLocationService.queuedFixes());

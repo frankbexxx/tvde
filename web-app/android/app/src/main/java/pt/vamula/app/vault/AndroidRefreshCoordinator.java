@@ -112,7 +112,7 @@ public final class AndroidRefreshCoordinator {
         } catch (VaultKeyException exception) {
             return Outcome.failure(exception.kind() == VaultKeyException.Kind.INVALIDATED ? "unavailable" : "transient");
         }
-        return identity("refreshed", access, body.text("user_id"), body.text("role"), body.text("phone"), body.text("display_name"));
+        return identity("refreshed", access, body.text("user_id"), body.text("role"), body.text("phone"), body.text("display_name"), family);
     }
 
     public Outcome logout(String apiBase) {
@@ -156,7 +156,7 @@ public final class AndroidRefreshCoordinator {
         }
         if (!accessExpired(current.accessToken())) {
             JwtIdentity identity = jwtIdentity(current.accessToken());
-            return identity("ready", current.accessToken(), identity.userId, identity.role, null, null);
+            return identity("ready", current.accessToken(), identity.userId, identity.role, null, null, current.familyId());
         }
         Outcome renewed = refresh(apiBase);
         if ("refreshed".equals(renewed.kind)) {
@@ -246,13 +246,22 @@ public final class AndroidRefreshCoordinator {
         return headers;
     }
 
-    private static Outcome identity(String kind, String accessToken, String userId, String role, String phone, String displayName) {
+    private static Outcome identity(
+        String kind,
+        String accessToken,
+        String userId,
+        String role,
+        String phone,
+        String displayName,
+        String familyId
+    ) {
         Outcome outcome = Outcome.ok(kind);
         outcome.accessToken = accessToken;
         outcome.userId = userId;
         outcome.role = role;
         outcome.phone = phone;
         outcome.displayName = displayName;
+        outcome.familyId = blankToNull(familyId);
         return outcome;
     }
 
@@ -325,6 +334,8 @@ public final class AndroidRefreshCoordinator {
         public String role;
         public String phone;
         public String displayName;
+        /** Família lida no cofre nesta recuperação ou renovação. Não vem de estado anterior da página. */
+        public String familyId;
         public boolean revoked;
         /** Verdadeiro quando o logout retirou a sessão observada, ou quando o cofre já estava vazio. */
         public boolean cleared;

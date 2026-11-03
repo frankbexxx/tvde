@@ -61,7 +61,10 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <!-- Não tem intent-filter. Nada o arranca sem um start explícito da própria app. -->
+        <!-- Não tem intent-filter. Nada o arranca sem um start explícito da própria app.
+             stopWithTask fica true: remover a task da vista recente pára o serviço
+             mesmo com o motorista Online. onPause não usa esta flag e não pára a recolha.
+             Não se altera nesta etapa. -->
         <service
             android:name=".location.DriverLocationService"
             android:exported="false"

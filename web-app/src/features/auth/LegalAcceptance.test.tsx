@@ -202,7 +202,7 @@ describe('legal acceptance UX', () => {
     expect(bridgeCalls).toEqual([true])
   })
 
-  it('logout bloqueia o acesso e pára o GPS', async () => {
+  it('logout bloqueia o acesso e desmontar a sonda não pára o GPS', async () => {
     noteSessionFamily('family-a')
     authState = { ...authState, token: 'jwt-1', userId: 'user-1' }
     getLegalAcceptance.mockResolvedValue(accepted())
@@ -214,7 +214,7 @@ describe('legal acceptance UX', () => {
     view.rerender(<SessionFrame />)
     expect(screen.getByText('login')).toBeInTheDocument()
     expect(screen.queryByText('shell jwt-1')).not.toBeInTheDocument()
-    expect(bridgeCalls).toEqual([true, false])
+    expect(bridgeCalls).toEqual([true])
   })
 
   it('troca de família exige nova verificação legal', async () => {

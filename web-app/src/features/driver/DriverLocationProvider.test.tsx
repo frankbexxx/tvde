@@ -236,13 +236,13 @@ describe('DriverLocationProvider', () => {
     await waitFor(() => expect(status.mock.calls.at(-1)?.[0]).toBe('access-2'))
   })
 
-  it('desmontar e remontar o ecrã conserva o estado e o cleanup ainda pára o serviço', async () => {
+  it('desmontar e remontar o ecrã conserva o estado e o cleanup não pára o serviço', async () => {
     status.mockResolvedValue({ is_available: true })
     const view = render(<Harness screen />)
     await waitFor(() => expect(serviceCalls.at(-1)).toBe(true))
 
     view.rerender(<Harness screen={false} />)
-    expect(serviceCalls.at(-1)).toBe(false)
+    expect(serviceCalls.at(-1)).toBe(true)
     expect(view.getByTestId('watch').textContent).toBe('yes|on')
 
     view.rerender(<Harness screen />)

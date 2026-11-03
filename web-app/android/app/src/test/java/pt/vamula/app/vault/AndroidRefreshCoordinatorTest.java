@@ -204,12 +204,15 @@ public class AndroidRefreshCoordinatorTest {
         assertEquals("ready", ready.kind);
         assertEquals("user-1", ready.userId);
         assertEquals("driver", ready.role);
+        assertEquals("family-1", ready.familyId);
         assertTrue(harness.http.calls.isEmpty());
 
         Harness expired = harness();
         expired.coordinator.commit(API, jwt(1L), "refresh-1", "family-1", null);
         expired.http.queue(0, "");
-        assertEquals("offline", expired.coordinator.restore(API).kind);
+        AndroidRefreshCoordinator.Outcome offline = expired.coordinator.restore(API);
+        assertEquals("offline", offline.kind);
+        assertEquals(null, offline.familyId);
         assertTrue(expired.vault.read().isPresent());
 
         expired.http.queue(401, "{\"detail\":\"invalid_grant\"}");
