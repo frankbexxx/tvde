@@ -8,6 +8,7 @@ import { HEADER_ROTATING_HINT_KEYS } from '@/components/layout/headerRotatingHin
 import { fetchRotacionalMessages } from '@/api/rotacional'
 import { useTranslation } from 'react-i18next'
 import { formatHeaderDateTime } from '@/i18n/format'
+import { SAFE_AREA_TOP_CLASS } from '@/components/layout/safeAreaInsets'
 
 function headerRoleLabel(role: string, t: (k: string) => string): string {
   if (role === 'driver') return t('common:roleDriver')
@@ -99,7 +100,7 @@ export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
   if (compact) {
     return (
       <header
-        className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0"
+        className={`sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0 ${SAFE_AREA_TOP_CLASS}`}
         data-testid="app-header"
       >
         <BrandStripe />
@@ -130,7 +131,7 @@ export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
 
   return (
     <header
-      className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0"
+      className={`sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0 ${SAFE_AREA_TOP_CLASS}`}
       data-testid="app-header"
     >
       <BrandStripe />

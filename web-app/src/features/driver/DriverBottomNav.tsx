@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Euro, Home, Inbox, Menu } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { SAFE_AREA_PB_CLASS } from '@/components/layout/safeAreaInsets'
 
 export type DriverShellTab = 'home' | 'earnings' | 'inbox' | 'menu'
 
@@ -47,7 +48,7 @@ export function DriverBottomNav({ active, onSelect, inboxUnreadCount = 0 }: Driv
 
   return (
     <nav
-      className="flex w-full border-t border-border bg-background/95 backdrop-blur-sm safe-area-pb"
+      className={`flex w-full border-t border-border bg-background/95 backdrop-blur-sm ${SAFE_AREA_PB_CLASS}`}
       aria-label={t('nav.aria')}
     >
       {item('home', 'driver-bottom-nav-home', t('nav.home'), Home)}

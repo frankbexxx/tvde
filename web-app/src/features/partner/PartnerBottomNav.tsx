@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Home, Inbox, Menu, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { SAFE_AREA_PB_CLASS } from '@/components/layout/safeAreaInsets'
 import type { PartnerShellTab } from './partnerShellContext'
 
 type PartnerBottomNavProps = {
@@ -46,7 +47,7 @@ export function PartnerBottomNav({ active, onSelect, inboxUnreadCount = 0 }: Par
 
   return (
     <nav
-      className="flex w-full border-t border-border bg-background/95 backdrop-blur-sm safe-area-pb"
+      className={`flex w-full border-t border-border bg-background/95 backdrop-blur-sm ${SAFE_AREA_PB_CLASS}`}
       aria-label={t('nav.aria')}
     >
       {item('home', 'partner-bottom-nav-home', t('nav.home'), Home)}
