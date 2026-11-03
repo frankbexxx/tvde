@@ -79,9 +79,11 @@
   }
 }
 
-/* Safe area for mobile bottom buttons (notch/home indicator) */
+/* Inset de sistema, uma vez: o maior entre env() e a variável do Capacitor.
+   Não somar os dois. O teclado não entra aqui: o viewport pede
+   interactive-widget=resizes-content e a barra fixed acompanha o fundo. */
 .safe-area-pb {
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
 }
 
 /* Toast 409 slide-down animation */

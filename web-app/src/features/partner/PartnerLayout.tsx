@@ -6,6 +6,7 @@ import { PartnerBottomNav } from './PartnerBottomNav'
 import { isPartnerFleetNavScreen, isPartnerDeepRoute } from './partnerMenuNav'
 import { PartnerShellProvider, usePartnerShell, type PartnerShellTab } from './partnerShellContext'
 import { PartnerWorkspaceProvider } from './partnerWorkspace'
+import { PARTNER_CONTENT_CLEARANCE_CLASS } from '../../components/layout/safeAreaInsets'
 
 function PartnerLayoutInner() {
   const {
@@ -83,7 +84,10 @@ function PartnerLayoutInner() {
 
   return (
     <div className="relative mx-auto flex min-h-full w-full max-w-lg flex-col">
-      <div className={`flex min-h-0 flex-1 flex-col ${menuOpen ? '' : 'pb-[52px]'}`}>
+      <div
+        data-testid="partner-shell-scroll"
+        className={`flex min-h-0 flex-1 flex-col ${menuOpen ? '' : PARTNER_CONTENT_CLEARANCE_CLASS}`}
+      >
         <Outlet />
       </div>
       {!menuOpen ? (

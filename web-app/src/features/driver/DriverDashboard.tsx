@@ -74,6 +74,7 @@ import {
 } from '../../services/locationService'
 import { getOsrmRouteMeta, getRoute } from '../../services/routingService'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
+import { SAFE_AREA_PB_CLASS } from '../../components/layout/safeAreaInsets'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { HintLine } from '../../components/layout/HintLine'
 import { ActionPanel } from '../../components/layout/ActionPanel'
@@ -1612,7 +1613,7 @@ export function DriverDashboard() {
       driverMapStageLayout ? (
         !menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} inboxUnreadCount={inboxUnreadCount} /> : undefined
       ) : (
-        <div className="w-full border-t border-border bg-background shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
+        <div className={`w-full border-t border-border bg-background shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]${menuOpen ? ` ${SAFE_AREA_PB_CLASS}` : ''}`}>
           <div className="px-4 pt-2 pb-1">{driverActiveTripPanel}</div>
           {!menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} inboxUnreadCount={inboxUnreadCount} /> : null}
         </div>

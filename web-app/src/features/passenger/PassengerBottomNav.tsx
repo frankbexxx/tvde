@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { History, Home, Menu, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { SAFE_AREA_PB_CLASS } from '@/components/layout/safeAreaInsets'
 
 export type PassengerShellTab = 'home' | 'history' | 'account' | 'menu'
 
@@ -30,7 +31,7 @@ export function PassengerBottomNav({ active, onSelect }: PassengerBottomNavProps
 
   return (
     <nav
-      className="flex w-full border-t border-border bg-background/95 backdrop-blur-sm safe-area-pb"
+      className={`flex w-full border-t border-border bg-background/95 backdrop-blur-sm ${SAFE_AREA_PB_CLASS}`}
       aria-label={t('nav.aria')}
     >
       {item('home', 'passenger-bottom-nav-home', t('nav.home'), Home)}

@@ -1,4 +1,8 @@
 import type { ReactNode } from 'react'
+import {
+  SCREEN_INSET_SCROLL_CLEARANCE_CLASS,
+  SCREEN_SCROLL_CLEARANCE_CLASS,
+} from './safeAreaInsets'
 
 interface ScreenContainerProps {
   children: ReactNode
@@ -41,9 +45,9 @@ export function ScreenContainer({
     bottomButton && bottomBarVariant === 'flush'
       ? immersive && mainScrollable === false
         ? 'pb-0'
-        : 'pb-[calc(10rem+env(safe-area-inset-bottom,0px))]'
+        : SCREEN_SCROLL_CLEARANCE_CLASS
       : bottomButton
-        ? 'pb-20'
+        ? SCREEN_INSET_SCROLL_CLEARANCE_CLASS
         : 'pb-8'
   const widthShell = fullBleed ? 'w-full max-w-none' : 'max-w-md mx-auto w-full'
   const mainColumn =
@@ -75,8 +79,8 @@ export function ScreenContainer({
                   ? 'w-full'
                   : 'max-w-md mx-auto w-full'
                 : fullBleed
-                  ? 'w-full px-4 py-4 safe-area-pb'
-                  : 'max-w-md mx-auto px-5 py-4 safe-area-pb'
+                  ? 'w-full px-4 pt-4'
+                  : 'max-w-md mx-auto px-5 pt-4'
             }
           >
             {bottomButton}

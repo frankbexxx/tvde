@@ -7,6 +7,7 @@ import { buildPartnerVehicleDocumentAlert } from './partnerVehicleDocumentAlerts
 import { usePartnerShell } from './partnerShellContext'
 import { PartnerHomeDashboard } from './screens/PartnerHomeDashboard'
 import { usePartnerWorkspace } from './partnerWorkspace'
+import { PARTNER_ALERT_OFFSET_CLASS } from '../../components/layout/safeAreaInsets'
 
 export function PartnerHome() {
   const { t } = useTranslation('partner')
@@ -40,7 +41,10 @@ export function PartnerHome() {
         <PartnerHomeDashboard metrics={metrics} trips={trips} onRefresh={() => void load()} />
       </div>
 
-      <div className="sticky bottom-[52px] z-10 border-t border-amber-500/35 bg-amber-500/10 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+      <div
+        data-testid="partner-home-alerts"
+        className={`sticky z-10 border-t border-amber-500/35 bg-amber-500/10 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] ${menuOpen ? 'bottom-0' : PARTNER_ALERT_OFFSET_CLASS}`}
+      >
         <h3 className="text-sm font-medium text-foreground">{t('home.alertsTitle')}</h3>
         <p className="text-[11px] text-foreground/75 mt-0.5">
           {t('home.alertsHint')}
