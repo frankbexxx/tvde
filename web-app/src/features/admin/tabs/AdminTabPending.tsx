@@ -95,6 +95,7 @@ export function AdminTabPending(props: AdminTabPendingProps) {
 
       <Dialog open={confirm !== null} onOpenChange={(open) => { if (!open) closeConfirm() }}>
         <DialogContent
+          safeArea
           data-testid="admin-pending-approve-dialog"
           className="max-w-[min(100vw-1.5rem,28rem)]"
           onEscapeKeyDown={(event) => {

@@ -66,5 +66,9 @@ export default defineConfig({
       name: 'p2-visual',
       testMatch: /p2-safe-area\.spec\.ts$/,
     },
+    {
+      name: 'p3-visual',
+      testMatch: /p3-safe-area\.spec\.ts$/,
+    },
   ],
 })

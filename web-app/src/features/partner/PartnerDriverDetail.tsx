@@ -838,11 +838,12 @@ export function PartnerDriverDetail() {
 
       <Dialog open={removeOpen} onOpenChange={(open) => { if (!open) closeRemoveDialog() }}>
         <DialogContent
+          safeArea
           data-testid="partner-driver-remove-dialog"
           className="max-w-[min(100vw-1.5rem,28rem)]"
           onOpenAutoFocus={(event) => {
             event.preventDefault()
-            removeCancelRef.current?.focus()
+            removeCancelRef.current?.focus({ preventScroll: true })
           }}
           onEscapeKeyDown={(event) => {
             if (removeBusyRef.current) event.preventDefault()

@@ -27,24 +27,45 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+/**
+ * Opt-in. A caixa fica dentro dos insets. O p-6 mantém os 24 px
+ * e não soma o inset outra vez. Com insets a zero, o máximo continua 85dvh.
+ * Perfil e Definições aplicam a classe. Os outros diálogos usam `safeArea`.
+ */
+export const MOBILE_DIALOG_SAFE_CLASS =
+  "max-h-[min(85dvh,calc(100dvh-max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,0px))-max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px))))]"
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     /** Optional classes for the overlay (e.g. raise z-index above Sheet `z-[60]`). */
     overlayClassName?: string
+    /**
+     * Opt-in: a caixa respeita os insets e o miolo faz scroll.
+     * O Fechar fica no padding da caixa, fora do miolo, por isso continua visível.
+     */
+    safeArea?: boolean
   }
->(({ className, overlayClassName, children, ...props }, ref) => (
+>(({ className, overlayClassName, children, safeArea = false, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        safeArea && "flex flex-col overflow-hidden",
+        safeArea && MOBILE_DIALOG_SAFE_CLASS,
         className
       )}
       {...props}
     >
-      {children}
+      {safeArea ? (
+        <div data-testid="dialog-safe-scroll" className="grid min-h-0 gap-4 overflow-y-auto">
+          {children}
+        </div>
+      ) : (
+        children
+      )}
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
@@ -108,14 +129,6 @@ const DialogDescription = React.forwardRef<
   />
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
-
-/**
- * Opt-in dos diálogos móveis de Perfil e Definições.
- * A caixa fica dentro dos insets. O p-6 do conteúdo mantém os 24 px
- * e não soma o inset outra vez. Com insets a zero, o máximo continua 85dvh.
- */
-export const MOBILE_DIALOG_SAFE_CLASS =
-  "max-h-[min(85dvh,calc(100dvh-max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,0px))-max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px))))]"
 
 export {
   Dialog,
