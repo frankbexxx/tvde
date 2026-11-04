@@ -36,6 +36,7 @@ import { isMockLocationModeEnabled } from '../../dev/mockLocation'
 import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
+import { SCREEN_INSET_SCROLL_CLEARANCE_CLASS } from '../../components/layout/safeAreaInsets'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { MapActionRow } from '../../components/layout/MapActionRow'
 import { BTN_SECONDARY, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_DISMISS_BTN_ERROR, MAP_HINT_WARNING, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_TRIP, MAP_TOAST_ERROR, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
@@ -1412,7 +1413,7 @@ export function PassengerDashboard() {
           <MapStage
             testId="passenger-map-stage"
             className="min-h-0 flex-1"
-            overlayClassName="relative z-10 flex min-h-0 flex-1 flex-col justify-end p-2 pb-20 pointer-events-none"
+            overlayClassName={`relative z-10 flex min-h-0 flex-1 flex-col justify-end px-2 pt-2 ${SCREEN_INSET_SCROLL_CLEARANCE_CLASS} pointer-events-none`}
             topOverlay={
               (import.meta.env.DEV && isMockLocationModeEnabled()) || geolocationUsedFallback ? (
                 <div className={MAP_BANNER_STACK}>

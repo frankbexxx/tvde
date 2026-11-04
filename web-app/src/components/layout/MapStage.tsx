@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { MapView, type MapViewProps } from '../../maps/MapView'
+import { SCREEN_INSET_SCROLL_CLEARANCE_CLASS } from './safeAreaInsets'
 
 export type MapStageMapProps = Omit<MapViewProps, 'className' | 'fillContainer'>
 
@@ -26,7 +27,7 @@ export function MapStage({
   children,
   className = '',
   testId,
-  overlayClassName = 'relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-2 pb-20 pointer-events-none',
+  overlayClassName = `relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 px-2 pt-2 ${SCREEN_INSET_SCROLL_CLEARANCE_CLASS} pointer-events-none`,
 }: MapStageProps) {
   const hasOverlay = topOverlay != null || bottomOverlay != null || children != null
 

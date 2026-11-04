@@ -58,5 +58,9 @@ export default defineConfig({
       name: 'sos-visual',
       testMatch: /sos-panel-safe-area\.spec\.ts$/,
     },
+    {
+      name: 'p1-visual',
+      testMatch: /p1-safe-area\.spec\.ts$/,
+    },
   ],
 })

@@ -57,6 +57,7 @@ import { AdminTabMetrics } from './tabs/AdminTabMetrics'
 import { AdminTabOps } from './tabs/AdminTabOps'
 import { AdminTabHealth } from './tabs/AdminTabHealth'
 import { AdminTabUsers } from './tabs/AdminTabUsers'
+import { ADMIN_PAGE_CLASS } from '../../components/layout/safeAreaInsets'
 
 interface PendingUser {
   phone: string
@@ -771,14 +772,14 @@ export function AdminDashboard() {
 
   if (loading && users.length === 0) {
     return (
-      <div className="p-4">
+      <div className={ADMIN_PAGE_CLASS} data-testid="admin-page-root">
         <p className="text-foreground/80">A carregar...</p>
       </div>
     )
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className={ADMIN_PAGE_CLASS} data-testid="admin-page-root">
       <div className="mb-4">
         <AppRouteModeSwitch />
       </div>

@@ -20,6 +20,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useAuth } from '@/context/AuthContext'
 import { AccountPanel } from '@/features/account/AccountPanel'
 import { DRIVER_OPEN_ACCOUNT_EVENT } from '@/features/driver/driverShellEvents'
+import { SAFE_AREA_SHEET_BOTTOM_CLASS } from '@/components/layout/safeAreaInsets'
 
 export function ProfileButton() {
   const { t } = useTranslation('common')
@@ -86,7 +87,7 @@ export function ProfileButton() {
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl min-h-[200px] max-h-[85dvh] overflow-y-auto safe-area-pb"
+        className={`rounded-t-2xl min-h-[200px] max-h-[85dvh] overflow-y-auto ${SAFE_AREA_SHEET_BOTTOM_CLASS}`}
       >
         <SheetHeader>
           <SheetTitle>{t('profilePanel.accountTitle')}</SheetTitle>
