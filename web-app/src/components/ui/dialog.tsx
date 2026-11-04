@@ -109,6 +109,14 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
+/**
+ * Opt-in dos diálogos móveis de Perfil e Definições.
+ * A caixa fica dentro dos insets. O p-6 do conteúdo mantém os 24 px
+ * e não soma o inset outra vez. Com insets a zero, o máximo continua 85dvh.
+ */
+export const MOBILE_DIALOG_SAFE_CLASS =
+  "max-h-[min(85dvh,calc(100dvh-max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,0px))-max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px))))]"
+
 export {
   Dialog,
   DialogPortal,
