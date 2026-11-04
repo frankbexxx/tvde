@@ -37,9 +37,10 @@ import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { SCREEN_INSET_SCROLL_CLEARANCE_CLASS } from '../../components/layout/safeAreaInsets'
+import { PASSENGER_MAP_FRAME_CLASS, PassengerMapNotices } from './PassengerMapNotices'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { MapActionRow } from '../../components/layout/MapActionRow'
-import { BTN_SECONDARY, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_DISMISS_BTN_ERROR, MAP_HINT_WARNING, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_TRIP, MAP_TOAST_ERROR, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
+import { BTN_SECONDARY, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_TRIP, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapStage } from '../../components/layout/MapStage'
@@ -1401,7 +1402,7 @@ export function PassengerDashboard() {
       ) : null}
 
       <div
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        className={PASSENGER_MAP_FRAME_CLASS}
         data-testid="passenger-main"
       >
 
@@ -1670,27 +1671,12 @@ export function PassengerDashboard() {
           />
         </div>
 
+        <PassengerMapNotices
+          error={error}
+          historyPollFault={historyPollFault}
+          onDismissError={() => setError(null)}
+        />
       </div>
-
-      {error && (
-        <div className={`pointer-events-auto absolute inset-x-0 top-14 z-30 mx-3 ${MAP_TOAST_ERROR} pr-14 text-base`}>
-          <button
-            type="button"
-            className={`${MAP_DISMISS_BTN_ERROR} min-h-11 min-w-11`}
-            aria-label="Fechar mensagem de erro"
-            onClick={() => setError(null)}
-          >
-            ×
-          </button>
-          <p className="leading-snug">{error}</p>
-        </div>
-      )}
-
-      {historyPollFault && (
-        <div className={`pointer-events-auto absolute inset-x-0 top-14 z-30 mx-3 ${MAP_HINT_WARNING}`}>
-          Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
-        </div>
-      )}
 
       {token && activeTripId ? (
         <EmergencySosPanel

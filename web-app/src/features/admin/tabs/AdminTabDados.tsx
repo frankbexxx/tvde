@@ -370,11 +370,12 @@ export function AdminTabDados(props: AdminTabDadosProps) {
         }}
       >
         <DialogContent
+          safeArea
           data-testid="admin-driver-reject-dialog"
           className="max-w-[min(100vw-1.5rem,28rem)]"
           onOpenAutoFocus={(event) => {
             event.preventDefault()
-            rejectCancelRef.current?.focus()
+            rejectCancelRef.current?.focus({ preventScroll: true })
           }}
           onEscapeKeyDown={(event) => {
             if (rejectBusyRef.current) event.preventDefault()

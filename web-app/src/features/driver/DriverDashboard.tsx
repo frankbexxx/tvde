@@ -2790,6 +2790,7 @@ export function DriverDashboard() {
         }}
       >
         <DialogContent
+          safeArea
           data-testid="driver-reject-attendable-panel"
           overlayClassName="z-[70]"
           className="z-[70] max-w-[min(100vw-1.5rem,420px)]"
@@ -4501,9 +4502,10 @@ function DriverOperationsMenu({
         }}
       >
         <DialogContent
+          safeArea
           data-testid="driver-history-trip-detail"
           overlayClassName="z-[70]"
-          className="z-[70] max-w-[min(100vw-1.5rem,520px)] max-h-[85dvh] overflow-y-auto"
+          className="z-[70] max-w-[min(100vw-1.5rem,520px)]"
         >
           <DialogHeader>
             <DialogTitle>{t('opsMenu.tripDetail.title')}</DialogTitle>

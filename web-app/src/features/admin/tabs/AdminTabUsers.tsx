@@ -85,11 +85,12 @@ function AccountActionDialog(props: {
   return (
     <Dialog open={props.open} onOpenChange={(open) => { if (!open) props.onCancel() }}>
       <DialogContent
+        safeArea
         data-testid={props.testId}
         className="max-w-[min(100vw-1.5rem,28rem)]"
         onOpenAutoFocus={(event) => {
           event.preventDefault()
-          cancelRef.current?.focus()
+          cancelRef.current?.focus({ preventScroll: true })
         }}
         onEscapeKeyDown={(event) => {
           if (props.busy) event.preventDefault()
