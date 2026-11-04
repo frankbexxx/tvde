@@ -2113,7 +2113,8 @@ export function DriverDashboard() {
                   </>
                 }
               >
-                <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-2 pb-20 pointer-events-none">
+                {/* A barra e o inset ficam no overlay do MapStage. Aqui só o padding de desenho. */}
+                <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-2 pointer-events-none">
                   <div className={`${MAP_BANNER_STACK} pointer-events-auto`}>
                     {docsConfirmedBlock && activeTripId ? driverDocsBlockedHintBox : null}
                     <DriverGpsOfferBanner offline={offline} notice={gpsOfferNotice} />

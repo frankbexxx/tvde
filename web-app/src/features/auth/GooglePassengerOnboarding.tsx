@@ -4,6 +4,14 @@ import { BTN_PRIMARY_RADIUS, SURFACE_RADIUS } from '../../components/layout/info
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { apiDetailCode, normalizePtPhone } from './googleOnboarding'
+import {
+  SAFE_AREA_BOTTOM_WITH_1REM,
+  SAFE_AREA_SCROLL_PB_WITH_4_5REM,
+  SAFE_AREA_TOP_WITH_1REM,
+} from '../../components/layout/safeAreaInsets'
+
+const ONBOARDING_FRAME = `box-border flex min-h-dvh flex-col bg-background px-4 ${SAFE_AREA_TOP_WITH_1REM} ${SAFE_AREA_BOTTOM_WITH_1REM}`
+const ONBOARDING_SCROLL = `box-border flex h-dvh max-h-dvh min-h-0 flex-col overflow-y-auto overscroll-y-contain bg-background px-4 ${SAFE_AREA_TOP_WITH_1REM} ${SAFE_AREA_BOTTOM_WITH_1REM} ${SAFE_AREA_SCROLL_PB_WITH_4_5REM}`
 
 export type GoogleOnboardingSubmit = {
   idToken: string
@@ -60,7 +68,7 @@ export function GooglePassengerOnboarding({
 
   if (!idToken) {
     return (
-      <div className="box-border flex min-h-dvh flex-col bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className={ONBOARDING_FRAME}>
         <div className={`m-auto w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden p-6`}>
           <p className="text-sm text-foreground" data-testid="google-onboarding-restart">
             {t('googleOnboardingRestart')}
@@ -97,19 +105,19 @@ export function GooglePassengerOnboarding({
     try {
       const session = linkRequired
         ? await onLink({
-            idToken,
-            nonce,
-            phone: normalizedPhone,
-            password,
-            acceptLegal: true,
-          })
+          idToken,
+          nonce,
+          phone: normalizedPhone,
+          password,
+          acceptLegal: true,
+        })
         : await onComplete({
-            idToken,
-            nonce,
-            name: cleanedName,
-            phone: normalizedPhone,
-            acceptLegal: true,
-          })
+          idToken,
+          nonce,
+          name: cleanedName,
+          phone: normalizedPhone,
+          acceptLegal: true,
+        })
       const role =
         session !== null && typeof session === 'object' && 'role' in session
           ? String((session as { role?: unknown }).role ?? '')
@@ -140,7 +148,7 @@ export function GooglePassengerOnboarding({
   if (mode === 'choice') {
     return (
       <div
-        className="box-border flex min-h-dvh flex-col bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className={ONBOARDING_FRAME}
         data-testid="google-account-choice"
       >
         <div className={`m-auto w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
@@ -177,10 +185,10 @@ export function GooglePassengerOnboarding({
 
   return (
     <div
-      className="box-border flex min-h-dvh flex-col overflow-y-auto bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
+      className={ONBOARDING_SCROLL}
       data-testid="google-onboarding"
     >
-      <div className={`m-auto w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
+      <div className={`m-auto w-full max-w-sm shrink-0 bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
         <BrandStripe />
         <form
           className="p-6 flex flex-col gap-4"

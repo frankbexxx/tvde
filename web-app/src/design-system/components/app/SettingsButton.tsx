@@ -29,6 +29,7 @@ import { DevTools } from "@/features/shared/DevTools"
 import {
   DRIVER_OPEN_ACTIVITY_LOG_EVENT,
 } from "@/features/driver/driverShellEvents"
+import { SAFE_AREA_SHEET_BOTTOM_CLASS } from "@/components/layout/safeAreaInsets"
 
 type ConfigView = "main" | "logs"
 
@@ -155,8 +156,8 @@ export function SettingsButton() {
         side="bottom"
         className={
           view === "logs"
-            ? "rounded-t-2xl min-h-[240px] max-h-[85dvh] overflow-hidden flex flex-col safe-area-pb"
-            : "rounded-t-2xl min-h-[200px] max-h-[85dvh] overflow-y-auto safe-area-pb"
+            ? `rounded-t-2xl min-h-[240px] max-h-[85dvh] overflow-hidden flex flex-col ${SAFE_AREA_SHEET_BOTTOM_CLASS}`
+            : `rounded-t-2xl min-h-[200px] max-h-[85dvh] overflow-y-auto ${SAFE_AREA_SHEET_BOTTOM_CLASS}`
         }
       >
         <SheetHeader>

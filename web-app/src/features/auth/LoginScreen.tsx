@@ -25,6 +25,11 @@ import { formatLoginError } from '../../i18n/apiErrors'
 import { LanguageSelector } from '../settings/LanguageSelector'
 import { LegalLocaleNotice } from '../../components/legal/LegalLocaleNotice'
 import { LegalConsumerRights } from '../../components/legal/LegalConsumerRights'
+import {
+  SAFE_AREA_BOTTOM_WITH_1_5REM,
+  SAFE_AREA_SCROLL_PB_WITH_4_5REM,
+  SAFE_AREA_TOP_WITH_1REM,
+} from '../../components/layout/safeAreaInsets'
 
 interface LoginScreenProps {
   /** BETA: `admin` = fluxo dedicado ao painel (URL `/admin` ou `/admin/login`). */
@@ -32,8 +37,12 @@ interface LoginScreenProps {
 }
 
 /** Single scrollport at viewport height — content taller than dvh must increase scrollHeight (UX-LOGIN-MOB-02). */
-const LOGIN_PAGE_ROOT =
-  'box-border h-dvh max-h-dvh overflow-y-auto overscroll-y-contain bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] scroll-pb-[max(4.5rem,env(safe-area-inset-bottom))]'
+const LOGIN_PAGE_ROOT = [
+  'box-border h-dvh max-h-dvh overflow-y-auto overscroll-y-contain bg-background px-4',
+  SAFE_AREA_TOP_WITH_1REM,
+  SAFE_AREA_BOTTOM_WITH_1_5REM,
+  SAFE_AREA_SCROLL_PB_WITH_4_5REM,
+].join(' ')
 const LOGIN_CARD_SHELL = (radius: string) =>
   `mx-auto my-2 w-full max-w-sm shrink-0 bg-card ${radius} shadow-card sm:my-4`
 
