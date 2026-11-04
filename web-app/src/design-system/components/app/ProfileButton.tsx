@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  MOBILE_DIALOG_SAFE_CLASS,
 } from '@/components/ui/dialog'
 import {
   Sheet,
@@ -69,7 +70,7 @@ export function ProfileButton() {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
-        <DialogContent className="max-w-[min(100vw-1.5rem,380px)] max-h-[85dvh] overflow-y-auto rounded-2xl">
+        <DialogContent className={`max-w-[min(100vw-1.5rem,380px)] overflow-y-auto rounded-2xl ${MOBILE_DIALOG_SAFE_CLASS}`}>
           <DialogHeader>
             <DialogTitle>{t('profilePanel.accountTitle')}</DialogTitle>
             <DialogDescription className="sr-only">

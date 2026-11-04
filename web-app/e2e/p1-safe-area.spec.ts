@@ -242,37 +242,58 @@ test.describe('P1 safe areas isoladas', () => {
     await page.screenshot({ path: 'test-results/p1-safe-area/09-settings-sheet-short.png' })
   })
 
-  test('perfil móvel em diálogo: pendente de P2, sem fórmula de safe area', async ({ page }) => {
+  test('perfil móvel em diálogo: título e fechar ficam fora da barra de estado', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await openScene(page, 'profile', 'android')
     await page.getByRole('button', { name: 'Conta' }).click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
-    const className = (await dialog.getAttribute('class')) ?? ''
-    const pad = await padding(dialog)
-    const box = await boxOf(dialog)
-    expect(className).not.toContain('safe-area-inset')
-    test.info().annotations.push({
-      type: 'pending-p2',
-      description: `dialog perfil padding-bottom=${pad.bottom} top=${Math.round(box.y)} bottom=${Math.round(box.y + box.height)}`,
+    await dialog.evaluate((element) => {
+      element.getAnimations().forEach((animation) => animation.finish())
     })
+    const viewport = page.viewportSize()!
+    const className = (await dialog.getAttribute('class')) ?? ''
+    expect(className).toContain('safe-area-inset-top')
+    expect(className).toContain('safe-area-inset-bottom')
+    expect(className).not.toContain('env(safe-area-inset-top,0px)+')
+    const pad = await padding(dialog)
+    expect(pad.bottom).toBeCloseTo(24, 0)
+    const box = await boxOf(dialog)
+    const maxHeight = await dialog.evaluate((element) => parseFloat(getComputedStyle(element).maxHeight))
+    const limit = viewport.height - SIM_TOP - SIM_BOTTOM
+    expect(maxHeight).toBeLessThanOrEqual(Math.min(viewport.height * 0.85, limit) + 1)
+    expect(box.y).toBeGreaterThanOrEqual(SIM_TOP - 1)
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height - SIM_BOTTOM + 1)
+    fullyInside(await boxOf(dialog.getByRole('heading').first()), SIM_TOP, SIM_BOTTOM, viewport)
+    fullyInside(await boxOf(dialog.getByRole('button', { name: 'Close' })), SIM_TOP, SIM_BOTTOM, viewport)
     await page.screenshot({ path: 'test-results/p1-safe-area/10-profile-dialog-mobile.png' })
   })
 
-  test('definições móveis em diálogo: pendente de P2, sem fórmula de safe area', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
+  test('definições móveis em diálogo: o scroll chega ao último link acima da faixa', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 420 })
     await openScene(page, 'settings', 'android')
     await page.getByTestId('open-settings').click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
-    const className = (await dialog.getAttribute('class')) ?? ''
-    const pad = await padding(dialog)
-    const box = await boxOf(dialog)
-    expect(className).not.toContain('safe-area-inset')
-    test.info().annotations.push({
-      type: 'pending-p2',
-      description: `dialog definições padding-bottom=${pad.bottom} top=${Math.round(box.y)} bottom=${Math.round(box.y + box.height)}`,
+    await dialog.evaluate((element) => {
+      element.getAnimations().forEach((animation) => animation.finish())
     })
+    const viewport = page.viewportSize()!
+    const className = (await dialog.getAttribute('class')) ?? ''
+    expect(className).toContain('safe-area-inset-top')
+    expect(className).toContain('safe-area-inset-bottom')
+    expect(className).not.toContain('env(safe-area-inset-bottom,0px)+var(')
+    const pad = await padding(dialog)
+    expect(pad.bottom).toBeCloseTo(24, 0)
+    fullyInside(await boxOf(dialog.getByRole('heading').first()), SIM_TOP, SIM_BOTTOM, viewport)
+    fullyInside(await boxOf(dialog.getByRole('button', { name: 'Close' })), SIM_TOP, SIM_BOTTOM, viewport)
+    const metrics = await dialog.evaluate((element) => ({
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+    }))
+    expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight + 8)
+    await scrollToEnd(dialog)
+    fullyInside(await boxOf(page.getByTestId('ral-consumidor-gov-link-passenger')), SIM_TOP, SIM_BOTTOM, viewport)
     await page.screenshot({ path: 'test-results/p1-safe-area/11-settings-dialog-mobile.png' })
   })
 

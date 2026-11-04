@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  MOBILE_DIALOG_SAFE_CLASS,
 } from "@/components/ui/dialog"
 import {
   Sheet,
@@ -65,11 +66,11 @@ export function SettingsButton() {
     <div className="mt-4 flex flex-col gap-4">
       <p className="text-xs text-muted-foreground leading-snug">{t("accountHint")}</p>
       <AppAppearanceSettings />
-        <div>
-          <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">{t("appMode")}</p>
-          <p className="text-xs text-muted-foreground mb-2 leading-snug">{t("appModeHint")}</p>
-          <ContextSwitch onChosen={() => setOpen(false)} />
-        </div>
+      <div>
+        <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">{t("appMode")}</p>
+        <p className="text-xs text-muted-foreground mb-2 leading-snug">{t("appModeHint")}</p>
+        <ContextSwitch onChosen={() => setOpen(false)} />
+      </div>
       <Button
         type="button"
         variant="outline"
@@ -131,8 +132,8 @@ export function SettingsButton() {
         <DialogContent
           className={
             view === "logs"
-              ? "max-w-[min(100vw-1.5rem,400px)] max-h-[85dvh] flex flex-col"
-              : "max-w-[min(100vw-1.5rem,380px)] max-h-[85dvh] overflow-y-auto"
+              ? `max-w-[min(100vw-1.5rem,400px)] flex flex-col overflow-y-auto ${MOBILE_DIALOG_SAFE_CLASS}`
+              : `max-w-[min(100vw-1.5rem,380px)] overflow-y-auto ${MOBILE_DIALOG_SAFE_CLASS}`
           }
         >
           <DialogHeader>
