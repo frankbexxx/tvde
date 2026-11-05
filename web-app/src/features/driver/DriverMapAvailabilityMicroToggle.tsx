@@ -4,9 +4,14 @@
  */
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+  driverAvailabilityLabelKey,
+  type PresentedLocationCue,
+} from './driverGpsOfferNotice'
 
 type DriverMapAvailabilityMicroToggleProps = {
   offline: boolean
+  locationCue?: PresentedLocationCue
   syncing?: boolean
   blocked?: boolean
   blockReason?: string | null
@@ -17,6 +22,7 @@ type DriverMapAvailabilityMicroToggleProps = {
 
 export function DriverMapAvailabilityMicroToggle({
   offline,
+  locationCue = 'unconfirmed',
   syncing = false,
   blocked = false,
   blockReason = null,
@@ -36,8 +42,12 @@ export function DriverMapAvailabilityMicroToggle({
       data-testid="driver-map-availability-control"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-foreground" data-testid="driver-availability-state">
-          {offline ? t('availability.stateOffline') : t('availability.stateOnline')}
+        <p
+          className="text-sm font-medium text-foreground"
+          data-testid="driver-availability-state"
+          data-location-cue={offline ? 'offline' : locationCue}
+        >
+          {offline ? t('availability.stateOffline') : t(driverAvailabilityLabelKey(locationCue))}
         </p>
         <button
           type="button"

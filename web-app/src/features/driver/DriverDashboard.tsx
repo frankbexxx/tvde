@@ -66,6 +66,9 @@ import { isMockLocationModeEnabled } from '../../dev/mockLocation'
 import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { startTripSimulation } from '../../dev/tripSimulation'
 import { isDemoLocationEnabled, useGeolocation } from '../../hooks/useGeolocation'
+import { isNativePlatform } from '../../utils/openExternalApp'
+import { isWebGpsRecoveryEnabled } from './driverWebGpsRecovery'
+import { useDriverWebGpsRecovery } from './useDriverWebGpsRecovery'
 import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
 import { resolveDriverLocationUploadOrigin } from '../../services/driverLocationUpload'
 import {
@@ -215,9 +218,12 @@ import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
 import { DriverGpsOfferBanner } from './DriverGpsOfferBanner'
 import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
 import {
+  driverAvailabilityLabelKey,
   INITIAL_GPS_OFFER_NOTICE,
+  presentedDriverLocationCue,
   reduceGpsOfferNotice,
   type GpsOfferNoticeState,
+  type PresentedLocationCue,
 } from './driverGpsOfferNotice'
 import {
   blockingDocumentStatuses,
@@ -253,11 +259,23 @@ function setStoredOffline(offline: boolean) {
 }
 
 /** §9.4 — barra sob o mapa (barra inferior activa): disponível → toque passa a offline. */
-function DriverMapAvailabilityPill({ onGoOffline }: { onGoOffline: () => void }) {
+function DriverMapAvailabilityPill({
+  onGoOffline,
+  locationCue,
+}: {
+  onGoOffline: () => void
+  locationCue: PresentedLocationCue
+}) {
   const { t } = useTranslation('driver')
   return (
     <div className="flex w-full min-h-11 items-center justify-between gap-2 bg-background/90 px-3 py-2">
-      <p className="text-sm font-medium text-foreground">{t('availability.stateOnline')}</p>
+      <p
+        className="text-sm font-medium text-foreground"
+        data-testid="driver-availability-label"
+        data-location-cue={locationCue}
+      >
+        {t(driverAvailabilityLabelKey(locationCue))}
+      </p>
       <button
         type="button"
         data-testid="driver-map-availability-pill"
@@ -292,16 +310,18 @@ function DriverMapOfflinePill({ onGoOnline }: { onGoOnline: () => void }) {
 function DriverShellAvailabilityInner({
   mapTapGoesOnline,
   offline,
+  locationCue,
   onGoOnline,
   onGoOffline,
 }: {
   mapTapGoesOnline: boolean
   offline: boolean
+  locationCue: PresentedLocationCue
   onGoOnline: () => void
   onGoOffline: () => void
 }) {
   if (!offline) {
-    return <DriverMapAvailabilityPill onGoOffline={onGoOffline} />
+    return <DriverMapAvailabilityPill onGoOffline={onGoOffline} locationCue={locationCue} />
   }
   if (mapTapGoesOnline) {
     return <DriverMapOfflinePill onGoOnline={onGoOnline} />
@@ -447,6 +467,7 @@ export function DriverDashboard() {
     usedFallback: geolocationUsedFallback,
     locationOrigin: geolocationUploadOrigin,
     retry: retryGeolocation,
+    adoptNewerGpsFix,
   } = useGeolocation({
     mockRole: 'driver',
     watchEnabled: geoWatchEnabled,
@@ -1067,6 +1088,21 @@ export function DriverDashboard() {
     fixTimestampMs: reportingRealGps ? geoDriverGpsFix?.timestamp : null,
     hasActiveTrip: !!activeTripId,
   })
+  const webGpsRecovery = useDriverWebGpsRecovery({
+    enabled: isWebGpsRecoveryEnabled({
+      reporting: locationReportingOperational,
+      nativePlatform: isNativePlatform(),
+      mock: isMockLocationModeEnabled(),
+      demo: isDemoLocationEnabled(),
+    }),
+    lastFixTimestampMs: geoDriverGpsFix?.timestamp ?? null,
+    adoptFix: adoptNewerGpsFix,
+  })
+  const availabilityLocationCue = presentedDriverLocationCue({
+    serverLocationClass: gpsOfferNotice.serverLocationClass,
+    fetchFailed: gpsOfferNotice.fetchFailed,
+    attention: webGpsRecovery.attention,
+  })
 
   const [serverLoc, setServerLoc] = useState<{ lat: number; lng: number; timestamp: number } | null>(null)
   const [serverLocErr, setServerLocErr] = useState<{ status?: number; detail?: string } | null>(null)
@@ -1581,6 +1617,7 @@ export function DriverDashboard() {
           <DriverShellAvailabilityInner
             mapTapGoesOnline={mapTapGoesOnline}
             offline={offline}
+            locationCue={availabilityLocationCue}
             onGoOnline={() => handleDriverAvailabilityChange(true)}
             onGoOffline={() => handleDriverAvailabilityChange(false)}
           />
@@ -2102,6 +2139,7 @@ export function DriverDashboard() {
                     {driverBottomNav && !activeTripId ? (
                       <DriverMapAvailabilityMicroToggle
                         offline={offline}
+                        locationCue={availabilityLocationCue}
                         syncing={availabilitySyncing}
                         blocked={docsBlockedOffline || hoursBlockedOffline}
                         blockReason={availabilityBlock?.reason}
@@ -2400,6 +2438,7 @@ export function DriverDashboard() {
                     <DriverShellAvailabilityInner
                       mapTapGoesOnline={mapTapGoesOnline}
                       offline={offline}
+                      locationCue={availabilityLocationCue}
                       onGoOnline={() => handleDriverAvailabilityChange(true)}
                       onGoOffline={() => handleDriverAvailabilityChange(false)}
                     />
@@ -2627,6 +2666,7 @@ export function DriverDashboard() {
                         <DriverShellAvailabilityInner
                           mapTapGoesOnline={mapTapGoesOnline}
                           offline={offline}
+                          locationCue={availabilityLocationCue}
                           onGoOnline={() => handleDriverAvailabilityChange(true)}
                           onGoOffline={() => handleDriverAvailabilityChange(false)}
                         />

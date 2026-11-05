@@ -27,6 +27,10 @@ describe('DriverMapAvailabilityMicroToggle', () => {
       />
     )
     expect(screen.getByTestId('driver-availability-state')).toHaveTextContent('Disponível')
+    expect(screen.getByTestId('driver-availability-state')).toHaveAttribute(
+      'data-location-cue',
+      'unconfirmed',
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Ficar indisponível' }))
     expect(onGoOffline).toHaveBeenCalledTimes(1)
   })
@@ -95,5 +99,66 @@ describe('DriverMapAvailabilityMicroToggle', () => {
     expect(action).toBeEnabled()
     fireEvent.click(action)
     expect(onGoOnline).toHaveBeenCalledTimes(2)
+  })
+
+  it('shows the server location state without calling a local fix eligible', () => {
+    const { rerender } = render(
+      <DriverMapAvailabilityMicroToggle
+        offline={false}
+        locationCue="recent"
+        onGoOnline={vi.fn()}
+        onGoOffline={vi.fn()}
+      />,
+    )
+    expect(screen.getByTestId('driver-availability-state')).toHaveTextContent(
+      'Disponível — localização recente',
+    )
+
+    rerender(
+      <DriverMapAvailabilityMicroToggle
+        offline={false}
+        locationCue="stale"
+        onGoOnline={vi.fn()}
+        onGoOffline={vi.fn()}
+      />,
+    )
+    expect(screen.getByTestId('driver-availability-state')).toHaveTextContent(
+      'Disponível — localização desactualizada',
+    )
+
+    rerender(
+      <DriverMapAvailabilityMicroToggle
+        offline={false}
+        locationCue="refreshing"
+        onGoOnline={vi.fn()}
+        onGoOffline={vi.fn()}
+      />,
+    )
+    expect(screen.getByTestId('driver-availability-state')).toHaveTextContent(
+      'Disponível — a actualizar localização',
+    )
+
+    rerender(
+      <DriverMapAvailabilityMicroToggle
+        offline={false}
+        locationCue="unavailable"
+        onGoOnline={vi.fn()}
+        onGoOffline={vi.fn()}
+      />,
+    )
+    expect(screen.getByTestId('driver-availability-state')).toHaveTextContent(
+      'Disponível — localização temporariamente indisponível',
+    )
+
+    rerender(
+      <DriverMapAvailabilityMicroToggle
+        offline={false}
+        locationCue="unconfirmed"
+        onGoOnline={vi.fn()}
+        onGoOffline={vi.fn()}
+      />,
+    )
+    expect(screen.getByTestId('driver-availability-state')).toHaveTextContent('Disponível')
+    expect(screen.getByTestId('driver-availability-state')).not.toHaveTextContent('recente')
   })
 })

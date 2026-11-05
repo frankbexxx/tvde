@@ -57,6 +57,48 @@ describe('useGeolocation upload origin (G2-DRV-GPS-08)', () => {
     }
   }
 
+  it('T2 and T10 keep a repeated timestamp off the upload path', async () => {
+    const { result } = renderHook(() =>
+      useGeolocation({ mockRole: 'driver', watchEnabled: true }),
+    )
+    await act(async () => {
+      watchCallbacks.success?.(position(38.72, -9.14, 5_000))
+    })
+    await waitFor(() => expect(result.current.gpsFix?.timestamp).toBe(5_000))
+
+    await act(async () => {
+      watchCallbacks.success?.(position(38.8, -9.2, 5_000))
+      const adopted = result.current.adoptNewerGpsFix({
+        lat: 38.8,
+        lng: -9.2,
+        timestamp: 5_000,
+      })
+      expect(adopted).toBe(false)
+    })
+    expect(result.current.gpsFix).toEqual({ lat: 38.72, lng: -9.14, timestamp: 5_000 })
+  })
+
+  it('T3 adopts a newer fix with the same coordinates', async () => {
+    const { result } = renderHook(() =>
+      useGeolocation({ mockRole: 'driver', watchEnabled: true }),
+    )
+    await act(async () => {
+      watchCallbacks.success?.(position(38.72, -9.14, 5_000))
+    })
+    await waitFor(() => expect(result.current.gpsFix?.timestamp).toBe(5_000))
+
+    await act(async () => {
+      const adopted = result.current.adoptNewerGpsFix({
+        lat: 38.72,
+        lng: -9.14,
+        timestamp: 8_000,
+      })
+      expect(adopted).toBe(true)
+    })
+    expect(result.current.gpsFix).toEqual({ lat: 38.72, lng: -9.14, timestamp: 8_000 })
+    expect(result.current.locationOrigin).toBe('device_gps')
+  })
+
   it('marks presentation_fallback when geolocation errors', async () => {
     const { result } = renderHook(() =>
       useGeolocation({ mockRole: 'driver', watchEnabled: true })

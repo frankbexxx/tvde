@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { isMockLocationModeEnabled } from '../dev/mockLocation'
 import { MOCK_DRIVER_START, MOCK_PASSENGER_POSITION } from '../dev/mockPositions'
 import type { DriverLocationUploadOrigin } from '../services/driverLocationUpload'
@@ -97,6 +97,11 @@ export type GeolocationResult = {
    * No-op se o hook estiver em mock mode ou demo mode (não há o que tentar).
    */
   retry: () => void
+  /**
+   * Aceita um fix real com timestamp estritamente mais recente.
+   * Não cria outro `watchPosition`. Timestamp igual ou anterior é ignorado.
+   */
+  adoptNewerGpsFix: (fix: GpsFix) => boolean
 }
 
 export type GeolocationMockRole = 'passenger' | 'driver'
@@ -171,6 +176,39 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
   const lastPositionRef = useRef<LatLng>(position)
   const lastFixTimestampRef = useRef<number | null>(null)
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const acceptNewerFix = useCallback((fix: GpsFix): boolean => {
+    if (
+      lastFixTimestampRef.current != null &&
+      fix.timestamp <= lastFixTimestampRef.current
+    ) {
+      return false
+    }
+    lastFixTimestampRef.current = fix.timestamp
+    setGpsFix({ lat: fix.lat, lng: fix.lng, timestamp: fix.timestamp })
+    setUsedFallback(false)
+    setLocationOrigin('device_gps')
+    try {
+      sessionStorage.removeItem(GEOLOCATION_FAILED_KEY)
+    } catch {
+      /* ignore */
+    }
+    const prev = lastPositionRef.current
+    if (prev && distanceMeters(prev, fix) < METERS_THRESHOLD) {
+      return true
+    }
+    lastPositionRef.current = { lat: fix.lat, lng: fix.lng }
+    setPosition({ lat: fix.lat, lng: fix.lng })
+    return true
+  }, [])
+
+  const adoptNewerGpsFix = useCallback(
+    (fix: GpsFix): boolean => {
+      if (isMockLocationModeEnabled() || isDemoLocationEnabled()) return false
+      return acceptNewerFix(fix)
+    },
+    [acceptNewerFix],
+  )
 
   useEffect(() => {
     if (isMockLocationModeEnabled()) {
@@ -256,39 +294,16 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     }
 
     const onSuccess = (pos: GeolocationPosition) => {
-      const { latitude, longitude } = pos.coords
-      const next = { lat: latitude, lng: longitude }
-      const fixTimestamp = pos.timestamp
-
-      try {
-        sessionStorage.removeItem(GEOLOCATION_FAILED_KEY)
-      } catch {
-        /* ignore */
-      }
-
-      if (
-        lastFixTimestampRef.current != null &&
-        fixTimestamp <= lastFixTimestampRef.current
-      ) {
-        return
-      }
-      lastFixTimestampRef.current = fixTimestamp
-      setGpsFix({ lat: next.lat, lng: next.lng, timestamp: fixTimestamp })
-      setUsedFallback(false)
-      setLocationOrigin('device_gps')
-
+      const accepted = acceptNewerFix({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        timestamp: pos.timestamp,
+      })
+      if (!accepted) return
       if (fallbackTimeoutRef.current) {
         clearTimeout(fallbackTimeoutRef.current)
         fallbackTimeoutRef.current = null
       }
-
-      const prev = lastPositionRef.current
-      if (prev && distanceMeters(prev, next) < METERS_THRESHOLD) {
-        return
-      }
-
-      lastPositionRef.current = next
-      setPosition(next)
     }
 
     const onError = (err: GeolocationPositionError) => {
@@ -322,7 +337,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
         fallbackTimeoutRef.current = null
       }
     }
-  }, [mockRole, retryCounter, watchEnabled])
+  }, [acceptNewerFix, mockRole, retryCounter, watchEnabled])
 
   const retry = () => {
     // Em mock/demo não há o que retentar — posição vem de uma constante.
@@ -341,7 +356,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     setRetryCounter((n) => n + 1)
   }
 
-  return { position, gpsFix, usedFallback, locationOrigin, retry }
+  return { position, gpsFix, usedFallback, locationOrigin, retry, adoptNewerGpsFix }
 }
 
 

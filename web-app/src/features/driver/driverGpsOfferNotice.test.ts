@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  driverAvailabilityLabelKey,
   INITIAL_GPS_OFFER_NOTICE,
+  presentedDriverLocationCue,
   reduceGpsOfferNotice,
   type DriverStatusEligibilitySnapshot,
   type GpsOfferNoticeState,
@@ -208,5 +210,89 @@ describe('driver GPS offer notice', () => {
       }),
     )
     expect(reduceGpsOfferNotice(shown, { type: 'went_offline' })).toEqual(INITIAL_GPS_OFFER_NOTICE)
+  })
+})
+
+describe('presented driver location cue', () => {
+  it('uses the server classification and does not treat a local fix as eligibility', () => {
+    const recent = status(
+      online({
+        matching_eligible: true,
+        gps_fix_age_seconds: 8,
+        matching_ineligible_reason: null,
+      }),
+    )
+    expect(recent.serverLocationClass).toBe('recent')
+    expect(
+      presentedDriverLocationCue({
+        serverLocationClass: recent.serverLocationClass,
+        fetchFailed: false,
+        attention: 'none',
+      }),
+    ).toBe('recent')
+    expect(driverAvailabilityLabelKey('recent')).toBe('availability.stateOnlineRecent')
+
+    const stale = status(
+      online({
+        matching_eligible: false,
+        matching_ineligible_reason: 'location_stale',
+      }),
+    )
+    expect(stale.serverLocationClass).toBe('stale')
+    expect(
+      presentedDriverLocationCue({
+        serverLocationClass: stale.serverLocationClass,
+        fetchFailed: false,
+        attention: 'none',
+      }),
+    ).toBe('stale')
+
+    const missing = status(
+      online({
+        matching_eligible: false,
+        matching_ineligible_reason: 'location_missing',
+      }),
+    )
+    expect(
+      presentedDriverLocationCue({
+        serverLocationClass: missing.serverLocationClass,
+        fetchFailed: false,
+        attention: 'cooldown',
+      }),
+    ).toBe('unavailable')
+
+    expect(
+      presentedDriverLocationCue({
+        serverLocationClass: 'unconfirmed',
+        fetchFailed: false,
+        attention: 'refreshing',
+      }),
+    ).toBe('refreshing')
+
+    expect(
+      presentedDriverLocationCue({
+        serverLocationClass: 'unconfirmed',
+        fetchFailed: false,
+        attention: 'cooldown',
+      }),
+    ).toBe('unavailable')
+
+    expect(
+      presentedDriverLocationCue({
+        serverLocationClass: 'unconfirmed',
+        fetchFailed: false,
+        attention: 'none',
+      }),
+    ).toBe('unconfirmed')
+    expect(driverAvailabilityLabelKey('unconfirmed')).toBe('availability.stateOnline')
+
+    const otherGate = status(
+      online({
+        matching_eligible: false,
+        matching_ineligible_reason: 'documents',
+      }),
+    )
+    expect(otherGate.serverLocationClass).toBe('unconfirmed')
+    expect(otherGate.visibleReason).toBeNull()
   })
 })

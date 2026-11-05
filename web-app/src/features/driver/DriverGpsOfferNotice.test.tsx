@@ -9,7 +9,8 @@ import {
   type GpsOfferNoticeState,
 } from './driverGpsOfferNotice'
 
-const COPY = 'Localização indisponível — não estás a receber novas ofertas.'
+const STALE_COPY = 'Localização desactualizada — não estás a receber novas ofertas.'
+const MISSING_COPY = 'Localização temporariamente indisponível — não estás a receber novas ofertas.'
 
 function notice(reason: 'location_missing' | 'location_stale', fetchFailed = false): GpsOfferNoticeState {
   return {
@@ -46,14 +47,13 @@ describe('DriverGpsOfferBanner', () => {
       <DriverGpsOfferBanner offline={false} notice={notice('location_stale')} />,
     )
     const banner = screen.getByTestId('driver-gps-offer-notice')
-    expect(banner).toHaveTextContent(COPY)
+    expect(banner).toHaveTextContent(STALE_COPY)
     expect(banner).toHaveAttribute('data-gps-reason', 'location_stale')
 
     rerender(<DriverGpsOfferBanner offline={false} notice={notice('location_missing')} />)
-    expect(screen.getByTestId('driver-gps-offer-notice')).toHaveAttribute(
-      'data-gps-reason',
-      'location_missing',
-    )
+    const missing = screen.getByTestId('driver-gps-offer-notice')
+    expect(missing).toHaveTextContent(MISSING_COPY)
+    expect(missing).toHaveAttribute('data-gps-reason', 'location_missing')
   })
 
   it('offline esconde o aviso de ofertas', () => {

@@ -23,7 +23,9 @@ export function DriverGpsOfferBanner({
         data-gps-reason={notice.visibleReason}
         data-status-unconfirmed={notice.fetchFailed ? 'true' : 'false'}
       >
-        {t('mapHome.gpsOfferUnavailable')}
+        {notice.visibleReason === 'location_missing'
+          ? t('mapHome.gpsOfferMissing')
+          : t('mapHome.gpsOfferStale')}
       </div>
     )
   }
